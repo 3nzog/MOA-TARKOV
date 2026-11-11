@@ -22,6 +22,14 @@ export default function MinimapSettings({ minimap }: { minimap: MinimapApi }) {
       </div>
       <div className="settings-row">
         <div className="settings-row__text">
+          <span>{t('settings.minimapOnlyInRaid')}</span>
+          <span className="settings-row__hint">{t('settings.minimapOnlyInRaidHint')}</span>
+        </div>
+        <Toggle checked={settings.onlyInRaid} onChange={(v) => update({ onlyInRaid: v })} label={t('settings.minimapOnlyInRaid')} />
+      </div>
+      {minimap.waitingForRaid && <p className="settings-row__hint">{t('settings.minimapWaitingRaid')}</p>}
+      <div className="settings-row">
+        <div className="settings-row__text">
           <span>{t('settings.minimapLocked')}</span>
           <span className="settings-row__hint">{t('settings.minimapLockedHint')}</span>
         </div>

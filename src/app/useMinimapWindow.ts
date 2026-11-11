@@ -29,6 +29,8 @@ interface Feed {
   self?: MinimapState['self'];
   /** Squadmates on the map you are on. */
   mates?: MinimapState['mates'];
+  /** A raid is running right now (from the game logs). */
+  inRaid: boolean;
 }
 
 type WinLike = {
@@ -110,13 +112,16 @@ export function useMinimapWindow(feed: Feed) {
   }, [settings]);
 
   // ---- open / close --------------------------------------------------------
+  // With "only during a raid" on, the overlay appears when a raid starts and
+  // goes away when it ends; otherwise it follows the on/off switch alone.
+  const shouldShow = settings.enabled && (!settings.onlyInRaid || feed.inRaid);
   useEffect(() => {
     if (!inTauri()) return;
     let cancelled = false;
     void (async () => {
       try {
         const existing = await getOverlay();
-        if (!settings.enabled) {
+        if (!shouldShow) {
           if (existing) await existing.close();
           if (!cancelled) setOpen(false);
           return;
@@ -167,7 +172,7 @@ export function useMinimapWindow(feed: Feed) {
     return () => {
       cancelled = true;
     };
-  }, [settings.enabled, settingsRef]);
+  }, [shouldShow, settingsRef]);
 
   // ---- lock (click-through) and size follow the settings --------------------
   useEffect(() => {
@@ -302,7 +307,9 @@ export function useMinimapWindow(feed: Feed) {
     }
   }, [settingsRef]);
 
-  return { settings, update, toggle, open, error, available: inTauri(), resetPosition };
+  /** On, but hidden until a raid starts. */
+  const waitingForRaid = settings.enabled && settings.onlyInRaid && !feed.inRaid;
+  return { settings, update, toggle, open, error, available: inTauri(), resetPosition, waitingForRaid };
 }
 
 export type MinimapApi = ReturnType<typeof useMinimapWindow>;

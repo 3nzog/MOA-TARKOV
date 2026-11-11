@@ -25,6 +25,12 @@ describe('minimap protocol', () => {
     expect(s).toMatchObject({ enabled: true, size: 480, opacity: 0.3, shape: 'circle', pos: null, locked: true });
   });
 
+  it('shows only during a raid unless that is turned off (older saves included)', () => {
+    expect(DEFAULT_MINIMAP.onlyInRaid).toBe(true);
+    expect(parseMinimapSettings(JSON.stringify({ enabled: true })).onlyInRaid).toBe(true);
+    expect(parseMinimapSettings(JSON.stringify({ enabled: true, onlyInRaid: false })).onlyInRaid).toBe(false);
+  });
+
   it('defaults to the top-right corner of the monitor, clear of the centered hotbar', () => {
     expect(defaultCorner({ x: 0, y: 0, width: 1920, height: 1080 }, 260)).toEqual({ x: 1636, y: 24 });
     // A monitor to the right of the primary one.

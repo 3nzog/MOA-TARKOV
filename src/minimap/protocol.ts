@@ -17,6 +17,8 @@ export type MinimapShape = 'circle' | 'square';
 
 export interface MinimapSettings {
   enabled: boolean;
+  /** Show only while a raid is running (from the game logs); hide when it ends. */
+  onlyInRaid: boolean;
   /** Locked = click-through: the game gets every click, the overlay none. */
   locked: boolean;
   /** Rotate the map so the direction you face is always up. */
@@ -34,6 +36,7 @@ export interface MinimapSettings {
 
 export const DEFAULT_MINIMAP: MinimapSettings = {
   enabled: false,
+  onlyInRaid: true,
   locked: true,
   headingUp: true,
   size: 260,
@@ -57,6 +60,7 @@ export function parseMinimapSettings(raw: string | null): MinimapSettings {
         : null;
     return {
       enabled: p.enabled === true,
+      onlyInRaid: p.onlyInRaid !== false,
       locked: p.locked !== false,
       headingUp: p.headingUp !== false,
       size: num(p.size, 140, 480, DEFAULT_MINIMAP.size),

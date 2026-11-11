@@ -166,7 +166,14 @@ function App() {
   );
   // PMC or Scav: learned from the raid's profile fingerprint (see raidHistory).
   const sideKnowledge = useMemo(() => learnSides(raidHistory.history), [raidHistory.history]);
-  const liveRaid = useMemo(() => currentRaid(raidHistory.history), [raidHistory.history]);
+  // Re-checked every minute too, so a raid whose end never reached the logs
+  // (game crash) stops counting as live once it is too old.
+  const [raidClock, setRaidClock] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setRaidClock(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const liveRaid = useMemo(() => currentRaid(raidHistory.history, raidClock), [raidHistory.history, raidClock]);
   const liveRaidSide = liveRaid ? raidSide(liveRaid, sideKnowledge) : null;
   const liveRaidSideSource =
     liveRaid?.profileKey ? sideKnowledge.source.get(liveRaid.profileKey) ?? null : null;
@@ -274,6 +281,7 @@ function App() {
     points: minimapFeedPoints,
     self: minimapSelf,
     mates: minimapMates,
+    inRaid: !!liveRaid,
   });
   const relativeSynced = useRelativeTime(quests.lastSynced);
   const relativeStale = useRelativeTime(quests.staleSince);
