@@ -1,0 +1,44 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Squad relay runtime output (analytics JSON-Lines, etc.)
+server/data/
+
+# Relay deployment secrets — never commit (Tailscale auth key, stats token)
+.env
+server/deploy/.env
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Claude Code local settings
+.claude/
+
+# Tauri updater signing keys — never commit
+*.key
+*.key.pub
+
+# FontAwesome Pro web kit — commercial license forbids redistributing the raw
+# kit in a public repo. Vendored locally for dev/build (the compiled exe embeds
+# the glyphs, which IS permitted). Each build machine drops the FA web zip into
+# src/vendor/fontawesome/ — the old FontAwesome Pro kit (per-seat license, must never ship).
+src/vendor/fontawesome/

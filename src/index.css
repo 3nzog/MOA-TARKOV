@@ -1,0 +1,55 @@
+/* Base styles. All variables live in src/ui/tokens.css (FIELD GLASS). */
+
+/* Padding and borders count INSIDE declared widths — without this, every
+   `width: 100%` input overflows its container by its own padding. */
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Machined scrollbars — slim, matte, no arrows. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--r-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-track { background: transparent; }
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+/* Focus is brass, always visible for keyboard users, never for mouse. */
+:focus-visible {
+  outline: 2px solid var(--accent-glow);
+  outline-offset: 1px;
+}

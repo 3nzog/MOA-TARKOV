@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  client:
+    name: Client — type-check, test, lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build        # tsc -b (type-check) + vite build — REQUIRED
+      - run: npx vitest run       # unit tests — REQUIRED
+      - run: npm run lint         # eslint — REQUIRED (no errors allowed)
+
+  server:
+    name: Server — test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+        working-directory: server
+      - run: npx vitest run
+        working-directory: server
+
+  core:
+    name: Rust core — test
+    # The app ships for Windows only (winreg, EFT install paths), so the core
+    # is tested on the platform it runs on.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      # generate_context!() embeds frontendDist at compile time. The tests do
+      # not exercise the UI, so a stub is enough and skips a full Vite build.
+      - name: Stub the frontend bundle
+        shell: bash
+        run: mkdir -p dist && echo '<!doctype html>' > dist/index.html
+      - run: cargo test --locked   # REQUIRED — a stale Cargo.lock fails here
+        working-directory: src-tauri

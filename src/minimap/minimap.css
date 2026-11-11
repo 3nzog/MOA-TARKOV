@@ -1,0 +1,116 @@
+/* Minimap overlay window. The window itself is transparent; only the disc (or
+   square) is painted, so the game shows around it. Tokens only. */
+
+html.minimap-root,
+html.minimap-root body,
+html.minimap-root #root {
+  background: transparent !important;
+  overflow: hidden;
+  user-select: none;
+}
+
+.minimap {
+  position: fixed;
+  inset: 4px;
+  overflow: hidden;
+  /* Translucent well: readable over a bright sky, the game still shows through. */
+  background: color-mix(in srgb, var(--bg-sunken) 72%, transparent);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--elev-2);
+}
+.minimap--circle { border-radius: 50%; }
+.minimap--square { border-radius: var(--r-lg); }
+.minimap--unlocked { border: 2px dashed var(--accent); cursor: move; }
+
+/* The map is drawn larger than the window (≥ √2) so a rotated square never
+   shows its corners; it turns about its own center, which is the player. */
+.minimap__rotor {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  left: -25%;
+  top: -25%;
+  transform-origin: 50% 50%;
+}
+.minimap .leaflet-container { background: transparent; }
+.minimap .leaflet-control-container { display: none; }
+
+.minimap__north {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.minimap__north span {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  color: var(--accent);
+  text-shadow: 0 0 3px var(--bg-sunken);
+}
+
+.minimap__msg,
+.minimap__badge {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 80%;
+  text-align: center;
+  font-size: var(--fs-micro);
+  color: var(--text-dim);
+  text-shadow: 0 0 3px var(--bg-sunken);
+}
+.minimap__msg { top: 50%; transform: translate(-50%, -50%); }
+.minimap__badge { bottom: 12%; }
+
+.minimap__edit {
+  position: absolute;
+  left: 50%;
+  bottom: 14%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 2px 4px 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  font-size: var(--fs-micro);
+  color: var(--text);
+  white-space: nowrap;
+}
+.minimap__edit button {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+
+/* Names of the exits read from O+O, and arrows on the rim for those off-screen.
+   Drawn unrotated above the turning map, so text always reads upright. */
+.minimap__exits {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.minimap__exits text {
+  font-family: var(--font-ui, inherit);
+  font-size: 11px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--bg-sunken);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}

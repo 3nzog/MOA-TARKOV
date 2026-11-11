@@ -1,0 +1,46 @@
+[package]
+name = "tarkov-companion"
+version = "0.9.0"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
+tauri-plugin-http = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+winreg = "0.52"
+notify = "6"
+regex = "1"
+dirs = "5"
+keyring = { version = "3", features = ["windows-native"] }
+tokio-tungstenite = { version = "0.26", default-features = false, features = ["handshake"] }
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+tokio = { version = "1", features = ["net", "sync", "time", "macros", "rt"] }
+uuid = { version = "1", features = ["v4"] }
+
+# Windows OCR (Windows.Media.Ocr) reads the extract list from O+O screenshots.
+# Same version tauri already pulls in, so only the extra API modules compile.
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61", features = [
+  "Foundation",
+  "Foundation_Collections",
+  "Globalization",
+  "Graphics_Imaging",
+  "Media_Ocr",
+  "Storage",
+  "Storage_Streams",
+  "Win32_System_WinRT",
+] }
+
+[profile.release]
+panic = "abort"
+codegen-units = 16
+lto = false
+opt-level = "s"
+strip = true

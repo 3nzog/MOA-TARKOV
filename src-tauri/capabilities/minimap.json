@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "minimap",
+  "description": "Minimap overlay window: receive state events and let the player drag it while unlocked. Nothing else — no HTTP, no dialogs, no filesystem.",
+  "windows": [
+    "minimap"
+  ],
+  "permissions": [
+    "core:event:default",
+    "core:window:default",
+    "core:window:allow-start-dragging"
+  ]
+}

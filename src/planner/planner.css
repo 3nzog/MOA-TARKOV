@@ -1,0 +1,193 @@
+/* Planner (rail section "Planner"). Tokens only — see docs/DESIGN-SYSTEM.md. */
+
+.planner { display: flex; flex-direction: column; gap: var(--sp-3); min-height: 0; }
+.planner-tabs { overflow-x: auto; scrollbar-width: none; gap: var(--sp-3); }
+.planner-tabs::-webkit-scrollbar { display: none; }
+.planner-tabs .ui-tabs__tab { white-space: nowrap; font-size: var(--fs-caption); }
+.planner-body { min-height: 0; }
+.planner-stack { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+.planner-state { display: flex; align-items: center; gap: var(--sp-2); color: var(--text-dim); }
+.planner-source { font-size: var(--fs-micro); color: var(--text-faint); margin: 0; }
+.planner-hint { font-size: var(--fs-micro); color: var(--text-faint); margin: 0; line-height: 1.45; }
+.planner-age { font-size: var(--fs-micro); margin: 0; }
+
+.planner-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.planner-row > .ui-select-wrap { flex: 1; }
+.planner-row__label { font-size: var(--fs-caption); color: var(--text-dim); }
+.planner-num { width: 84px; }
+.planner-chips { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.planner-meta { display: inline-flex; align-items: center; gap: var(--sp-1); margin-left: auto; font-size: var(--fs-micro); color: var(--text-dim); flex-shrink: 0; }
+
+.planner-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: var(--sp-1);
+}
+.planner-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: var(--fs-micro);
+  color: var(--text-dim);
+}
+.planner-stats .mono { font-size: var(--fs-body); color: var(--text); }
+
+.planner-callout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-2);
+  border: 1px solid var(--warn);
+  background: var(--warn-soft);
+  border-radius: var(--r-md);
+  font-size: var(--fs-caption);
+}
+.planner-callout p { margin: 0; }
+.planner-callout--info { border-color: var(--info); background: var(--info-soft); }
+
+.planner-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.planner-list > li { display: flex; align-items: baseline; gap: var(--sp-1); font-size: var(--fs-caption); flex-wrap: wrap; }
+.planner-list--dense > li { gap: 4px; }
+
+.planner-link {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: left;
+}
+.planner-link:hover { color: var(--accent-hover); text-decoration: underline; }
+.planner-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.planner-quests { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.planner-quest, .planner-craft {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+.planner-craft { padding: var(--sp-2); display: flex; flex-direction: column; gap: 2px; }
+.planner-quest--open { border-color: var(--border-strong); background: var(--surface-2); }
+.planner-quest__head {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  background: none;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-caption);
+  text-align: left;
+  cursor: pointer;
+}
+.planner-quest__head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--r-md); }
+.planner-quest__name { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.planner-quest__body { display: flex; flex-direction: column; gap: var(--sp-2); padding: 0 var(--sp-2) var(--sp-2); }
+.planner-subhead {
+  margin: var(--sp-1) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.planner-station__head { display: flex; align-items: center; gap: var(--sp-1); padding-right: var(--sp-2); }
+.planner-station__head > .planner-quest__head { flex: 1; min-width: 0; }
+.planner-station__head > .ui-select-wrap { width: 68px; flex-shrink: 0; }
+.planner-level-select { height: 28px; font-size: var(--fs-caption); }
+
+.planner-status {
+  font-size: var(--fs-micro);
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.planner-status--available { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
+.planner-status--active { color: var(--info); border-color: var(--info-soft); background: var(--info-soft); }
+.planner-status--complete { color: var(--text-dim); }
+.planner-status--failed { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+.planner-status--locked { color: var(--text-faint); }
+
+.planner-reasons { margin: 0; padding-left: var(--sp-4); font-size: var(--fs-caption); color: var(--warn); }
+
+.planner-objectives { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.planner-objectives label { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-caption); cursor: pointer; }
+.planner-objectives input[type='checkbox'] { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+.planner-objective--done { opacity: 0.55; }
+.planner-objective--done label > span { text-decoration: line-through; }
+.planner-item-line { display: block; font-size: var(--fs-micro); color: var(--text-faint); }
+.planner-fir {
+  display: inline-block;
+  margin-left: var(--sp-1);
+  padding: 0 4px;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--warn);
+  border: 1px solid var(--warn);
+  vertical-align: 1px;
+}
+
+.planner-tree { list-style: none; margin: 0; padding-left: var(--sp-3); border-left: 1px solid var(--border); font-size: var(--fs-caption); display: flex; flex-direction: column; gap: 4px; }
+.planner-tree > li { display: flex; flex-direction: column; gap: 4px; }
+.planner-tree > li > .planner-status { align-self: flex-start; }
+
+.planner-needs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.planner-needs > li { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-1); padding: var(--sp-1) var(--sp-2); }
+.planner-need--done { opacity: 0.55; }
+.planner-need__main { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); font-size: var(--fs-caption); }
+.planner-need__name {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.planner-need__name:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.planner-need__detail { padding-top: var(--sp-1); display: flex; flex-direction: column; gap: var(--sp-1); }
+.planner-counter { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.planner-counter .mono { min-width: 44px; text-align: center; font-size: var(--fs-caption); }
+
+.planner-profit { color: var(--text); white-space: nowrap; }
+.planner-profit--neg { color: var(--danger); }
+.planner-prices { display: grid; grid-template-columns: auto 1fr; gap: 2px var(--sp-2); margin: 0; font-size: var(--fs-micro); }
+.planner-prices dt { color: var(--text-faint); }
+.planner-prices dd { margin: 0; color: var(--text-dim); }
+
+.planner-mate { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-1) 0; border-top: 1px solid var(--border); }
+.planner-mate__head { display: flex; align-items: center; gap: var(--sp-1); font-size: var(--fs-caption); }
+.planner-mate__dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* Compact mode: the map only, spine shrunk to the exit control. */
+.shell--compact .rail-panel { display: none; }
+.compact-exit {
+  position: absolute;
+  top: var(--sp-2);
+  z-index: var(--z-map-ui);
+}
+/* Opposite corner from the floor switcher, which owns the rail-side top corner. */
+.shell--left .compact-exit { right: var(--sp-2); }
+.shell--right .compact-exit { left: var(--sp-2); }
+
+/* Hotkey settings */
+.hotkey-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.hotkey-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); font-size: var(--fs-caption); }
+.hotkey-list .hotkey-actions { display: inline-flex; gap: var(--sp-1); align-items: center; }
