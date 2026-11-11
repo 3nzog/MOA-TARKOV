@@ -58,6 +58,10 @@ import { canonicalMapId } from './map/canonicalMap';
 import { mapIdFromLogLocation } from './map/logLocationMap';
 import { currentRaid, learnSides, raidSide, setManualSide, type RaidSide } from './state/raidHistory';
 import PlannerPanel, { type PlannerTab } from './planner/PlannerPanel';
+import { useAppearance } from './appearance/useAppearance';
+import GlassIntro from './intro/GlassIntro';
+import { knownSymbol, useSelfSymbol } from './squad/symbols';
+import { hexForColorId } from '../shared/squadProtocol';
 
 // Stable empty array for the `objectives` prop fallback. A fresh `[]` literal
 // would change identity every render, invalidating MarkerLayer's classified/
@@ -81,8 +85,15 @@ function App() {
   const [patchNotesOpen, setPatchNotesOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [plannerTab, setPlannerTab] = useState<PlannerTab>('summary');
+  const appearance = useAppearance();
+  // The glass logo reveal plays once per launch (Settings → Appearance turns it off).
+  const [showIntro, setShowIntro] = useState(() => appearance.intro);
+  const selfSymbol = useSelfSymbol();
 
   const squad = useSquad();
+  // Your marker colour: the squad seat colour, else your saved pick, else the live green.
+  const selfColorId = squad.selfColorId ?? squad.identity.colorId;
+  const selfColor = selfColorId ? hexForColorId(selfColorId) : undefined;
   const settings = useSettings();
   const railWidth = useRailWidth();
   const selection = useQuestSelection();
@@ -237,11 +248,32 @@ function App() {
         : [],
     [selectedMapId, questState, pois.currentPois, liveRaidSide, panelExitIds],
   );
+  const minimapSelf = useMemo(() => ({ symbol: selfSymbol, color: selfColor }), [selfSymbol, selfColor]);
+  const minimapMates = useMemo(
+    () =>
+      squad.members.flatMap((m) => {
+        const p = squad.positions[m.id];
+        if (m.id === squad.selfId || !p || p.payload.mapId !== selectedMapId) return [];
+        return [{
+          id: m.id,
+          name: m.name,
+          color: hexForColorId(m.colorId),
+          symbol: knownSymbol(p.payload.symbol),
+          x: p.payload.x,
+          z: p.payload.z,
+          rotation: p.payload.rotation,
+          ts: p.ts,
+        }];
+      }),
+    [squad.members, squad.positions, squad.selfId, selectedMapId],
+  );
   const minimap = useMinimapWindow({
     mapId: selectedMapId,
     pos: playerPos,
     activeFloorId: floors.activeFloorId ?? null,
     points: minimapFeedPoints,
+    self: minimapSelf,
+    mates: minimapMates,
   });
   const relativeSynced = useRelativeTime(quests.lastSynced);
   const relativeStale = useRelativeTime(quests.staleSince);
@@ -311,10 +343,22 @@ function App() {
     [questState],
   );
 
+  // How much of the map the floating spine + rail cover (padding 10 + spine 64 +
+  // gap 10, plus the rail and its gap). The docked layout puts them beside the
+  // map instead, so nothing is covered.
+  const chromeWidth =
+    appearance.layout !== 'floating' || compact.compact
+      ? 0
+      : 10 + 64 + 10 + (railSection ? railWidth.width + 10 : 0);
+
   return (
     <div className="app-container">
+      {showIntro && <GlassIntro onDone={() => setShowIntro(false)} />}
       <Toast message={toast} onDismiss={() => setToast(null)} />
-      <div className={`shell shell--${settings.railSide}${compact.compact ? ' shell--compact' : ''}`}>
+      <div
+        className={`shell shell--${settings.railSide}${compact.compact ? ' shell--compact' : ''}`}
+        style={{ '--chrome-w': `${chromeWidth}px` } as CSSProperties}
+      >
         {!compact.compact && (
         <Spine
           side={settings.railSide}
@@ -503,7 +547,12 @@ function App() {
                       questStates={squadSync.squadQuestStates}
                       sharedQuestIds={squadSync.sharedQuestIds}
                     />
-                    <PlayerMarker position={playerPos} mapId={selectedMapId} />
+                    <PlayerMarker
+                      position={playerPos}
+                      mapId={selectedMapId}
+                      symbol={selfSymbol}
+                      color={selfColor}
+                    />
                     <FollowCamera
                       mapId={selectedMapId}
                       pos={playerPos}
@@ -586,6 +635,10 @@ function App() {
           compactOnTopOk={compact.onTopOk}
           minimap={minimap}
           tracker={tracker}
+          onReplayIntro={() => {
+            setSettingsOpen(false);
+            setShowIntro(true);
+          }}
         />
       )}
       {onboardingOpen && (

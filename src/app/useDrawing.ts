@@ -4,7 +4,7 @@ import { hexForColorId, type DrawPayload } from '../../shared/squadProtocol';
 import type { DrawTool } from '../map/DrawLayer';
 import { newDrawId } from '../map/drawId';
 import type { SquadApi } from '../squad/SquadContext';
-import { TOKEN_HEX } from '../ui/tokens';
+import { useAppearance } from '../appearance/useAppearance';
 import { useLatest } from '../hooks/useLatest';
 
 interface Options {
@@ -23,7 +23,8 @@ export function useDrawing({ selectedMapId, squad, notify }: Options) {
   // Picking a color in the Squad tab persists it immediately, so this updates
   // your map ink live (no more grey-forever).
   const myColorId = squad.selfColorId ?? squad.identity.colorId;
-  const myDrawHex = myColorId ? hexForColorId(myColorId) : TOKEN_HEX.accent;
+  const accent = useAppearance().accent;
+  const myDrawHex = myColorId ? hexForColorId(myColorId) : accent;
   // The draw callbacks stay stable (DrawLayer binds its map handlers once) and
   // read fresh map, color and squad through these.
   const squadRef = useLatest(squad);

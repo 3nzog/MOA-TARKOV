@@ -6,6 +6,28 @@
 > that shipped. Values live in [`src/ui/tokens.css`](../src/ui/tokens.css); the
 > component reference is [`DESIGN-SYSTEM.md`](DESIGN-SYSTEM.md).
 
+## 2026-11 update: liquid glass, and the player decides
+
+The chrome became glass. In the default **floating** layout the map fills the
+window and the spine, rail, map docks and modals float over it as frosted
+panels (`--glass-*` tokens in `tokens.css`); **side by side** keeps the old
+docked layout. Nearly every visual choice is now the player's, in
+Settings → Appearance (`src/appearance/`): dark or light theme, accent colour
+(the default moved from brass to mint; brass is still a preset), the glass
+material (Clear / Frosted / Solid presets, or blur, opacity, saturation, edge
+light and tint by hand), text size, density, corner roundness, map brightness,
+marker and label size, the view cone, animations and the opening.
+
+Each player picks a **symbol** for their marker (Phosphor fill icons). The
+symbol sits upright in a disc in the player's colour; a pointer on the ring and
+a soft view cone turn with the heading, so direction still reads at a glance.
+The party sees it: it rides in the position message (`symbol`, optional).
+
+The app opens with a **glass reveal** of the mark (`src/intro/`, a WebGL2
+shader adapted from zanwei/glass-icon-reveal, MIT), skippable with any click or
+key, off with animations off or reduced motion, and never longer than 7 s.
+The sections below describe the original concept, which the glass builds on.
+
 ## The problem the look has to solve
 
 The app lives on a second monitor during a raid. It is glanced at, not read: a

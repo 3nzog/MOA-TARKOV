@@ -240,8 +240,8 @@
    an old pointer should LOOK old fast (Moacir's spec, feedback round 1). */
 .tc-squadmate {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   opacity: calc(1 - 0.7 * var(--staleness, 0));
   transition: opacity 2.5s linear;
 }
@@ -257,28 +257,13 @@
 }
 .tc-squadmate-ping.is-pinging { animation: tc-ping 0.9s var(--ease-out); }
 @media (prefers-reduced-motion: reduce) { .tc-squadmate-ping.is-pinging { animation: none; } }
-.tc-squadmate-arrow {
-  position: absolute;
-  inset: 2px;
-  transform-origin: 50% 50%;
-  transition: transform 80ms linear;
-  /* white hairline + soft shadow so any squad color reads on any map */
-  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.6)) drop-shadow(0 1px 4px rgba(0, 0, 0, 0.55));
-}
-.tc-squadmate-arrow svg { width: 100%; height: 100%; display: block; }
-.tc-squadmate-arrow path {
-  fill: var(--c, var(--text-dim));
-  stroke: var(--bg-sunken);
-  stroke-width: 1.6;
-  stroke-linejoin: round;
-}
 .tc-squadmate-name {
   position: absolute;
-  top: 40px;
+  top: 44px;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-  font-size: 11px;
+  font-size: calc(11px * var(--label-scale, 1));
   font-weight: 700;
   color: var(--map-label);
   text-shadow: 0 0 3px var(--map-ink), 0 0 3px var(--map-ink);

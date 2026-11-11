@@ -235,7 +235,15 @@
 }
 .ui-modal--sm { max-width: 400px; }
 .ui-modal--md { max-width: 540px; }
-.ui-modal--lg { max-width: 720px; }
+.ui-modal--lg { max-width: 880px; }
+/* Modals are glass too, a little denser than the rail so text stays crisp. */
+.ui-modal {
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border: none;
+  box-shadow: var(--glass-shadow), var(--elev-3);
+}
 .ui-modal__header {
   display: flex;
   align-items: center;

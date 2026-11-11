@@ -7,7 +7,8 @@
 // the last screenshot position fix. So it moves when a screenshot is taken, not
 // continuously; a fix that is getting old fades out instead of lying.
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CircleMarker, MapContainer, ImageOverlay, useMap } from 'react-leaflet';
+import { CircleMarker, MapContainer, ImageOverlay, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Lock } from '@phosphor-icons/react';
 import { MAPS, getGameToLatLng, getMapDef, leafletBounds, makeCRS } from '../map/mapDefs';
@@ -15,6 +16,7 @@ import { canonicalMapId } from '../map/canonicalMap';
 import FloorVisualOverlay from '../map/FloorVisualOverlay';
 import { ALL_FLOORS } from '../map/FloorSwitcher';
 import PlayerMarker from '../map/PlayerMarker';
+import { markerHtml } from '../squad/symbols';
 import { TOKEN_HEX } from '../ui/tokens';
 import { MARKER_COLORS } from '../poi/registry';
 import {
@@ -111,6 +113,28 @@ function useNow(intervalMs: number): number {
     return () => window.clearInterval(id);
   }, [intervalMs]);
   return now;
+}
+
+/** A squadmate on the minimap: same marker as the big map, smaller, fading with age. */
+function MateMarker({ mate, at, heading }: { mate: NonNullable<MinimapState['mates']>[number]; at: [number, number]; heading: number }) {
+  const icon = useMemo(
+    () =>
+      L.divIcon({
+        className: 'tc-player-marker minimap__mate',
+        html: markerHtml(mate.symbol, mate.color, { ping: '' }),
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
+      }),
+    [mate.symbol, mate.color],
+  );
+  const [el, setEl] = useState<L.Marker | null>(null);
+  useEffect(() => {
+    const dir = el?.getElement()?.querySelector<HTMLElement>('.tc-mk__dir');
+    if (dir) dir.style.transform = `rotate(${heading}deg)`;
+    const root = el?.getElement();
+    if (root) root.style.opacity = Date.now() - mate.ts > 30_000 ? '0.35' : '1';
+  }, [el, heading, mate.ts, icon]);
+  return <Marker ref={setEl} position={at} icon={icon} interactive={false} keyboard={false} zIndexOffset={900} />;
 }
 
 export default function MinimapApp() {
@@ -211,7 +235,7 @@ export default function MinimapApp() {
         <>
           <div
             className="minimap__rotor"
-            style={{ transform: `rotate(${turn}deg)`, opacity: age > STALE_MS ? 0.55 : 1 }}
+            style={{ transform: `rotate(${turn}deg)`, opacity: age > STALE_MS ? 0.55 : 1, '--counter': `${-turn}deg` } as React.CSSProperties}
           >
             <MapContainer
               key={mapId}
@@ -261,7 +285,13 @@ export default function MinimapApp() {
                   />
                 ))}
               {named.length > 0 && <ProjectExits mapId={mapId!} points={named} onChange={updateExitOffsets} />}
-              {age < DEAD_MS && <PlayerMarker position={pos} mapId={mapId!} />}
+              {toLatLng &&
+                (state.mates ?? []).map((m) => (
+                  <MateMarker key={m.id} mate={m} at={toLatLng(m.x, m.z)} heading={headingAngle(m.rotation, getMapDef(mapId!)?.rotation ?? 0)} />
+                ))}
+              {age < DEAD_MS && (
+                <PlayerMarker position={pos} mapId={mapId!} symbol={state.self?.symbol} color={state.self?.color} />
+              )}
               <Follow mapId={mapId!} pos={pos} zoom={settings.zoom} />
             </MapContainer>
           </div>

@@ -102,6 +102,9 @@ export interface PositionPayload {
   y: number;
   z: number;
   rotation: number; // yaw degrees, same frame as PlayerMarker
+  // The sender's map symbol (src/squad/symbols.ts). Optional and relayed
+  // opaquely: older clients neither send nor read it.
+  symbol?: string;
 }
 
 export interface QuestsPayload {

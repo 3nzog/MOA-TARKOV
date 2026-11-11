@@ -10,6 +10,7 @@ import { getGameToLatLng, getMapDef } from "./mapDefs";
 import { useSquad } from "../squad/useSquad";
 import type { MemberPosition } from "../squad/SquadContext";
 import { hexForColorId, type SquadMember } from "../../shared/squadProtocol";
+import { knownSymbol, markerHtml } from "../squad/symbols";
 
 // Staleness is CONTINUOUS: the pointer's opacity eases down as the position
 // ages (fresh → ghost), driven by a --staleness custom property set on the
@@ -24,20 +25,19 @@ function stalenessOf(ageMs: number): number {
   return Math.min(1, Math.max(0, t));
 }
 
-function makeIcon(name: string, hex: string): L.DivIcon {
+function makeIcon(name: string, hex: string, symbol: string | null): L.DivIcon {
   const safe = name.replace(/[<>&"]/g, "");
   return L.divIcon({
     className: "tc-squadmate-marker",
     html:
       `<div class="tc-squadmate" style="--c:${hex}">` +
-      `<div class="tc-squadmate-ping"></div>` +
-      `<div class="tc-squadmate-arrow">` +
-      `<svg viewBox="0 0 24 24"><path d="M12 2.2 20.8 21.2 12 16.4 3.2 21.2Z"/></svg>` +
-      `</div>` +
-      `<div class="tc-squadmate-name">${safe}</div>` +
+      markerHtml(symbol, hex, {
+        ping: `<div class="tc-squadmate-ping"></div>`,
+        after: `<div class="tc-squadmate-name">${safe}</div>`,
+      }) +
       `</div>`,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
   });
 }
 
@@ -56,15 +56,16 @@ function SquadmateMarker({
 }) {
   const markerRef = useRef<L.Marker | null>(null);
   const hex = hexForColorId(member.colorId);
-  const icon = useMemo(() => makeIcon(member.name, hex), [member.name, hex]);
+  const symbol = knownSymbol(pos.payload.symbol);
+  const icon = useMemo(() => makeIcon(member.name, hex, symbol), [member.name, hex, symbol]);
 
-  // Rotate the arrow to the member's heading. The CRS bakes in the map's own
-  // rotation for positions, but the CSS arrow is screen-space, so add it here
-  // (same correction PlayerMarker applies).
+  // Turn the cone + pointer to the member's heading. The CRS bakes in the map's
+  // own rotation for positions, but the CSS rotation is screen-space, so add it
+  // here (same correction PlayerMarker applies).
   useEffect(() => {
     const el = markerRef.current?.getElement();
-    const arrow = el?.querySelector<HTMLElement>(".tc-squadmate-arrow");
-    if (arrow) arrow.style.transform = `rotate(${pos.payload.rotation + mapRotation}deg)`;
+    const dir = el?.querySelector<HTMLElement>(".tc-mk__dir");
+    if (dir) dir.style.transform = `rotate(${pos.payload.rotation + mapRotation}deg)`;
   }, [pos.payload.rotation, mapRotation, icon]);
 
   // Staleness fade + fresh-update pulse on the live element. A FRESH position

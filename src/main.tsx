@@ -11,6 +11,10 @@ import App from './App.tsx'
 import { SquadProvider } from './squad/SquadContext'
 import { setupI18n } from './i18n'
 import MinimapApp from './minimap/MinimapApp'
+import { initAppearance } from './appearance/useAppearance'
+
+// Theme, accent and glass come from the saved appearance before anything paints.
+initAppearance()
 
 // The same bundle serves the minimap overlay window (opened by the main window
 // with ?view=minimap). It renders only the minimap — no squad connection, no

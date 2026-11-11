@@ -114,3 +114,7 @@ html.minimap-root #root {
   stroke-width: 3px;
   stroke-linejoin: round;
 }
+
+/* Markers keep their symbol upright while the heading-up rotor turns the map. */
+.minimap .tc-mk__disc { transform: rotate(var(--counter, 0deg)); }
+.minimap .tc-mk { transform: scale(calc(var(--marker-scale, 1) * 0.8)); }

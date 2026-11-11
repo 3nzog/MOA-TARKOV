@@ -13,6 +13,18 @@ import type { MinimapApi } from '../app/useMinimapWindow';
 import TrackerSettings from './TrackerSettings';
 import SquadServerSettings from './SquadServerSettings';
 import type { TrackerApi } from '../app/useTracker';
+import AppearanceSettings from './AppearanceSettings';
+import {
+  Info,
+  Keyboard,
+  MapTrifold,
+  PaintBrush,
+  PlugsConnected,
+  SlidersHorizontal,
+  UsersThree,
+} from '@phosphor-icons/react';
+
+export type SettingsTab = 'general' | 'appearance' | 'minimap' | 'hotkeys' | 'party' | 'integrations' | 'about';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -30,6 +42,10 @@ interface SettingsModalProps {
   compactOnTopOk?: boolean | null;
   minimap?: MinimapApi;
   tracker?: TrackerApi;
+  /** Replays the opening animation (Appearance tab). */
+  onReplayIntro?: () => void;
+  /** Tab to open on (defaults to General). */
+  initialTab?: SettingsTab;
 }
 
 export default function SettingsModal({
@@ -47,8 +63,11 @@ export default function SettingsModal({
   compactOnTopOk,
   minimap,
   tracker,
+  onReplayIntro,
+  initialTab = 'general',
 }: SettingsModalProps): React.JSX.Element {
   const { t, i18n } = useTranslation();
+  const [tab, setTab] = useState<SettingsTab>(initialTab);
   const [installRoot, setInstallRoot] = useState<string | null>(null);
   const [resolvedLogsDir, setResolvedLogsDir] = useState<string | null>(null);
   const [resolveError, setResolveError] = useState<string | null>(null);
@@ -156,9 +175,37 @@ export default function SettingsModal({
     await handleSetRoot(null, t('settings.autoDetectReEnabled'));
   }, [handleSetRoot]);
 
+  const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'general', label: t('settings.tabs.general'), icon: <SlidersHorizontal weight="duotone" /> },
+    { id: 'appearance', label: t('settings.tabs.appearance'), icon: <PaintBrush weight="duotone" /> },
+    { id: 'minimap', label: t('settings.tabs.minimap'), icon: <MapTrifold weight="duotone" /> },
+    { id: 'hotkeys', label: t('settings.tabs.hotkeys'), icon: <Keyboard weight="duotone" /> },
+    { id: 'party', label: t('settings.tabs.party'), icon: <UsersThree weight="duotone" /> },
+    { id: 'integrations', label: t('settings.tabs.integrations'), icon: <PlugsConnected weight="duotone" /> },
+    { id: 'about', label: t('settings.tabs.about'), icon: <Info weight="duotone" /> },
+  ];
+
   return (
-    <Modal title={t('settings.title')} onClose={onClose} size="md">
-      <div className="settings-body">
+    <Modal title={t('settings.title')} onClose={onClose} size="lg">
+      <div className="settings-layout">
+        <nav className="settings-nav" aria-label={t('settings.title')}>
+          {tabs.map((x) => (
+            <button
+              key={x.id}
+              type="button"
+              className={`settings-nav__btn${tab === x.id ? ' is-on' : ''}`}
+              aria-current={tab === x.id ? 'page' : undefined}
+              onClick={() => setTab(x.id)}
+            >
+              {x.icon}
+              <span>{x.label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="settings-pane" key={tab}>
+          {tab === 'appearance' && <AppearanceSettings onReplayIntro={onReplayIntro} />}
+          {tab === 'general' && (
+            <div className="settings-body">
         <SectionLabel>{t('settings.language')}</SectionLabel>
         <div className="settings-row">
           <div className="settings-row__text">
@@ -229,27 +276,32 @@ export default function SettingsModal({
           <Toggle checked={floorLock} onChange={onFloorLockChange} label={t('settings.automaticFloorsOnlyLabel')} />
         </div>
 
-        {minimap && (
-          <>
-            <SectionLabel>{t('settings.minimap')}</SectionLabel>
-            <MinimapSettings minimap={minimap} />
-          </>
-        )}
-
         <SectionLabel>{t('settings.compactMode')}</SectionLabel>
         <p className="settings-row__hint">{t('settings.compactModeHint')}</p>
         {compactOnTopOk === false && <p className="settings-err">{t('settings.compactOnTopFailed')}</p>}
 
-        {hotkeys && (
-          <>
-            <SectionLabel>{t('settings.hotkeys')}</SectionLabel>
-            <HotkeySettings hotkeys={hotkeys} />
-          </>
-        )}
-
-        <SectionLabel>{t('settings.squadServer.title')}</SectionLabel>
-        <SquadServerSettings />
-
+            </div>
+          )}
+          {tab === 'minimap' && (
+            <div className="settings-body">
+              <SectionLabel>{t('settings.minimap')}</SectionLabel>
+              {minimap ? <MinimapSettings minimap={minimap} /> : <p className="muted">{t('settings.desktopOnly')}</p>}
+            </div>
+          )}
+          {tab === 'hotkeys' && (
+            <div className="settings-body">
+              <SectionLabel>{t('settings.hotkeys')}</SectionLabel>
+              {hotkeys ? <HotkeySettings hotkeys={hotkeys} /> : <p className="muted">{t('settings.desktopOnly')}</p>}
+            </div>
+          )}
+          {tab === 'party' && (
+            <div className="settings-body">
+              <SectionLabel>{t('settings.squadServer.title')}</SectionLabel>
+              <SquadServerSettings />
+            </div>
+          )}
+          {tab === 'integrations' && (
+            <div className="settings-body">
         {tracker && (
           <>
             <SectionLabel>{t('settings.tracker.title')}</SectionLabel>
@@ -276,6 +328,10 @@ export default function SettingsModal({
         </div>
         {statusMsg && <p className="muted">{statusMsg}</p>}
 
+            </div>
+          )}
+          {tab === 'about' && (
+            <div className="settings-body">
         <SectionLabel>{t('settings.appUpdates')}</SectionLabel>
         <p className="muted">{t('settings.currentVersion', { version: appVersion ?? '—' })}</p>
         <div className="modal-actions">
@@ -294,6 +350,10 @@ export default function SettingsModal({
         <p className="settings-credits">
           {t('settings.credits')}
         </p>
+        <p className="settings-credits">{t('settings.creditsIntro')}</p>
+            </div>
+          )}
+        </div>
       </div>
     </Modal>
   );

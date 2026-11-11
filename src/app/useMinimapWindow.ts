@@ -25,6 +25,10 @@ interface Feed {
   pos: PlayerPos | null;
   activeFloorId: string | null;
   points: MinimapPoint[];
+  /** Your marker's symbol and colour. */
+  self?: MinimapState['self'];
+  /** Squadmates on the map you are on. */
+  mates?: MinimapState['mates'];
 }
 
 type WinLike = {
@@ -224,6 +228,8 @@ export function useMinimapWindow(feed: Feed) {
       pos: feed.pos,
       activeFloorId: feed.activeFloorId,
       points: feed.points,
+      self: feed.self,
+      mates: feed.mates,
       settings: {
         locked: settings.locked,
         headingUp: settings.headingUp,
@@ -238,7 +244,7 @@ export function useMinimapWindow(feed: Feed) {
         ago: t('minimap.ago', { min: '{{min}}' }),
       },
     }),
-    [feed.mapId, feed.pos, feed.activeFloorId, feed.points, settings, t],
+    [feed.mapId, feed.pos, feed.activeFloorId, feed.points, feed.self, feed.mates, settings, t],
   );
 
   useEffect(() => {

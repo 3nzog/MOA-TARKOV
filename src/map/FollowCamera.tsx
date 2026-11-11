@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
+import L from "leaflet";
 import { getGameToLatLng } from "./mapDefs";
 
 export interface LivePos {
@@ -41,7 +42,14 @@ export default function FollowCamera({
     const toLatLng = getGameToLatLng(mapId);
     if (!toLatLng) return;
     lastCenteredTsRef.current = pos.ts;
-    map.setView(toLatLng(pos.x, pos.z) as [number, number], zoom, {
+    // In the floating layout the rail covers part of the map: centre the player
+    // in the part you can see (--chrome-w on .shell is how much is covered).
+    const shell = map.getContainer().closest<HTMLElement>('.shell');
+    const covered = shell ? parseFloat(getComputedStyle(shell).getPropertyValue('--chrome-w')) || 0 : 0;
+    const shift = shell?.classList.contains('shell--right') ? covered / 2 : -covered / 2;
+    const target = L.latLng(toLatLng(pos.x, pos.z) as [number, number]);
+    const center = covered ? map.unproject(map.project(target, zoom).add([shift, 0]), zoom) : target;
+    map.setView(center, zoom, {
       animate: true,
       duration: 0.5,
     });

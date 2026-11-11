@@ -1,0 +1,49 @@
+/* Opening animation overlay (GlassIntro.tsx). */
+.glass-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  cursor: pointer;
+  transition: opacity 460ms var(--ease-out), filter 460ms var(--ease-out);
+}
+.glass-intro__stage { position: absolute; inset: 0; }
+.glass-intro--out { opacity: 0; filter: blur(8px); pointer-events: none; }
+
+.glass-intro__title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + min(120px, 18vmin));
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.glass-intro__name {
+  font-family: var(--font-display);
+  font-size: calc(30px * var(--font-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(8px);
+  filter: blur(6px);
+  transition: opacity 520ms var(--ease-out), transform 520ms var(--ease-out), filter 520ms var(--ease-out);
+}
+.glass-intro--title .glass-intro__name,
+.glass-intro--out .glass-intro__name { opacity: 1; transform: none; filter: none; }
+
+.glass-intro__fallback {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(140px, 22vmin);
+  height: min(140px, 22vmin);
+  transform: translate(-50%, -50%);
+  animation: glass-intro-fallback 900ms var(--ease-out) both;
+}
+.glass-intro__fallback svg { width: 100%; height: 100%; display: block; }
+@keyframes glass-intro-fallback {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(1.6); filter: blur(10px); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: none; }
+}

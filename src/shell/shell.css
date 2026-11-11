@@ -283,3 +283,84 @@
 @media (prefers-reduced-motion: reduce) {
   .spine__btn--update::after { animation: none; }
 }
+
+/* ============================================================================
+   Glass surfaces — every docked and floating chrome surface uses the material
+   from tokens.css (Settings → Appearance tunes it).
+   ========================================================================== */
+.spine,
+.rail-panel,
+.floor-switcher,
+.tc-zoom-dock,
+.tc-tools-dock,
+.map-picker__menu {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+}
+.floor-switcher,
+.tc-zoom-dock,
+.tc-tools-dock {
+  border: none;
+  box-shadow: var(--glass-shadow);
+}
+
+/* ============================================================================
+   Floating layout (default): the map fills the window and the spine and rail
+   float over it as glass panels. --chrome-w (set on .shell from App.tsx) is
+   how much of the map they cover, so the on-map docks move clear of them.
+   ========================================================================== */
+:root[data-layout='floating'] .shell {
+  position: relative;
+  gap: 10px;
+  padding: 10px;
+}
+:root[data-layout='floating'] .shell--compact { padding: 0; }
+:root[data-layout='floating'] .map-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+:root[data-layout='floating'] .spine,
+:root[data-layout='floating'] .rail-panel {
+  position: relative;
+  z-index: var(--z-rail);
+  border: none;
+  border-radius: var(--r-xl);
+  box-shadow: var(--glass-shadow);
+}
+:root[data-layout='floating'] .rail-panel { overflow: visible; }
+:root[data-layout='floating'] .rail-panel > :first-child { border-top-left-radius: inherit; border-top-right-radius: inherit; }
+:root[data-layout='floating'] .spine { animation: glass-in var(--dur-grand) var(--ease-out) both; }
+:root[data-layout='floating'] .rail-panel { animation: glass-in var(--dur-grand) var(--ease-out) 60ms both; }
+:root[data-layout='floating'] .spine__btn--active::before { display: none; }
+:root[data-layout='floating'] .rail-resizer { right: -9px; }
+:root[data-layout='floating'] .shell--right .rail-resizer { right: auto; left: -9px; }
+
+@keyframes glass-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+/* On-map docks and banners clear the floating chrome on the rail side. */
+:root[data-layout='floating'] .shell--left .floor-switcher,
+:root[data-layout='floating'] .shell--left .tc-zoom-dock,
+:root[data-layout='floating'] .shell--left .tc-tools-dock { left: calc(var(--chrome-w, 0px) + 2px); }
+:root[data-layout='floating'] .shell--right .floor-switcher,
+:root[data-layout='floating'] .shell--right .tc-zoom-dock,
+:root[data-layout='floating'] .shell--right .tc-tools-dock { right: calc(var(--chrome-w, 0px) + 2px); }
+:root[data-layout='floating'] .shell--left .shell-error,
+:root[data-layout='floating'] .shell--left .shell-warn { left: calc(var(--chrome-w, 0px) + 2px); }
+:root[data-layout='floating'] .shell--right .shell-error,
+:root[data-layout='floating'] .shell--right .shell-warn { right: calc(var(--chrome-w, 0px) + 2px); }
+:root[data-layout='floating'] .shell--left .map-empty,
+:root[data-layout='floating'] .shell--left .map-placeholder { padding-left: var(--chrome-w, 0px); }
+:root[data-layout='floating'] .shell--right .map-empty,
+:root[data-layout='floating'] .shell--right .map-placeholder { padding-right: var(--chrome-w, 0px); }
+
+/* Map art brightness (Settings → Appearance), so bright maps sit back behind the glass. */
+.map-stage .leaflet-overlay-pane > img,
+.map-stage .leaflet-overlay-pane > svg.leaflet-image-layer,
+.map-stage .leaflet-tile-pane {
+  filter: brightness(var(--map-brightness, 1));
+}

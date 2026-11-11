@@ -21,12 +21,14 @@
   --text-faint: #646a58;     /* tertiary, etched labels, placeholders */
 
   /* ---- Color: brass accent (CTAs, active, focus) -------------------------- */
+  /* The default; Settings → Appearance overrides --accent / --accent-ink on
+     <html> (src/appearance), and the rest of the family follows it. */
   --accent: #c9a86a;
-  --accent-hover: #dcc18a;
-  --accent-pressed: #b3924f;
-  --accent-ink: #171307;                    /* text on brass */
-  --accent-soft: rgba(201, 168, 106, 0.13); /* tinted fills */
-  --accent-glow: rgba(201, 168, 106, 0.45); /* focus ring, marker halo */
+  --accent-hover: color-mix(in srgb, var(--accent) 80%, white);
+  --accent-pressed: color-mix(in srgb, var(--accent) 82%, black);
+  --accent-ink: #171307;                    /* text on the accent */
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent); /* tinted fills */
+  --accent-glow: color-mix(in srgb, var(--accent) 45%, transparent); /* focus ring, marker halo */
 
   /* ---- Color: signals ------------------------------------------------------ */
   --live: #3ddc97;                       /* LIVE only: player, fresh ping, connected */
@@ -48,31 +50,33 @@
   --font-display: 'Barlow Condensed', 'Inter Variable', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', Consolas, monospace;
 
-  --fs-micro: 12px;       /* etched labels (uppercase + tracked) */
-  --fs-caption: 13px;
-  --fs-body: 14px;        /* desktop default — roomy enough for a map monitor */
-  --fs-body-lg: 16px;
-  --fs-title: 18px;
-  --fs-display-sm: 22px;  /* Barlow Condensed */
-  --fs-display: 30px;     /* Barlow Condensed */
+  /* Sizes follow the "text size" preference (--font-scale, set on <html>). */
+  --fs-micro: calc(12px * var(--font-scale, 1));       /* etched labels */
+  --fs-caption: calc(13px * var(--font-scale, 1));
+  --fs-body: calc(14px * var(--font-scale, 1));        /* desktop default */
+  --fs-body-lg: calc(16px * var(--font-scale, 1));
+  --fs-title: calc(18px * var(--font-scale, 1));
+  --fs-display-sm: calc(22px * var(--font-scale, 1));  /* Barlow Condensed */
+  --fs-display: calc(30px * var(--font-scale, 1));     /* Barlow Condensed */
 
   --track-label: 0.07em;  /* tracking for etched uppercase labels */
 
   /* ---- Spacing (4px base grid) --------------------------------------------- */
-  --sp-0: 2px;
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 24px;
-  --sp-6: 32px;
-  --sp-7: 48px;
+  /* Scaled by the density preference (--density: 0.8 compact … 1.18 roomy). */
+  --sp-0: calc(2px * var(--density, 1));
+  --sp-1: calc(4px * var(--density, 1));
+  --sp-2: calc(8px * var(--density, 1));
+  --sp-3: calc(12px * var(--density, 1));
+  --sp-4: calc(16px * var(--density, 1));
+  --sp-5: calc(24px * var(--density, 1));
+  --sp-6: calc(32px * var(--density, 1));
+  --sp-7: calc(48px * var(--density, 1));
 
-  /* ---- Radius --------------------------------------------------------------- */
-  --r-sm: 4px;
-  --r-md: 6px;
-  --r-lg: 10px;
-  --r-xl: 14px;
+  /* ---- Radius (scaled by the "corners" preference) -------------------------- */
+  --r-sm: calc(5px * var(--radius-scale, 1));
+  --r-md: calc(8px * var(--radius-scale, 1));
+  --r-lg: calc(12px * var(--radius-scale, 1));
+  --r-xl: calc(18px * var(--radius-scale, 1));
   --r-pill: 9999px;
 
   /* ---- Elevation (panels float over the map; little else floats) ------------ */
@@ -109,4 +113,79 @@
     --dur-slow: 0ms;
     --dur-grand: 0ms;
   }
+}
+
+/* ---- Glass ----------------------------------------------------------------
+   The material of every floating surface (rail, spine, modals, map docks).
+   Its knobs come from Settings → Appearance (src/appearance/appearance.ts). */
+:root {
+  --glass-blur: 22px;
+  --glass-opacity: 0.6;
+  --glass-sat: 1.3;
+  --glass-edge: 0.5;
+  --glass-tint: #ffffff;
+  --glass-bg:
+    linear-gradient(
+      color-mix(in srgb, var(--glass-tint) 6%, transparent),
+      color-mix(in srgb, var(--glass-tint) 2%, transparent)
+    ),
+    color-mix(in srgb, var(--surface-1) calc(var(--glass-opacity) * 100%), transparent);
+  --glass-bg-strong:
+    linear-gradient(
+      color-mix(in srgb, var(--glass-tint) 6%, transparent),
+      color-mix(in srgb, var(--glass-tint) 2%, transparent)
+    ),
+    color-mix(in srgb, var(--surface-1) calc(max(var(--glass-opacity), 0.84) * 100%), transparent);
+  --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  --glass-edge-light: color-mix(in srgb, #ffffff calc(var(--glass-edge) * 34%), transparent);
+  --glass-hairline: color-mix(in srgb, #ffffff calc(var(--glass-edge) * 13%), transparent);
+  --glass-shadow:
+    inset 0 1px 0 var(--glass-edge-light),
+    inset 0 0 0 1px var(--glass-hairline),
+    0 18px 50px -22px rgba(0, 0, 0, 0.75);
+}
+
+/* The accent picked in Settings → Appearance arrives as --accent-base. */
+:root { --accent: var(--accent-base, #c9a86a); }
+
+/* ---- Light theme ------------------------------------------------------------ */
+:root[data-theme='light'] {
+  color-scheme: light;
+  /* Pastel accents wash out on light surfaces: darken for text and fills. */
+  --accent: color-mix(in srgb, var(--accent-base, #c9a86a) 68%, black);
+  --bg-sunken: #dfe2da;
+  --bg: #eceee8;
+  --surface-1: #fbfbf8;
+  --surface-2: #f0f1ec;
+  --surface-3: #e3e6de;
+  --border: #d6d9cf;
+  --border-strong: #bfc3b6;
+  --text: #171a14;
+  --text-dim: #545a4c;
+  --text-faint: #80867a;
+  --accent-soft: color-mix(in srgb, var(--accent) 20%, transparent);
+  --live-soft: rgba(26, 160, 104, 0.16);
+  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --elev-1: 0 1px 2px rgba(20, 24, 16, 0.12);
+  --elev-2: 0 4px 16px rgba(20, 24, 16, 0.14);
+  --elev-3: 0 12px 40px rgba(20, 24, 16, 0.18);
+  --glass-shadow:
+    inset 0 1px 0 var(--glass-edge-light),
+    inset 0 0 0 1px color-mix(in srgb, #000000 calc(var(--glass-edge) * 10%), transparent),
+    0 18px 50px -24px rgba(20, 24, 16, 0.35);
+}
+
+/* ---- Animations off (Settings → Appearance) --------------------------------- */
+:root[data-motion='off'] {
+  --dur-fast: 0ms;
+  --dur-base: 0ms;
+  --dur-slow: 0ms;
+  --dur-grand: 0ms;
+}
+:root[data-motion='off'] *,
+:root[data-motion='off'] *::before,
+:root[data-motion='off'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
 }

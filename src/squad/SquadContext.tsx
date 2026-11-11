@@ -24,6 +24,7 @@ import {
 } from "./partyApi";
 import { SquadTransport, type ConnStatus } from "./transport";
 import { loadIdentity, saveIdentity, type SquadIdentity } from "./identity";
+import { getSelfSymbol, useSelfSymbol } from "./symbols";
 import type {
   AnyEnvelope,
   SquadMember,
@@ -435,9 +436,19 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   );
 
   const broadcastPosition = useCallback((p: PositionPayload) => {
-    selfPos.current = p;
-    transportRef.current?.send("position", p);
+    const withSymbol = { ...p, symbol: getSelfSymbol() };
+    selfPos.current = withSymbol;
+    transportRef.current?.send("position", withSymbol);
   }, []);
+
+  // A new symbol reaches the squad at once, not only with the next screenshot.
+  const selfSymbol = useSelfSymbol();
+  useEffect(() => {
+    const p = selfPos.current;
+    if (!p || p.symbol === selfSymbol) return;
+    selfPos.current = { ...p, symbol: selfSymbol };
+    transportRef.current?.send("position", selfPos.current);
+  }, [selfSymbol]);
 
   const broadcastQuests = useCallback((ids: string[]) => {
     selfQuests.current = ids;

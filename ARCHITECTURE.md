@@ -160,6 +160,16 @@ tells it.
 The full audit, including what was not built and why, is in
 [`docs/FEATURE-PARITY.md`](docs/FEATURE-PARITY.md).
 
+## Appearance
+
+`src/appearance/` keeps the player's look (theme, accent, glass material,
+sizes, motion) in localStorage and writes it onto `<html>` as custom properties
+and data attributes before the first paint, so the stylesheets follow without
+prop drilling and the minimap window follows through the storage event. The
+player's map symbol lives in `src/squad/symbols.ts`, which also builds the
+marker HTML shared by the player, squadmate and minimap markers. The opening
+animation is `src/intro/` (WebGL2, with a plain fade when WebGL2 is missing).
+
 ## Squad mode: a relay, not P2P
 
 **Automatic party on a VPN LAN.** With Radmin VPN on, "Join party" needs no
