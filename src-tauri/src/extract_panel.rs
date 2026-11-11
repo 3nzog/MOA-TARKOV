@@ -51,7 +51,7 @@ pub struct PanelText {
     pub missing_language: Option<String>,
 }
 
-#[cfg(windows)]
+#[cfg(all(windows, test))]
 pub fn read_lines(path: &Path) -> windows::core::Result<Vec<String>> {
     read_panel(path, None).map(|p| p.lines)
 }
@@ -129,7 +129,7 @@ pub fn read_panel(path: &Path, game_lang: Option<&str>) -> windows::core::Result
     Ok(PanelText { lines, missing_language })
 }
 
-#[cfg(not(windows))]
+#[cfg(all(not(windows), test))]
 pub fn read_lines(_path: &Path) -> Result<Vec<String>, String> {
     Ok(Vec::new())
 }
