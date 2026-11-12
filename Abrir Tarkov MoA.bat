@@ -178,7 +178,7 @@ echo.
 echo  O winget nao esta disponivel neste Windows, entao nao da para instalar
 echo  sozinho. Instale o "Instalador de Aplicativo" (App Installer) pela
 echo  Microsoft Store e rode este arquivo de novo.
-exit /b 1
+goto :end_pause
 
 :restart_needed
 echo.
@@ -203,6 +203,16 @@ echo  A compilacao falhou. Veja a mensagem acima.
 goto :end_pause
 
 :end_pause
+rem  Fica aberta ate digitar SAIR: um Enter sem querer nao some com a mensagem.
 echo.
-pause
+echo  ------------------------------------------------------------------
+echo   Algo deu errado: leia a mensagem acima (role para cima se precisar)
+echo   ou tire um print desta janela para quem te ajudar.
+echo  ------------------------------------------------------------------
+:end_wait
+if defined MOA_NO_WAIT exit /b 1
+echo.
+set "ANS="
+set /p "ANS=  Digite SAIR e aperte Enter para fechar: "
+if /i not "%ANS%"=="SAIR" goto :end_wait
 exit /b 1
