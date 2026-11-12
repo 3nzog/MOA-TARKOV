@@ -23,7 +23,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/mopocop/Tarkov-moa/releases/latest/download/latest.json"
+        "https://github.com/3nzog/MOA-TARKOV/releases/latest/download/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNBMDEwNzRDNEMzOTMwRDYKUldUV01EbE1UQWNCT21OMWNvY1JLUE45YnhpMmxDRVp1ZTNBQnBWUmp6c2VScEdPeTdBeThwUmoK",
       "windows": {
@@ -33,7 +33,7 @@
   },
   "bundle": {
     "active": true,
-    "createUpdaterArtifacts": true,
+    "createUpdaterArtifacts": false,
     "targets": ["nsis"],
     "publisher": "Moacir",
     "icon": ["icons/icon.ico"],
