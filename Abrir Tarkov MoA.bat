@@ -20,6 +20,8 @@ setlocal EnableExtensions
 chcp 65001 >nul
 title Tarkov MoA
 cd /d "%~dp0"
+set "SELF=%~f0"
+set "EXE=src-tauri	argetelease	arkov-companion.exe"
 call :ui_init
 call :banner
 
@@ -187,6 +189,7 @@ rem ---- 4. Abrir (sem terminal) -----------------------------------------------
 :launch
 call :section "4/4" "Abrindo"
 call :ok "Tudo pronto"
+call :start_menu
 start "" "%EXE%"
 echo.
 echo     %ACC%%B%▶  Boa caçada, operador.%R%
@@ -197,6 +200,7 @@ exit /b 0
 :already_open
 echo.
 call :ok "O Tarkov MoA já está aberto" "é só olhar a barra de tarefas"
+if exist "%EXE%" call :start_menu
 echo.
 timeout /t 3 >nul
 exit /b 0
@@ -306,6 +310,21 @@ exit /b %errorlevel%
 rem  Recarrega o PATH do registro, para enxergar o que acabou de ser instalado.
 :refresh_path
 for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')"`) do set "PATH=%%P"
+exit /b 0
+
+rem  Atalhos no Menu Iniciar, para achar o MoA pela pesquisa do Windows:
+rem  "Tarkov MoA" abre na hora o programa ja compilado; "Atualizar Tarkov MoA"
+rem  roda este arquivo (busca novidades no GitHub, recompila se precisar e abre).
+:start_menu
+set "MOA_EXE=%CD%\%EXE%"
+set "MOA_BAT=%SELF%"
+set "MOA_DIR=%CD%"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = [Environment]::GetFolderPath('Programs'); $w = New-Object -ComObject WScript.Shell; $a = $w.CreateShortcut((Join-Path $p 'Tarkov MoA.lnk')); $a.TargetPath = $env:MOA_EXE; $a.WorkingDirectory = Split-Path $env:MOA_EXE; $a.IconLocation = $env:MOA_EXE + ',0'; $a.Description = 'Tarkov MoA'; $a.Save(); $b = $w.CreateShortcut((Join-Path $p 'Atualizar Tarkov MoA.lnk')); $b.TargetPath = $env:MOA_BAT; $b.WorkingDirectory = $env:MOA_DIR; $b.IconLocation = (Join-Path $env:MOA_DIR 'src-tauri\icons\icon.ico') + ',0'; $b.Description = 'Busca a versao mais nova do Tarkov MoA, recompila se precisar e abre'; $b.Save()" >nul 2>&1
+if errorlevel 1 (
+  call :warn "Não deu para criar os atalhos no Menu Iniciar"
+) else (
+  call :ok "Atalhos no Menu Iniciar" "pesquise Tarkov MoA no Windows"
+)
 exit /b 0
 
 rem  errorlevel 0 = WebView2 instalado
