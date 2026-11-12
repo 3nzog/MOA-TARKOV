@@ -296,7 +296,13 @@
         "knife": "Knife",
         "fist": "Fist",
         "anchor": "Anchor"
-      }
+      },
+      "placeLabels": "Place names on the map",
+      "placeLabelsHint": "Big Red, Dorms, Scav Town… on the main map only, never on the minimap.",
+      "questNames": "Quest names on the pins",
+      "questNamesHint": "Writes the quest's name next to each of its places.",
+      "upcomingQuests": "Quests I can take",
+      "upcomingQuestsHint": "Also pins quests you can start now (prerequisites and level met) in a softer colour, not only the ones the game logged as accepted."
     }
   },
   "errors": {
@@ -754,5 +760,11 @@
     "capacity": "{{n}} rds",
     "dataNote": "Data from tarkov.dev, {{date}}. Prices are estimates.",
     "statsTitle": "Weapon stats"
+  },
+  "titlebar": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "close": "Close"
   }
 }

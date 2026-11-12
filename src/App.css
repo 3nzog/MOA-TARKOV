@@ -1006,3 +1006,41 @@ button:disabled {
   backdrop-filter: var(--glass-filter);
   box-shadow: var(--glass-shadow);
 }
+
+/* ------- Place names (PlaceLabelLayer) and quest names on pins ------- */
+.tc-place-label-marker { pointer-events: none; }
+.tc-place-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: calc(13px * var(--size, 1) * var(--label-scale, 1));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 0 3px #000, 0 0 6px rgba(0, 0, 0, 0.85);
+}
+.tc-quest-label {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: calc(11px * var(--label-scale, 1));
+  font-weight: 700;
+  color: #ffe9a8;
+  background: rgba(0, 0, 0, 0.55);
+  text-shadow: 0 0 2px #000;
+  pointer-events: none;
+}
+.tc-quest-upcoming { opacity: 0.72; }
+.tc-quest-upcoming .tc-quest-label { color: #c9d8e6; font-weight: 600; }
+.tc-quest-upcoming.tc-hl { opacity: 1; }

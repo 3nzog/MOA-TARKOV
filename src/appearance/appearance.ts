@@ -42,6 +42,12 @@ export interface Appearance {
   labelScale: number;
   /** Map image brightness (dims bright map art behind the glass). */
   mapBrightness: number;
+  /** Place names on the main map ("Big Red", "Dorms"…). Never on the minimap. */
+  placeLabels: boolean;
+  /** The quest's name under each quest pin on the main map. */
+  questNames: boolean;
+  /** Also pin quests the player can take but has not accepted yet (dimmer). */
+  upcomingQuests: boolean;
 }
 
 export const ACCENTS: { id: string; hex: string }[] = [
@@ -75,6 +81,9 @@ export const DEFAULT_APPEARANCE: Appearance = {
   viewCone: true,
   labelScale: 1,
   mapBrightness: 1,
+  placeLabels: true,
+  questNames: true,
+  upcomingQuests: true,
 };
 
 export const APPEARANCE_KEY = 'tc_appearance_v1';
@@ -111,6 +120,9 @@ export function normalizeAppearance(raw: unknown): Appearance {
     viewCone: typeof r.viewCone === 'boolean' ? r.viewCone : d.viewCone,
     labelScale: num(r.labelScale, 0.8, 1.6, d.labelScale),
     mapBrightness: num(r.mapBrightness, 0.4, 1.2, d.mapBrightness),
+    placeLabels: typeof r.placeLabels === 'boolean' ? r.placeLabels : d.placeLabels,
+    questNames: typeof r.questNames === 'boolean' ? r.questNames : d.questNames,
+    upcomingQuests: typeof r.upcomingQuests === 'boolean' ? r.upcomingQuests : d.upcomingQuests,
   };
 }
 

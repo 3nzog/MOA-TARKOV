@@ -296,7 +296,13 @@
         "knife": "刀",
         "fist": "拳头",
         "anchor": "锚"
-      }
+      },
+      "placeLabels": "地图上显示地名",
+      "placeLabelsHint": "Big Red、Dorms、Scav Town… 只在大地图显示，不在小地图显示。",
+      "questNames": "标记旁显示任务名",
+      "questNamesHint": "在任务的每个地点旁写上任务名。",
+      "upcomingQuests": "我能接的任务",
+      "upcomingQuestsHint": "除了已接受的任务，也用浅色标出现在就能开始的任务（前置和等级已满足）。"
     }
   },
   "errors": {
@@ -754,5 +760,11 @@
     "capacity": "{{n}} 发",
     "dataNote": "数据来自 tarkov.dev（{{date}}）。价格为估算。",
     "statsTitle": "武器属性"
+  },
+  "titlebar": {
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "restore": "还原",
+    "close": "关闭"
   }
 }

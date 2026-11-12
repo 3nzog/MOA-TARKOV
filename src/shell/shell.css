@@ -402,3 +402,45 @@
 .raid-pill--pmc .raid-pill__side { background: var(--info-soft); color: var(--info); }
 .raid-pill__side--btn { border: none; cursor: pointer; font-weight: 700; }
 .raid-pill__side--btn:hover { filter: brightness(1.25); }
+
+/* ============================================================================
+   Title bar (TitleBar.tsx): the Windows frame is off, the app draws its own.
+   ========================================================================== */
+.titlebar {
+  flex: 0 0 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-bottom: 1px solid var(--glass-hairline);
+  user-select: none;
+  z-index: var(--z-toast);
+}
+.titlebar__mark { display: grid; place-items: center; color: var(--accent); font-size: 18px; }
+.titlebar__name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.titlebar__spacer { flex: 1; align-self: stretch; }
+.titlebar__btn {
+  width: 46px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 0;
+}
+.titlebar__btn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
+.titlebar__btn--close:hover:not(:disabled) { background: #d83b3b; color: #fff; }

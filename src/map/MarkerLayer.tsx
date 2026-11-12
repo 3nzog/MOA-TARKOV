@@ -23,6 +23,10 @@ interface MarkerLayerProps {
   onTogglePin?: (kind: "task" | "objective", id: string) => void;
   /** Quest ids ≥2 squadmates (incl. you) have active — pins get the shared-objective ring. */
   sharedQuestIds?: Set<string>;
+  /** Objectives of quests the player can take but has not accepted: drawn dimmer. */
+  upcoming?: Array<{ task: TarkovTask; objective: TaskObjective }>;
+  /** Write the quest's name under each pin. */
+  showNames?: boolean;
 }
 
 function resolvePosition(
@@ -55,16 +59,22 @@ function resolvePosition(
 // replaces the DOM element, and if that swap lands between mousedown and mouseup,
 // the browser drops the click event. Keeping the DOM stable lets click fire.
 const QUEST_GLYPH_SIZE = 22;
-let questIcon: L.DivIcon | null = null;
-function getIcon(): L.DivIcon {
-  if (questIcon) return questIcon;
-  questIcon = L.divIcon({
-    className: "tc-marker",
+// One icon per (quest name, upcoming, label shown): built once and reused, so
+// a re-render never swaps the marker's DOM.
+const iconCache = new Map<string, L.DivIcon>();
+function getIcon(name: string | null, upcoming: boolean): L.DivIcon {
+  const key = `${name ?? ""}|${upcoming ? 1 : 0}`;
+  let icon = iconCache.get(key);
+  if (icon) return icon;
+  const label = name ? `<span class="tc-quest-label">${name.replace(/[<>&"]/g, "")}</span>` : "";
+  icon = L.divIcon({
+    className: upcoming ? "tc-marker tc-quest-upcoming" : "tc-marker",
     iconSize: [QUEST_GLYPH_SIZE, QUEST_GLYPH_SIZE],
     iconAnchor: [QUEST_GLYPH_SIZE / 2, QUEST_GLYPH_SIZE / 2],
-    html: `<div class="tc-poi-glyph" style="color:${MARKER_COLORS.Y}">${QUEST_GLYPH_SVG}</div>`,
+    html: `<div class="tc-poi-glyph" style="color:${upcoming ? "#9fb7cf" : MARKER_COLORS.Y}">${QUEST_GLYPH_SVG}</div>${label}`,
   });
-  return questIcon;
+  iconCache.set(key, icon);
+  return icon;
 }
 
 interface ClassifiedMarker {
@@ -72,6 +82,8 @@ interface ClassifiedMarker {
   objective: TaskObjective;
   latLng: [number, number];
   floorId: string;
+  /** Not accepted yet, but open to the player (prerequisites and level met). */
+  upcoming: boolean;
 }
 
 function ObjectiveMarker({
@@ -81,11 +93,13 @@ function ObjectiveMarker({
   shared,
   onHoverObjective,
   onTogglePin,
+  showName,
 }: {
   m: ClassifiedMarker;
   highlighted: boolean;
   offFloor: boolean;
   shared: boolean;
+  showName: boolean;
   onHoverObjective?: (id: string | null) => void;
   onTogglePin?: (kind: "task" | "objective", id: string) => void;
 }): React.JSX.Element {
@@ -106,7 +120,7 @@ function ObjectiveMarker({
     <Marker
       ref={markerRef}
       position={m.latLng as L.LatLngExpression}
-      icon={getIcon()}
+      icon={getIcon(showName ? m.task.name : null, m.upcoming)}
       eventHandlers={{
         mouseover: () => onHoverObjective?.(m.objective.id),
         mouseout: () => onHoverObjective?.(null),
@@ -127,6 +141,8 @@ export default function MarkerLayer({
   onHoverObjective,
   onTogglePin,
   sharedQuestIds,
+  upcoming,
+  showNames = false,
 }: MarkerLayerProps): React.JSX.Element {
   // getGameToLatLng returns a fresh closure each call; memoize per-map so it
   // doesn't invalidate the `classified`/`counts` memos every render, which
@@ -136,8 +152,12 @@ export default function MarkerLayer({
 
   const classified = useMemo<ClassifiedMarker[]>(() => {
     if (!toLatLng) return [];
-    return objectives
-      .map(({ task, objective }) => {
+    const all = [
+      ...objectives.map((o) => ({ ...o, upcoming: false })),
+      ...(upcoming ?? []).map((o) => ({ ...o, upcoming: true })),
+    ];
+    return all
+      .map(({ task, objective, upcoming: isUpcoming }) => {
         const pos = resolvePosition(objective, mapId);
         if (!pos) return null;
         const floorId =
@@ -149,10 +169,11 @@ export default function MarkerLayer({
           objective,
           latLng: toLatLng(pos.x, pos.z),
           floorId,
+          upcoming: isUpcoming,
         };
       })
       .filter((m): m is ClassifiedMarker => m !== null);
-  }, [objectives, mapId, floors, toLatLng]);
+  }, [objectives, upcoming, mapId, floors, toLatLng]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { [ALL_FLOORS]: classified.length };
@@ -182,13 +203,14 @@ export default function MarkerLayer({
 
         return (
           <ObjectiveMarker
-            key={`${m.task.id}-${m.objective.id}`}
+            key={`${m.task.id}-${m.objective.id}-${m.upcoming ? "u" : "a"}`}
             m={m}
             highlighted={highlighted}
             offFloor={offFloor}
             shared={sharedQuestIds?.has(m.task.id) ?? false}
             onHoverObjective={onHoverObjective}
             onTogglePin={onTogglePin}
+            showName={showNames}
           />
         );
       })}

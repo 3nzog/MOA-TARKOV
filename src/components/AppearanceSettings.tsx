@@ -97,6 +97,15 @@ export default function AppearanceSettings({ onReplayIntro }: { onReplayIntro?: 
         <Slider label={t('settings.appearance.labelSize')} min={0.8} max={1.6} step={0.05} value={a.labelScale}
           onChange={(v) => setAppearance({ labelScale: v })} valueText={pct(a.labelScale)} />
       </Row>
+      <Row label={t('settings.appearance.placeLabels')} hint={t('settings.appearance.placeLabelsHint')}>
+        <Toggle checked={a.placeLabels} onChange={(v) => setAppearance({ placeLabels: v })} label={t('settings.appearance.placeLabels')} />
+      </Row>
+      <Row label={t('settings.appearance.questNames')} hint={t('settings.appearance.questNamesHint')}>
+        <Toggle checked={a.questNames} onChange={(v) => setAppearance({ questNames: v })} label={t('settings.appearance.questNames')} />
+      </Row>
+      <Row label={t('settings.appearance.upcomingQuests')} hint={t('settings.appearance.upcomingQuestsHint')}>
+        <Toggle checked={a.upcomingQuests} onChange={(v) => setAppearance({ upcomingQuests: v })} label={t('settings.appearance.upcomingQuests')} />
+      </Row>
       <Row label={t('settings.appearance.mapBrightness')} hint={t('settings.appearance.mapBrightnessHint')}>
         <Slider label={t('settings.appearance.mapBrightness')} min={0.4} max={1.2} step={0.05} value={a.mapBrightness}
           onChange={(v) => setAppearance({ mapBrightness: v })} valueText={pct(a.mapBrightness)} />

@@ -60,6 +60,10 @@ import { currentRaid, learnSides, raidSide, setManualSide, type RaidSide } from 
 import PlannerPanel, { type PlannerTab } from './planner/PlannerPanel';
 import { useAppearance } from './appearance/useAppearance';
 import GlassIntro from './intro/GlassIntro';
+import TitleBar from './shell/TitleBar';
+import PlaceLabelLayer from './map/PlaceLabelLayer';
+import { collectObjectiveMaps } from './quests/derive';
+import type { TarkovTask, TaskObjective } from './api/types';
 import { effectiveStatus } from './state/localProgress';
 
 // The weapon bench and its ~2 MB of data load only when it is first opened.
@@ -112,7 +116,8 @@ function App() {
   const planner = usePlanner();
   const compact = useCompactMode();
   // Progression data loads the first time the planner opens (lazy, ~2 MB).
-  const progressionLoad = useProgressionData(railSection === 'planner');
+  // Also needed on the map: which quests the player can take now (upcoming pins).
+  const progressionLoad = useProgressionData(railSection === 'planner' || appearance.upcomingQuests);
   const tracker = useTracker({
     progress: quests.progress,
     setProgress: quests.setProgress,
@@ -296,6 +301,26 @@ function App() {
     mates: minimapMates,
     inRaid: !!liveRaid,
   });
+  // Quests the player can take now (prerequisites and level met) but the logs
+  // never saw accepted: pinned dimmer on the map, so the places of "my" quests
+  // show even before the game says they were picked up.
+  const questTasks = quests.tasks;
+  const upcomingObjectives = useMemo(() => {
+    if (!selectedMapId || !questState) return [];
+    const target = canonicalMapId(selectedMapId);
+    const active = new Set(questState.available.map((x) => x.id));
+    const out: { task: TarkovTask; objective: TaskObjective }[] = [];
+    for (const task of questTasks) {
+      if (active.has(task.id) || questStatuses.get(task.id)?.status !== 'available') continue;
+      for (const objective of task.objectives ?? []) {
+        const positioned =
+          (objective.zones?.some((z) => z.position) ?? false) ||
+          (objective.possibleLocations?.some((l) => l.positions && l.positions.length > 0) ?? false);
+        if (positioned && collectObjectiveMaps(objective).some((m) => canonicalMapId(m) === target)) out.push({ task, objective });
+      }
+    }
+    return out;
+  }, [selectedMapId, questState, questTasks, questStatuses]);
   const relativeSynced = useRelativeTime(quests.lastSynced);
   // Quest-unlocked trader offers in the weapon bench open once the quest is done.
   const questProgress = quests.progress;
@@ -383,6 +408,7 @@ function App() {
 
   return (
     <div className="app-container">
+      <TitleBar />
       {showIntro && <GlassIntro onDone={() => setShowIntro(false)} />}
       <Toast message={toast} onDismiss={() => setToast(null)} />
       <div
@@ -592,8 +618,11 @@ function App() {
                         onHoverObjective={selection.setHoveredObjectiveId}
                         onTogglePin={selection.togglePin}
                         sharedQuestIds={squadSync.sharedQuestIds}
+                        upcoming={appearance.upcomingQuests ? upcomingObjectives : undefined}
+                        showNames={appearance.questNames}
                       />
                     )}
+                    <PlaceLabelLayer mapId={selectedMapId} visible={appearance.placeLabels} />
                     <SquadQuestLayer
                       mapId={selectedMapId}
                       questStates={squadSync.squadQuestStates}

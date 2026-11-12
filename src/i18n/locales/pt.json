@@ -296,7 +296,13 @@
         "knife": "Faca",
         "fist": "Punho",
         "anchor": "Âncora"
-      }
+      },
+      "placeLabels": "Nomes de lugares no mapa",
+      "placeLabelsHint": "Big Red, Dorms, Scav Town… só no mapa grande, nunca no minimapa.",
+      "questNames": "Nome da missão nos marcadores",
+      "questNamesHint": "Escreve o nome da missão ao lado de cada local dela.",
+      "upcomingQuests": "Missões que posso pegar",
+      "upcomingQuestsHint": "Marca também, numa cor mais suave, as missões que você já pode começar (requisitos e nível ok), não só as que o jogo registrou como aceitas."
     }
   },
   "errors": {
@@ -754,5 +760,11 @@
     "capacity": "{{n}} balas",
     "dataNote": "Dados do tarkov.dev, {{date}}. Preços são estimativas.",
     "statsTitle": "Status da arma"
+  },
+  "titlebar": {
+    "minimize": "Minimizar",
+    "maximize": "Maximizar",
+    "restore": "Restaurar",
+    "close": "Fechar"
   }
 }

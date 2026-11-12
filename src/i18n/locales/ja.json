@@ -296,7 +296,13 @@
         "knife": "ナイフ",
         "fist": "拳",
         "anchor": "錨"
-      }
+      },
+      "placeLabels": "マップに地名を表示",
+      "placeLabelsHint": "Big Red、Dorms、Scav Town… 大きいマップのみ。ミニマップには表示しません。",
+      "questNames": "マーカーにタスク名",
+      "questNamesHint": "各地点の横にタスク名を表示します。",
+      "upcomingQuests": "受けられるタスク",
+      "upcomingQuestsHint": "受注済みだけでなく、今すぐ開始できるタスク（前提とレベルを満たす）も淡い色で表示します。"
     }
   },
   "errors": {
@@ -754,5 +760,11 @@
     "capacity": "{{n}}発",
     "dataNote": "tarkov.devのデータ（{{date}}）。価格は推定です。",
     "statsTitle": "武器ステータス"
+  },
+  "titlebar": {
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "restore": "元に戻す",
+    "close": "閉じる"
   }
 }
