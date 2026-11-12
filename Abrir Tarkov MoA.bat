@@ -8,55 +8,69 @@ rem    - Node.js LTS                 (roda a interface)
 rem    - Rust (rustup)               (compila o nucleo do app)
 rem    - Visual Studio Build Tools   (compilador C++ que o Rust usa no Windows)
 rem    - WebView2 Runtime            (motor da janela; ja vem no Windows 11)
-rem  Depois baixa as dependencias (npm), compila a versao final uma vez e abre
-rem  o MoA sem deixar terminal aberto. Nas proximas vezes so confere e abre;
-rem  recompila sozinho quando o codigo do projeto mudar.
+rem  Antes de abrir, busca a versao mais nova no GitHub (git pull). Depois baixa
+rem  as dependencias (npm), compila a versao final uma vez e abre o MoA sem
+rem  deixar terminal aberto. Nas proximas vezes so confere e abre; recompila
+rem  sozinho quando o codigo do projeto mudar.
+rem
+rem  Visual: o arquivo e UTF-8 (chcp 65001) e usa as cores do terminal do
+rem  Windows 10/11 (sequencias ANSI).
 rem ============================================================================
 setlocal EnableExtensions
+chcp 65001 >nul
 title Tarkov MoA
 cd /d "%~dp0"
-
-echo.
-echo  ===  Tarkov MoA  ===
-echo.
+call :ui_init
+call :banner
 
 if not exist "package.json" goto :no_project
 
 call :refresh_path
 
-rem ---- Atualizar pelo Git ---------------------------------------------------------
+rem ---- 1. Atualizar pelo Git ------------------------------------------------------
 rem  Se esta pasta veio do GitHub (tem .git), baixa a versao mais nova antes de
 rem  abrir. Sem internet, sem Git ou com mudancas locais que conflitam, segue com
 rem  a versao que ja esta aqui. Se a atualizacao trouxer um .bat novo, este
 rem  arquivo reinicia com ele (--atualizado evita repetir a busca).
-if /i "%~1"=="--atualizado" goto :updated
-if not exist ".git" goto :updated
+call :section "1/4" "Atualização"
+if /i "%~1"=="--atualizado" (
+  call :ok "Atualizado para a versão mais nova"
+  goto :updated
+)
+if not exist ".git" (
+  call :note "Esta pasta não veio do GitHub: abrindo a versão que está aqui."
+  goto :updated
+)
 where git >nul 2>&1
-if errorlevel 1 goto :updated
+if errorlevel 1 (
+  call :note "Git não instalado: abrindo a versão que está aqui."
+  goto :updated
+)
 set "OLDHEAD="
 for /f %%H in ('git rev-parse HEAD 2^>nul') do set "OLDHEAD=%%H"
-echo  [..] Procurando atualizacao no GitHub...
+call :run "Procurando novidades no GitHub"
 rem  Tudo num bloco so: o cmd le o bloco inteiro antes de rodar, entao trocar
 rem  este arquivo no meio do git pull nao atrapalha o que vem depois.
 (
   git -c credential.helper= -c credential.helper=manager pull --ff-only --quiet >nul 2>&1
   if errorlevel 1 (
-    echo  [!!] Nao deu para atualizar agora - sem internet, ou arquivos mudados aqui.
-    echo       Abrindo a versao que ja esta instalada.
+    call :warn "Não deu para atualizar agora (sem internet, ou arquivos mudados aqui)"
+    call :note "Abrindo a versão que já está instalada."
   ) else (
     for /f %%H in ('git rev-parse HEAD 2^>nul') do (
       if /i not "%%H"=="%OLDHEAD%" (
-        echo  [ok] Atualizado para a versao mais nova.
+        call :ok "Versão nova baixada" "reiniciando com ela"
         call "%~f0" --atualizado
         exit /b
       )
     )
-    echo  [ok] Ja esta na versao mais nova.
+    call :ok "Já está na versão mais nova"
   )
 )
 :updated
 
-rem ---- winget ------------------------------------------------------------------
+rem ---- 2. Requisitos -----------------------------------------------------------------
+call :section "2/4" "Requisitos do computador"
 where winget >nul 2>&1
 if errorlevel 1 set "NO_WINGET=1"
 
@@ -66,23 +80,25 @@ where node >nul 2>&1
 if errorlevel 1 goto :install_node
 node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit(a>22||(a===22&&b>=12)||(a===20&&b>=19)?0:1)" >nul 2>&1
 if errorlevel 1 goto :upgrade_node
-echo  [ok] Node.js
+set "NODEV="
+for /f %%v in ('node -v 2^>nul') do set "NODEV=%%v"
+call :ok "Node.js" "%NODEV%"
 goto :check_rust
 
 :install_node
-echo  [..] Node.js nao encontrado. Instalando o Node.js LTS...
+call :run "Node.js não encontrado: instalando o Node.js LTS"
 call :winget_install OpenJS.NodeJS.LTS || goto :fail
 call :refresh_path
 where node >nul 2>&1
 if errorlevel 1 goto :restart_needed
-echo  [ok] Node.js instalado
+call :ok "Node.js instalado"
 goto :check_rust
 
 :upgrade_node
-echo  [..] Node.js muito antigo para este projeto. Atualizando para o LTS...
+call :run "Node.js muito antigo: atualizando para o LTS"
 call :winget_install OpenJS.NodeJS.LTS upgrade || goto :fail
 call :refresh_path
-echo  [ok] Node.js atualizado
+call :ok "Node.js atualizado"
 
 rem ---- Rust --------------------------------------------------------------------
 :check_rust
@@ -91,11 +107,13 @@ where rustup >nul 2>&1
 if errorlevel 1 goto :install_rust
 cargo -V >nul 2>&1
 if errorlevel 1 goto :rust_toolchain
-echo  [ok] Rust
+set "RUSTV="
+for /f "tokens=2" %%v in ('rustc --version 2^>nul') do set "RUSTV=%%v"
+call :ok "Rust" "%RUSTV%"
 goto :check_msvc
 
 :install_rust
-echo  [..] Rust nao encontrado. Instalando o rustup...
+call :run "Rust não encontrado: instalando o rustup"
 call :winget_install Rustlang.Rustup || goto :fail
 call :refresh_path
 if exist "%USERPROFILE%\.cargo\bin\rustup.exe" set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
@@ -103,10 +121,10 @@ where rustup >nul 2>&1
 if errorlevel 1 goto :restart_needed
 
 :rust_toolchain
-echo  [..] Preparando o compilador Rust (stable-msvc)...
+call :run "Preparando o compilador Rust (stable-msvc)"
 rustup toolchain install stable-x86_64-pc-windows-msvc --profile minimal || goto :fail
 rustup default stable-x86_64-pc-windows-msvc || goto :fail
-echo  [ok] Rust pronto
+call :ok "Rust pronto"
 
 rem ---- Visual Studio Build Tools (MSVC) ----------------------------------------
 :check_msvc
@@ -115,57 +133,156 @@ if not exist "%VSWHERE%" goto :install_msvc
 set "VSPATH="
 for /f "usebackq delims=" %%I in (`"%VSWHERE%" -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set "VSPATH=%%I"
 if not defined VSPATH goto :install_msvc
-echo  [ok] Compilador C++ (Visual Studio Build Tools)
+call :ok "Compilador C++" "Visual Studio Build Tools"
 goto :check_webview
 
 :install_msvc
-echo  [..] Compilador C++ nao encontrado. Instalando o Visual Studio Build Tools...
-echo       Isso baixa alguns GB e pode levar varios minutos. O Windows vai pedir
-echo       permissao de administrador.
+call :run "Compilador C++ não encontrado: instalando o Visual Studio Build Tools"
+call :note "Baixa alguns GB e leva vários minutos. O Windows vai pedir permissão."
 call :winget_install Microsoft.VisualStudio.2022.BuildTools msvc || goto :fail
-echo  [ok] Visual Studio Build Tools instalado
+call :ok "Visual Studio Build Tools instalado"
 
 rem ---- WebView2 ----------------------------------------------------------------
 :check_webview
 call :has_webview
 if not errorlevel 1 goto :webview_ok
-echo  [..] WebView2 nao encontrado. Instalando...
+call :run "WebView2 não encontrado: instalando"
 call :winget_install Microsoft.EdgeWebView2Runtime || goto :fail
 :webview_ok
-echo  [ok] WebView2
+call :ok "WebView2" "motor da janela"
 
 rem ---- App ja aberto? ---------------------------------------------------------
 tasklist /fi "imagename eq tarkov-companion.exe" 2>nul | find /i "tarkov-companion.exe" >nul
 if not errorlevel 1 goto :already_open
 
-rem ---- Compilar so quando precisa ----------------------------------------------
+rem ---- 3. Compilar so quando precisa ----------------------------------------------
 rem  A versao final (release) abre sem terminal. Ela e compilada na primeira vez
 rem  e de novo so quando algum arquivo do projeto ficar mais novo que ela.
+call :section "3/4" "Preparando o programa"
 set "EXE=src-tauri\target\release\tarkov-companion.exe"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$exe = Get-Item -LiteralPath '%EXE%' -ErrorAction SilentlyContinue; if (-not $exe) { exit 1 }; $t = $exe.LastWriteTimeUtc; $dirs = 'src','src-tauri\src','src-tauri\capabilities','src-tauri\icons','public','data\snapshot'; $files = 'package.json','package-lock.json','index.html','vite.config.ts','src-tauri\Cargo.toml','src-tauri\Cargo.lock','src-tauri\tauri.conf.json','scripts\tarkovtracker-key.ps1'; $all = @(Get-ChildItem -LiteralPath $dirs -Recurse -File -ErrorAction SilentlyContinue) + @(Get-Item -LiteralPath $files -ErrorAction SilentlyContinue); if ($all | Where-Object { $_.LastWriteTimeUtc -gt $t } | Select-Object -First 1) { exit 1 }; exit 0"
-if not errorlevel 1 goto :launch
+if not errorlevel 1 (
+  call :ok "Já compilado" "nada mudou desde a última vez"
+  goto :launch
+)
 
-echo.
-echo  [..] Baixando/conferindo as dependencias do projeto (npm)...
+call :run "Baixando e conferindo as dependências (npm)"
+echo %DIM%
 call npm install --no-audit --no-fund
-if errorlevel 1 goto :npm_failed
-echo  [ok] Dependencias prontas
-echo.
-echo  [..] Compilando o Tarkov MoA. Na primeira vez leva alguns minutos;
-echo       depois so recompila quando o codigo mudar.
-echo.
+set "NPMERR=%errorlevel%"
+echo %R%
+if not "%NPMERR%"=="0" goto :npm_failed
+call :ok "Dependências prontas"
+call :run "Compilando o Tarkov MoA"
+call :note "Na primeira vez leva alguns minutos; depois só recompila quando o código mudar."
+echo %DIM%
 call npx tauri build --no-bundle
-if errorlevel 1 goto :build_failed
+set "BUILDERR=%errorlevel%"
+echo %R%
+if not "%BUILDERR%"=="0" goto :build_failed
 if not exist "%EXE%" goto :build_failed
+call :ok "Compilado"
 
-rem ---- Abrir (sem terminal) ----------------------------------------------------
+rem ---- 4. Abrir (sem terminal) ----------------------------------------------------
 :launch
+call :section "4/4" "Abrindo"
+call :ok "Tudo pronto"
 start "" "%EXE%"
+echo.
+echo     %ACC%%B%▶  Boa caçada, operador.%R%
+echo.
+timeout /t 2 >nul
 exit /b 0
 
 :already_open
-echo  O Tarkov MoA ja esta aberto.
-timeout /t 2 >nul
+echo.
+call :ok "O Tarkov MoA já está aberto" "é só olhar a barra de tarefas"
+echo.
+timeout /t 3 >nul
+exit /b 0
+
+rem =============================================================================
+rem  Visual
+rem =============================================================================
+
+:ui_init
+for /f %%a in ('echo prompt $E^| cmd') do set "ESC=%%a"
+set "R=%ESC%[0m"
+set "B=%ESC%[1m"
+set "TXT=%ESC%[38;2;228;232;222m"
+set "DIM=%ESC%[38;2;120;128;114m"
+set "ACC=%ESC%[38;2;127;214;172m"
+set "OKC=%ESC%[38;2;96;222;150m"
+set "RUNC=%ESC%[38;2;118;188;242m"
+set "WARNC=%ESC%[38;2;240;192;92m"
+set "ERRC=%ESC%[38;2;242;104;104m"
+set "G1=%ESC%[38;2;186;244;214m"
+set "G2=%ESC%[38;2;150;230;192m"
+set "G3=%ESC%[38;2;127;214;172m"
+set "G4=%ESC%[38;2;104;196;186m"
+set "G5=%ESC%[38;2;94;174;204m"
+set "G6=%ESC%[38;2;90;150;214m"
+set "BARW=48"
+set "BARON=━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+set "BAROFF=────────────────────────────────────────────────"
+exit /b 0
+
+:banner
+cls
+echo.
+echo   %G1%████████╗ █████╗ ██████╗ ██╗  ██╗ ██████╗ ██╗   ██╗    ███╗   ███╗ ██████╗  █████╗ %R%
+echo   %G2%╚══██╔══╝██╔══██╗██╔══██╗██║ ██╔╝██╔═══██╗██║   ██║    ████╗ ████║██╔═══██╗██╔══██╗%R%
+echo   %G3%   ██║   ███████║██████╔╝█████╔╝ ██║   ██║██║   ██║    ██╔████╔██║██║   ██║███████║%R%
+echo   %G4%   ██║   ██╔══██║██╔══██╗██╔═██╗ ██║   ██║╚██╗ ██╔╝    ██║╚██╔╝██║██║   ██║██╔══██║%R%
+echo   %G5%   ██║   ██║  ██║██║  ██║██║  ██╗╚██████╔╝ ╚████╔╝     ██║ ╚═╝ ██║╚██████╔╝██║  ██║%R%
+echo   %G6%   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝   ╚═══╝      ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝%R%
+echo.
+echo   %DIM%mapa ao vivo  ·  missões  ·  extrações  ·  party  ·  mesa de armas%R%
+echo   %DIM%─────────────────────────────────────────────────────────────────────────────────────%R%
+exit /b 0
+
+rem  :section "1/4" "Titulo" - titulo da etapa e a barra de progresso geral
+:section
+echo.
+for /f "tokens=1,2 delims=/" %%a in ("%~1") do call :progress %%a %%b
+echo   %ACC%▌%R% %B%%TXT%%~2%R%  %DIM%etapa %~1%R%
+exit /b 0
+
+rem  :progress <feito> <total> - barra que enche conforme as etapas
+:progress
+set /a "FILL=%~1*BARW/%~2", "EMPTY=BARW-FILL", "PCT=%~1*100/%~2"
+call set "ON=%%BARON:~0,%FILL%%%"
+call set "OFF=%%BAROFF:~0,%EMPTY%%%"
+echo   %G2%%ON%%DIM%%OFF%%R%  %B%%TXT%%PCT%%%%R%
+exit /b 0
+
+rem  :ok "texto" ["detalhe"]
+:ok
+echo     %OKC%✔%R%  %TXT%%~1%R%  %DIM%%~2%R%
+exit /b 0
+
+:run
+echo     %RUNC%●%R%  %TXT%%~1%R%%DIM%...%R%
+exit /b 0
+
+:warn
+echo     %WARNC%▲%R%  %TXT%%~1%R%
+exit /b 0
+
+:note
+echo        %DIM%%~1%R%
+exit /b 0
+
+rem  :err "linha" - uma linha dentro do quadro de erro
+:err
+echo   %ERRC%┃%R%  %TXT%%~1%R%
+exit /b 0
+
+:err_head
+echo.
+echo   %ERRC%┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%R%
+echo   %ERRC%┃%R%  %ERRC%%B%✖  %~1%R%
+echo   %ERRC%┃%R%
 exit /b 0
 
 rem =============================================================================
@@ -202,49 +319,47 @@ rem ============================================================================
 rem  Erros
 rem =============================================================================
 :no_project
-echo  Este arquivo precisa ficar na pasta do projeto (junto do package.json).
+call :err_head "Pasta errada"
+call :err "Este arquivo precisa ficar na pasta do projeto (junto do package.json)."
 goto :end_pause
 
 :no_winget
-echo.
-echo  O winget nao esta disponivel neste Windows, entao nao da para instalar
-echo  sozinho. Instale o "Instalador de Aplicativo" (App Installer) pela
-echo  Microsoft Store e rode este arquivo de novo.
+call :err_head "O winget não está disponível neste Windows"
+call :err "Sem ele não dá para instalar os requisitos sozinho. Instale o"
+call :err "Instalador de Aplicativo (App Installer) pela Microsoft Store"
+call :err "e rode este arquivo de novo."
 goto :end_pause
 
 :restart_needed
-echo.
-echo  A instalacao terminou, mas este terminal ainda nao enxerga o programa novo.
-echo  Feche esta janela e abra o arquivo de novo.
+call :err_head "Falta só reabrir"
+call :err "A instalação terminou, mas este terminal ainda não enxerga o programa novo."
+call :err "Feche esta janela e abra o arquivo de novo."
 goto :end_pause
 
 :fail
-echo.
-echo  Nao deu para instalar um dos requisitos. Veja a mensagem acima, resolva e
-echo  rode este arquivo de novo.
+call :err_head "Não deu para instalar um dos requisitos"
+call :err "Veja a mensagem acima, resolva e rode este arquivo de novo."
 goto :end_pause
 
 :npm_failed
-echo.
-echo  O npm nao conseguiu baixar as dependencias. Confira a internet e tente de novo.
+call :err_head "O npm não conseguiu baixar as dependências"
+call :err "Confira a internet e tente de novo."
 goto :end_pause
 
 :build_failed
-echo.
-echo  A compilacao falhou. Veja a mensagem acima.
+call :err_head "A compilação falhou"
+call :err "A mensagem do compilador está logo acima."
 goto :end_pause
 
 :end_pause
 rem  Fica aberta ate digitar SAIR: um Enter sem querer nao some com a mensagem.
-echo.
-echo  ------------------------------------------------------------------
-echo   Algo deu errado: leia a mensagem acima (role para cima se precisar)
-echo   ou tire um print desta janela para quem te ajudar.
-echo  ------------------------------------------------------------------
+call :err "Role para cima para ler tudo, ou tire um print desta janela para"
+call :err "quem for te ajudar."
+echo   %ERRC%┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%R%
 :end_wait
 if defined MOA_NO_WAIT exit /b 1
 echo.
 set "ANS="
-set /p "ANS=  Digite SAIR e aperte Enter para fechar: "
+set /p "ANS=  %ACC%›%R%  Digite %B%SAIR%R% e aperte Enter para fechar: "
 if /i not "%ANS%"=="SAIR" goto :end_wait
 exit /b 1
