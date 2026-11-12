@@ -19,6 +19,8 @@ export interface RawWeapon {
   cal?: string;
   fr?: number;
   cat?: string;
+  /** Factory preset item id (its image is the assembled gun). */
+  p?: string;
   s?: RawSlot[];
   /** The factory build's parts. */
   d?: string[];
@@ -110,3 +112,5 @@ export function slotLabel(loc: WeaponLocale, slot: string): string {
 /** tarkov.dev images, by item id. */
 export const itemIcon = (id: string) => `https://assets.tarkov.dev/${id}-icon.webp`;
 export const itemImage = (id: string) => `https://assets.tarkov.dev/${id}-512.webp`;
+/** The inventory-cell picture (item on its grid background). */
+export const itemGrid = (id: string) => `https://assets.tarkov.dev/${id}-grid-image.webp`;

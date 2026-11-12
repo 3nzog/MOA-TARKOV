@@ -113,6 +113,8 @@ async function main() {
       cal: typeof p.caliber === 'string' ? p.caliber.replace(/^Caliber/, '') : undefined,
       fr: num(p.fireRate),
       cat: arr(g.categories)[0],
+      // The factory preset item: its picture is the whole assembled gun.
+      p: preset ? preset.id : undefined,
       s: slotsOf(g),
       // The factory build: its parts, slotted into the tree by the app.
       d: preset ? arr(preset.containsItems).map((c) => c.item).filter((id) => reach.has(id)) : undefined,

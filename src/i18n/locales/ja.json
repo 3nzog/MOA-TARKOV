@@ -736,7 +736,7 @@
     "required": "必須",
     "empty": "空",
     "remove": "パーツを外す",
-    "pickSlot": "スロットを選ぶと合うパーツが表示されます。",
+    "pickSlot": "ベンチのスロットをクリックすると合うパーツが表示されます。",
     "searchPart": "パーツを検索",
     "onlyObtainable": "入手できるものだけ",
     "sort": "並べ替え",
@@ -752,6 +752,7 @@
     "ergoShort": "エルゴ",
     "recoilShort": "反動",
     "capacity": "{{n}}発",
-    "dataNote": "tarkov.devのデータ（{{date}}）。価格は推定です。"
+    "dataNote": "tarkov.devのデータ（{{date}}）。価格は推定です。",
+    "statsTitle": "武器ステータス"
   }
 }

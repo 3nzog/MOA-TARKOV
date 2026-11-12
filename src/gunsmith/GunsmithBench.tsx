@@ -51,7 +51,47 @@ import {
   updatePreset,
   usePresets,
 } from './presets';
+import BenchStage from './BenchStage';
 import './gunsmith.css';
+
+/** A stat as the modding screen shows it: a bar, the value, and the change from the factory build. */
+function StatBar({
+  label,
+  value,
+  base,
+  max,
+  lowerIsBetter,
+  unit = '',
+  digits = 1,
+}: {
+  label: string;
+  value: number;
+  base: number;
+  max: number;
+  lowerIsBetter?: boolean;
+  unit?: string;
+  digits?: number;
+}) {
+  const pct = (v: number) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
+  const d = Math.round((value - base) * 10 ** digits) / 10 ** digits;
+  const good = lowerIsBetter ? d < 0 : d > 0;
+  return (
+    <div className="gs-bar">
+      <div className="gs-bar__top">
+        <span>{label}</span>
+        <strong>
+          {Number.isInteger(value) ? value : value.toFixed(digits)}
+          {unit}
+          {d !== 0 && <em className={good ? 'gs-good' : 'gs-bad'}>{d > 0 ? ` +${d}` : ` ${d}`}</em>}
+        </strong>
+      </div>
+      <div className="gs-bar__track">
+        <span className="gs-bar__base" style={{ width: pct(base) }} />
+        <span className={`gs-bar__fill ${d === 0 ? '' : good ? 'is-good' : 'is-bad'}`} style={{ width: pct(value) }} />
+      </div>
+    </div>
+  );
+}
 
 const LAST_KEY = 'tc_gunsmith_last_v1';
 const M4A1 = '5447a9cd4bdc2dbd208b4567';
@@ -318,12 +358,6 @@ function Bench({ data, loc, onClose, playerLevel, taskDone }: Props & { data: We
     const n = pct ? Math.round(v * 1000) / 10 : Math.round(v * 10) / 10;
     return `${n > 0 ? '+' : ''}${n}${pct ? '%' : ''}`;
   };
-  const delta = (now: number, base: number, lowerIsBetter = false) => {
-    const d = Math.round((now - base) * 10) / 10;
-    if (!d) return null;
-    const good = lowerIsBetter ? d < 0 : d > 0;
-    return <span className={good ? 'gs-good' : 'gs-bad'}>{d > 0 ? `+${d}` : d}</span>;
-  };
 
   const traders = partTraders(data);
 
@@ -464,10 +498,141 @@ function Bench({ data, loc, onClose, playerLevel, taskDone }: Props & { data: We
           </div>
         </aside>
 
-        {/* ---- center: the gun, its stats and its slots ---- */}
+        {/* ---- center: the modding table ---- */}
         <main className="gs-col gs-center">
+          <div className="gs-stage-head">
+            <h3>{gunName}</h3>
+            <div className="gs-gun-card__meta">
+              {gun?.cal && <span>{gun.cal}</span>}
+              {gun?.fr ? <span>{t('gunsmith.rpm', { n: gun.fr })}</span> : null}
+              <span className={isObtainable(gunAvail) ? 'gs-ok' : 'gs-locked'}>{bestLabel(gunAvail)}</span>
+            </div>
+          </div>
+          <BenchStage
+            rows={rows}
+            loc={loc}
+            gunImageId={gun?.p ?? build.weaponId}
+            gunName={gunName}
+            selected={selected}
+            onSelect={(path) => {
+              setSelected(path);
+              setPartSearch('');
+            }}
+            ok={(id) => isObtainable(avail(id))}
+            popover={
+              selRow && (
+                <>
+                  <div className="gs-pop__head">
+                    <div className="gs-block__title">{slotLabel(loc, selRow.slot)}</div>
+                    <IconButton size="sm" icon={<X />} label={t('gunsmith.close')} onClick={() => setSelected(null)} />
+                  </div>
+                  <Input
+                    uiSize="sm"
+                    value={partSearch}
+                    autoFocus
+                    placeholder={t('gunsmith.searchPart')}
+                    aria-label={t('gunsmith.searchPart')}
+                    icon={<MagnifyingGlass />}
+                    onChange={(e) => setPartSearch(e.target.value)}
+                  />
+                  <div className="gs-pick-opts">
+                    <label className="gs-check">
+                      <Toggle size="sm" checked={onlyObtainable} onChange={setOnlyObtainable} label={t('gunsmith.onlyObtainable')} />
+                      <span>{t('gunsmith.onlyObtainable')}</span>
+                    </label>
+                    <Select aria-label={t('gunsmith.sort')} value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+                      <option value="recoil">{t('gunsmith.sortBy.recoil')}</option>
+                      <option value="ergo">{t('gunsmith.sortBy.ergo')}</option>
+                      <option value="price">{t('gunsmith.sortBy.price')}</option>
+                      <option value="name">{t('gunsmith.sortBy.name')}</option>
+                    </Select>
+                  </div>
+                  <ul className="gs-parts">
+                    {!selRow.required && (
+                      <li>
+                        <button
+                          type="button"
+                          className={`gs-part${!selRow.itemId ? ' is-on' : ''}`}
+                          onClick={() => {
+                            setBuild(equip(data, build, selRow.path, null));
+                            setSelected(null);
+                          }}
+                        >
+                          <span className="gs-img gs-img--none" aria-hidden="true" />
+                          <span className="gs-part__main"><strong>{t('gunsmith.leaveEmpty')}</strong></span>
+                        </button>
+                      </li>
+                    )}
+                    {candidates.length === 0 && <li className="gs-hint">{t('gunsmith.nothingFits')}</li>}
+                    {candidates.map((c) => (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          className={`gs-part${c.id === selRow.itemId ? ' is-on' : ''}${isObtainable(c.a) ? '' : ' is-locked'}`}
+                          onClick={() => {
+                            setBuild(equip(data, build, selRow.path, c.id));
+                            setSelected(null);
+                          }}
+                          title={[...c.a.open.map(sourceLabel), ...c.a.locked.map(lockLabel)].join('\n')}
+                        >
+                          <Icon id={c.id} alt="" />
+                          <span className="gs-part__main">
+                            <strong>{itemName(loc, c.id)}</strong>
+                            <small className={isObtainable(c.a) ? 'gs-ok' : 'gs-locked'}>{bestLabel(c.a)}</small>
+                            {c.clash.length > 0 && (
+                              <small className="gs-bad">{t('gunsmith.replaces', { items: c.clash.map((x) => itemShort(loc, x)).join(', ') })}</small>
+                            )}
+                          </span>
+                          <span className="gs-part__stats">
+                            {fmtDelta(c.m.e) && <span className={(c.m.e ?? 0) > 0 ? 'gs-good' : 'gs-bad'}>{t('gunsmith.ergoShort')} {fmtDelta(c.m.e)}</span>}
+                            {fmtDelta(c.m.r, true) && <span className={(c.m.r ?? 0) < 0 ? 'gs-good' : 'gs-bad'}>{t('gunsmith.recoilShort')} {fmtDelta(c.m.r, true)}</span>}
+                            {c.m.cap ? <span>{t('gunsmith.capacity', { n: c.m.cap })}</span> : null}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {selRow.itemId && (
+                    <p className="gs-hint gs-pop__src">
+                      {[...avail(selRow.itemId).open.map(sourceLabel), ...avail(selRow.itemId).locked.map(lockLabel)].join(' · ')}
+                    </p>
+                  )}
+                </>
+              )
+            }
+          />
+          <p className="gs-hint gs-stage-hint">{t('gunsmith.pickSlot')}</p>
+        </main>
+
+        {/* ---- right: stats like the modding screen, then trader levels ---- */}
+        <aside className="gs-col gs-right">
+          <div className="gs-block__title">{t('gunsmith.statsTitle')}</div>
+          <div className="gs-bars">
+            <StatBar label={t('gunsmith.stat.ergo')} value={stats.ergonomics} base={factory.ergonomics} max={100} />
+            <StatBar label={t('gunsmith.stat.recoilV')} value={stats.recoilVertical} base={factory.recoilVertical} max={Math.max(200, factory.recoilVertical * 1.3)} lowerIsBetter />
+            <StatBar label={t('gunsmith.stat.recoilH')} value={stats.recoilHorizontal} base={factory.recoilHorizontal} max={Math.max(400, factory.recoilHorizontal * 1.3)} lowerIsBetter />
+            <StatBar label={t('gunsmith.stat.weight')} value={stats.weight} base={factory.weight} max={Math.max(6, factory.weight * 2)} lowerIsBetter unit=" kg" digits={2} />
+          </div>
+          <div className="gs-cost">
+            <small>{t('gunsmith.stat.cost')}</small>
+            <strong>{rub(cost)}</strong>
+          </div>
+          <p className="gs-hint">{t('gunsmith.statsNote')}</p>
+
+          {(missing.length > 0 || unavailable.length > 0 || noCash.length > 0) && (
+            <div className="gs-warn">
+              <Warning weight="fill" />
+              <div>
+                {missing.length > 0 && <p>{t('gunsmith.missing', { slots: missing.map((r) => slotLabel(loc, r.slot)).join(', ') })}</p>}
+                {unavailable.length > 0 && <p>{t('gunsmith.unavailable', { count: unavailable.length })}</p>}
+                {noCash.length > 0 && <p>{t('gunsmith.noCash', { count: noCash.length })}</p>}
+              </div>
+            </div>
+          )}
+
           {tradersOpen && (
             <section className="gs-traders">
+              <div className="gs-block__title">{t('gunsmith.traders')}</div>
               <p className="gs-hint">{t('gunsmith.tradersHint')}</p>
               {traders.map((tr) => (
                 <div key={tr.id} className="gs-trader">
@@ -509,143 +674,6 @@ function Bench({ data, loc, onClose, playerLevel, taskDone }: Props & { data: We
                 </Button>
               </div>
             </section>
-          )}
-
-          <section className="gs-gun-card">
-            <Icon id={build.weaponId} alt={gunName} big />
-            <div className="gs-gun-card__info">
-              <h3>{gunName}</h3>
-              <div className="gs-gun-card__meta">
-                {gun?.cal && <span>{gun.cal}</span>}
-                {gun?.fr ? <span>{t('gunsmith.rpm', { n: gun.fr })}</span> : null}
-                <span className={isObtainable(gunAvail) ? 'gs-ok' : 'gs-locked'}>{bestLabel(gunAvail)}</span>
-              </div>
-              <div className="gs-stats">
-                <div><small>{t('gunsmith.stat.ergo')}</small><strong>{stats.ergonomics}</strong>{delta(stats.ergonomics, factory.ergonomics)}</div>
-                <div><small>{t('gunsmith.stat.recoilV')}</small><strong>{stats.recoilVertical}</strong>{delta(stats.recoilVertical, factory.recoilVertical, true)}</div>
-                <div><small>{t('gunsmith.stat.recoilH')}</small><strong>{stats.recoilHorizontal}</strong>{delta(stats.recoilHorizontal, factory.recoilHorizontal, true)}</div>
-                <div><small>{t('gunsmith.stat.weight')}</small><strong>{stats.weight.toFixed(2)} kg</strong></div>
-                <div><small>{t('gunsmith.stat.cost')}</small><strong>{rub(cost)}</strong></div>
-              </div>
-              <p className="gs-hint">{t('gunsmith.statsNote')}</p>
-            </div>
-          </section>
-
-          {(missing.length > 0 || unavailable.length > 0 || noCash.length > 0) && (
-            <div className="gs-warn">
-              <Warning weight="fill" />
-              <div>
-                {missing.length > 0 && <p>{t('gunsmith.missing', { slots: missing.map((r) => slotLabel(loc, r.slot)).join(', ') })}</p>}
-                {unavailable.length > 0 && <p>{t('gunsmith.unavailable', { count: unavailable.length })}</p>}
-                {noCash.length > 0 && <p>{t('gunsmith.noCash', { count: noCash.length })}</p>}
-              </div>
-            </div>
-          )}
-
-          <ul className="gs-slots">
-            {rows.map((r) => {
-              const a = r.itemId ? avail(r.itemId) : null;
-              return (
-                <li key={r.path} style={{ paddingLeft: r.depth * 18 }}>
-                  <button
-                    type="button"
-                    className={`gs-slot${selected === r.path ? ' is-on' : ''}${!r.itemId ? ' is-empty' : ''}${r.required && !r.itemId ? ' is-required' : ''}`}
-                    onClick={() => {
-                      setSelected(r.path);
-                      setPartSearch('');
-                    }}
-                  >
-                    <span className="gs-slot__label">
-                      {slotLabel(loc, r.slot)}
-                      {r.required && <em>{t('gunsmith.required')}</em>}
-                    </span>
-                    {r.itemId ? (
-                      <span className="gs-slot__item">
-                        <Icon id={r.itemId} alt="" />
-                        <span className="gs-slot__name">{itemName(loc, r.itemId)}</span>
-                        <span className={`gs-dot ${a && isObtainable(a) ? 'gs-dot--ok' : 'gs-dot--locked'}`} title={a ? bestLabel(a) : ''} />
-                      </span>
-                    ) : (
-                      <span className="gs-slot__item gs-slot__item--empty">{t('gunsmith.empty')}</span>
-                    )}
-                  </button>
-                  {r.itemId && (
-                    <IconButton
-                      size="sm"
-                      icon={<X />}
-                      label={t('gunsmith.remove')}
-                      onClick={() => setBuild(equip(data, build, r.path, null))}
-                    />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </main>
-
-        {/* ---- right: parts for the selected slot ---- */}
-        <aside className="gs-col gs-right">
-          {!selRow ? (
-            <p className="gs-hint gs-pick-hint">{t('gunsmith.pickSlot')}</p>
-          ) : (
-            <>
-              <div className="gs-block__title">{slotLabel(loc, selRow.slot)}</div>
-              <Input
-                uiSize="sm"
-                value={partSearch}
-                placeholder={t('gunsmith.searchPart')}
-                aria-label={t('gunsmith.searchPart')}
-                icon={<MagnifyingGlass />}
-                onChange={(e) => setPartSearch(e.target.value)}
-              />
-              <div className="gs-pick-opts">
-                <label className="gs-check">
-                  <Toggle size="sm" checked={onlyObtainable} onChange={setOnlyObtainable} label={t('gunsmith.onlyObtainable')} />
-                  <span>{t('gunsmith.onlyObtainable')}</span>
-                </label>
-                <Select aria-label={t('gunsmith.sort')} value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
-                  <option value="recoil">{t('gunsmith.sortBy.recoil')}</option>
-                  <option value="ergo">{t('gunsmith.sortBy.ergo')}</option>
-                  <option value="price">{t('gunsmith.sortBy.price')}</option>
-                  <option value="name">{t('gunsmith.sortBy.name')}</option>
-                </Select>
-              </div>
-              <ul className="gs-parts">
-                {!selRow.required && (
-                  <li>
-                    <button type="button" className={`gs-part${!selRow.itemId ? ' is-on' : ''}`} onClick={() => setBuild(equip(data, build, selRow.path, null))}>
-                      <span className="gs-img gs-img--none" aria-hidden="true" />
-                      <span className="gs-part__main"><strong>{t('gunsmith.leaveEmpty')}</strong></span>
-                    </button>
-                  </li>
-                )}
-                {candidates.length === 0 && <li className="gs-hint">{t('gunsmith.nothingFits')}</li>}
-                {candidates.map((c) => (
-                  <li key={c.id}>
-                    <button
-                      type="button"
-                      className={`gs-part${c.id === selRow.itemId ? ' is-on' : ''}${isObtainable(c.a) ? '' : ' is-locked'}`}
-                      onClick={() => setBuild(equip(data, build, selRow.path, c.id))}
-                      title={[...c.a.open.map(sourceLabel), ...c.a.locked.map(lockLabel)].join('\n')}
-                    >
-                      <Icon id={c.id} alt="" />
-                      <span className="gs-part__main">
-                        <strong>{itemName(loc, c.id)}</strong>
-                        <small className={isObtainable(c.a) ? 'gs-ok' : 'gs-locked'}>{bestLabel(c.a)}</small>
-                        {c.clash.length > 0 && (
-                          <small className="gs-bad">{t('gunsmith.replaces', { items: c.clash.map((x) => itemShort(loc, x)).join(', ') })}</small>
-                        )}
-                      </span>
-                      <span className="gs-part__stats">
-                        {fmtDelta(c.m.e) && <span className={(c.m.e ?? 0) > 0 ? 'gs-good' : 'gs-bad'}>{t('gunsmith.ergoShort')} {fmtDelta(c.m.e)}</span>}
-                        {fmtDelta(c.m.r, true) && <span className={(c.m.r ?? 0) < 0 ? 'gs-good' : 'gs-bad'}>{t('gunsmith.recoilShort')} {fmtDelta(c.m.r, true)}</span>}
-                        {c.m.cap ? <span>{t('gunsmith.capacity', { n: c.m.cap })}</span> : null}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
           )}
         </aside>
       </div>

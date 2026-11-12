@@ -736,7 +736,7 @@
     "required": "required",
     "empty": "Empty",
     "remove": "Remove part",
-    "pickSlot": "Pick a slot on the left to see what fits.",
+    "pickSlot": "Click a slot on the table to see what fits it.",
     "searchPart": "Search part",
     "onlyObtainable": "Only what I can get",
     "sort": "Sort",
@@ -752,6 +752,7 @@
     "ergoShort": "Ergo",
     "recoilShort": "Recoil",
     "capacity": "{{n}} rds",
-    "dataNote": "Data from tarkov.dev, {{date}}. Prices are estimates."
+    "dataNote": "Data from tarkov.dev, {{date}}. Prices are estimates.",
+    "statsTitle": "Weapon stats"
   }
 }

@@ -736,7 +736,7 @@
     "required": "必需",
     "empty": "空",
     "remove": "卸下配件",
-    "pickSlot": "选择一个槽位查看可用配件。",
+    "pickSlot": "点击台上的槽位查看可安装的配件。",
     "searchPart": "搜索配件",
     "onlyObtainable": "只看我能获得的",
     "sort": "排序",
@@ -752,6 +752,7 @@
     "ergoShort": "工效",
     "recoilShort": "后坐",
     "capacity": "{{n}} 发",
-    "dataNote": "数据来自 tarkov.dev（{{date}}）。价格为估算。"
+    "dataNote": "数据来自 tarkov.dev（{{date}}）。价格为估算。",
+    "statsTitle": "武器属性"
   }
 }

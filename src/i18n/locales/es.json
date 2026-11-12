@@ -736,7 +736,7 @@
     "required": "obligatoria",
     "empty": "Vacío",
     "remove": "Quitar pieza",
-    "pickSlot": "Elige una ranura para ver qué encaja.",
+    "pickSlot": "Haz clic en una ranura del banco para ver qué encaja.",
     "searchPart": "Buscar pieza",
     "onlyObtainable": "Solo lo que puedo conseguir",
     "sort": "Ordenar",
@@ -752,6 +752,7 @@
     "ergoShort": "Ergo",
     "recoilShort": "Retroc.",
     "capacity": "{{n}} balas",
-    "dataNote": "Datos de tarkov.dev, {{date}}. Los precios son estimaciones."
+    "dataNote": "Datos de tarkov.dev, {{date}}. Los precios son estimaciones.",
+    "statsTitle": "Estadísticas del arma"
   }
 }

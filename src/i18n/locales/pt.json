@@ -736,7 +736,7 @@
     "required": "obrigatório",
     "empty": "Vazio",
     "remove": "Tirar peça",
-    "pickSlot": "Escolha um encaixe para ver o que serve.",
+    "pickSlot": "Clique num encaixe da bancada para ver o que serve nele.",
     "searchPart": "Buscar peça",
     "onlyObtainable": "Só o que eu consigo",
     "sort": "Ordenar",
@@ -752,6 +752,7 @@
     "ergoShort": "Ergo",
     "recoilShort": "Recuo",
     "capacity": "{{n}} balas",
-    "dataNote": "Dados do tarkov.dev, {{date}}. Preços são estimativas."
+    "dataNote": "Dados do tarkov.dev, {{date}}. Preços são estimativas.",
+    "statsTitle": "Status da arma"
   }
 }
