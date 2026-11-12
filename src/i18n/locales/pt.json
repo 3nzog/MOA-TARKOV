@@ -672,7 +672,8 @@
     "live": "Em raid: {{map}}",
     "pmc": "PMC",
     "scav": "Scav",
-    "unknown": "lado desconhecido"
+    "unknown": "lado desconhecido",
+    "fix": "Lado errado? Clique para trocar PMC / Scav (fica salvo para este perfil)"
   },
   "gunsmith": {
     "title": "Mesa de armas",

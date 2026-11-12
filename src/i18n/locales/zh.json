@@ -672,7 +672,8 @@
     "live": "战局中：{{map}}",
     "pmc": "PMC",
     "scav": "Scav",
-    "unknown": "身份未知"
+    "unknown": "身份未知",
+    "fix": "身份不对？点击切换 PMC / Scav（会记住该档案）"
   },
   "gunsmith": {
     "title": "改枪台",

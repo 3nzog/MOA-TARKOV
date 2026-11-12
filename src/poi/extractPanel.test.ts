@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findPanelMap, matchExtractPanel, normalizeText } from './extractPanel';
+import { exitsForSide, findPanelMap, matchExtractPanel, normalizeText } from './extractPanel';
 import type { Poi } from './types';
 
 const ex = (id: string, label: string, faction = 'pmc'): Poi => ({
@@ -129,5 +129,16 @@ describe('transit destinations with a variant suffix', () => {
     const pois = [ex('a', 'Esgoto'), tr('gz', 'Ground Zero 21+'), tr('lab', 'The Lab (Dark)')];
     const m = matchExtractPanel(['Esgoto', 'TRANSI TOI Viajar para Ground Zero', 'TRANSIT02 Viajar para The Lab'], pois)!;
     expect([...m.ids].sort()).toEqual(['extract:a', 'transit:gz', 'transit:lab']);
+  });
+});
+
+describe('exits for a side', () => {
+  const mk = (id: string, faction: string | undefined, category: 'extract' | 'transit' = 'extract') =>
+    ({ id, category, mapId: 'm', position: { x: 0, y: 0, z: 0 }, label: id, source: 'tarkov-dev', meta: faction ? { faction } : {} }) as never;
+  const pois = [mk('pmc', 'pmc'), mk('scav', 'scav'), mk('coop', 'shared'), mk('t', undefined, 'transit')];
+  it('drops the other side only', () => {
+    expect(exitsForSide(pois, 'scav').map((p: { id: string }) => p.id)).toEqual(['scav', 'coop', 't']);
+    expect(exitsForSide(pois, 'pmc').map((p: { id: string }) => p.id)).toEqual(['pmc', 'coop', 't']);
+    expect(exitsForSide(pois, null)).toHaveLength(4);
   });
 });

@@ -672,7 +672,8 @@
     "live": "En incursión: {{map}}",
     "pmc": "PMC",
     "scav": "Scav",
-    "unknown": "lado desconocido"
+    "unknown": "lado desconocido",
+    "fix": "¿Lado equivocado? Haz clic para cambiar PMC / Scav (se recuerda para este perfil)"
   },
   "gunsmith": {
     "title": "Banco de armas",

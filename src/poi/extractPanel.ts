@@ -72,6 +72,20 @@ export interface PanelMatch {
  * than two exits matched: every raid has at least two, so fewer means the
  * screenshot was not of the O+O list (or of a different map).
  */
+/**
+ * The exits a side can have: on a Scav raid, PMC-only exits never count (and
+ * the reverse), so a name the two lists share can't pull in the wrong one.
+ * Shared (co-op) exits and transits stay. Unknown side: everything.
+ */
+export function exitsForSide(pois: Poi[], side: 'pmc' | 'scav' | null): Poi[] {
+  if (!side) return pois;
+  return pois.filter((p) => {
+    if (p.category !== 'extract') return true;
+    const f = String((p.meta as { faction?: string } | undefined)?.faction ?? 'shared').toLowerCase();
+    return f === 'shared' || f === side;
+  });
+}
+
 export function matchExtractPanel(lines: string[], pois: Poi[], aliases: ExitAliases = {}): PanelMatch | null {
   // Keep line indexes aligned with `lines` (empty lines just never match).
   const norm = lines.map(normalizeText);

@@ -672,7 +672,8 @@
     "live": "In raid: {{map}}",
     "pmc": "PMC",
     "scav": "Scav",
-    "unknown": "side unknown"
+    "unknown": "side unknown",
+    "fix": "Wrong side? Click to switch PMC / Scav (remembered for this profile)"
   },
   "gunsmith": {
     "title": "Weapon bench",

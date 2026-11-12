@@ -400,3 +400,5 @@
 }
 .raid-pill--scav .raid-pill__side { background: var(--warn-soft); color: var(--warn); }
 .raid-pill--pmc .raid-pill__side { background: var(--info-soft); color: var(--info); }
+.raid-pill__side--btn { border: none; cursor: pointer; font-weight: 700; }
+.raid-pill__side--btn:hover { filter: brightness(1.25); }

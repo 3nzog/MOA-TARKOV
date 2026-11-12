@@ -51,7 +51,7 @@ import { useHotkeys, type HotkeyAction } from './app/useHotkeys';
 import { useCompactMode } from './app/useCompactMode';
 import { useMinimapWindow } from './app/useMinimapWindow';
 import { minimapPoints } from './minimap/protocol';
-import { findPanelMap, matchExtractPanel, type ExitAliases } from './poi/extractPanel';
+import { exitsForSide, findPanelMap, matchExtractPanel, type ExitAliases } from './poi/extractPanel';
 import { getExitAliases } from './api/tarkov-dev';
 import type { Poi } from './poi/types';
 import { canonicalMapId } from './map/canonicalMap';
@@ -196,8 +196,8 @@ function App() {
     if (!extractPanel || !selectedMapId || !extractPanel.mapId) return null;
     if (extractPanel.raidStartedAt !== (liveRaid?.startedAt ?? null)) return null;
     if (canonicalMapId(extractPanel.mapId) !== canonicalMapId(selectedMapId)) return null;
-    return matchExtractPanel(extractPanel.lines, pois.currentPois, exitAliases);
-  }, [extractPanel, selectedMapId, liveRaid, pois.currentPois, exitAliases]);
+    return matchExtractPanel(extractPanel.lines, exitsForSide(pois.currentPois, liveRaidSide), exitAliases);
+  }, [extractPanel, selectedMapId, liveRaid, liveRaidSide, pois.currentPois, exitAliases]);
   const panelExitIds = panelMatch?.ids ?? null;
   useEffect(() => {
     // A map's display name: the transits that lead to it carry it, localized.
@@ -215,7 +215,10 @@ function App() {
     extractPanelHandler.current = (lines, missingLanguage) => {
       // Try every map: the list itself says where you are. Ties go to the raid's map, then the one shown.
       const raidMap = liveRaid?.location ? mapIdFromLogLocation(liveRaid.location) ?? null : null;
-      const found = findPanelMap(lines, pois.poisByMapId, exitAliases, raidMap ?? selectedMapId);
+      const sidePois = Object.fromEntries(
+        Object.entries(pois.poisByMapId).map(([id, list]) => [id, exitsForSide(list, liveRaidSide)]),
+      );
+      const found = findPanelMap(lines, sidePois, exitAliases, raidMap ?? selectedMapId);
       if (!found) {
         // Three or more lines look like the list; say so instead of failing silently.
         if (missingLanguage) setToast(t('extractPanel.missingOcrLanguage', { lang: missingLanguage }));
@@ -225,11 +228,17 @@ function App() {
       setExtractPanel({ lines, mapId: found.mapId, raidStartedAt: liveRaid?.startedAt ?? null });
       const switching = !selectedMapId || canonicalMapId(found.mapId) !== canonicalMapId(selectedMapId);
       if (switching) setSelectedMapId(found.mapId);
-      setToast(
-        switching
-          ? t('extractPanel.readSwitched', { count: found.match.ids.size, map: mapLabel(found.mapId) })
-          : t('extractPanel.read', { count: found.match.ids.size }),
-      );
+      // Name what was read, so a wrong pick shows at once.
+      const names = (pois.poisByMapId[found.mapId] ?? [])
+        .filter((p) => found.match.ids.has(p.id))
+        .map((p) => {
+          const dest = (p.meta as { destMapName?: string } | undefined)?.destMapName;
+          return p.category === 'transit' && dest ? `→ ${dest}` : p.label;
+        });
+      const head = switching
+        ? t('extractPanel.readSwitched', { count: found.match.ids.size, map: mapLabel(found.mapId) })
+        : t('extractPanel.read', { count: found.match.ids.size });
+      setToast(`${head} ${names.join(' · ')}`);
     };
   });
   const panelExitNames = useMemo(
@@ -438,7 +447,19 @@ function App() {
                     <span className="raid-pill__text">
                       {t('raidPill.live', { map: liveRaidMapName })}
                     </span>
-                    <span className="raid-pill__side">{t(`raidPill.${liveRaidSide ?? 'unknown'}`)}</span>
+                    {liveRaid.profileKey ? (
+                      // Wrong side? One click flips it, and the app remembers it for this profile.
+                      <button
+                        type="button"
+                        className="raid-pill__side raid-pill__side--btn"
+                        title={t('raidPill.fix')}
+                        onClick={() => setLiveRaidSide(liveRaidSide === 'scav' ? 'pmc' : 'scav')}
+                      >
+                        {t(`raidPill.${liveRaidSide ?? 'unknown'}`)}
+                      </button>
+                    ) : (
+                      <span className="raid-pill__side">{t(`raidPill.${liveRaidSide ?? 'unknown'}`)}</span>
+                    )}
                   </div>
                 )}
               </div>

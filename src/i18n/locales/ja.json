@@ -672,7 +672,8 @@
     "live": "レイド中：{{map}}",
     "pmc": "PMC",
     "scav": "Scav",
-    "unknown": "不明"
+    "unknown": "不明",
+    "fix": "違いますか？クリックで PMC / Scav を切り替え（このプロファイルに記憶）"
   },
   "gunsmith": {
     "title": "武器ベンチ",
