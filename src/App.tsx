@@ -249,11 +249,10 @@ function App() {
             questState.availableObjectivesByMap[selectedMapId] ?? [],
             pois.currentPois,
             60,
-            liveRaidSide,
             panelExitIds,
           )
         : [],
-    [selectedMapId, questState, pois.currentPois, liveRaidSide, panelExitIds],
+    [selectedMapId, questState, pois.currentPois, panelExitIds],
   );
   const minimapSelf = useMemo(() => ({ symbol: selfSymbol, color: selfColor }), [selfSymbol, selfColor]);
   const minimapMates = useMemo(
@@ -333,6 +332,12 @@ function App() {
   );
   const hotkeys = useHotkeys(hotkeyHandlers);
 
+  // Name of the map the live raid is on, for the "in raid" pill.
+  const liveRaidMapName = useMemo(() => {
+    const id = liveRaid?.location ? mapIdFromLogLocation(liveRaid.location) : null;
+    if (!id) return liveRaid?.location ?? '';
+    return questState ? resolveMapName(id, questState.availableTasksByMap, questState.availableObjectivesByMap) : id;
+  }, [liveRaid, questState]);
   const selectedMapName = useMemo(() => {
     if (!questState || !selectedMapId) return '';
     return resolveMapName(
@@ -418,6 +423,15 @@ function App() {
                   selectedMapId={selectedMapId}
                   onSelect={setSelectedMapId}
                 />
+                {liveRaid && (
+                  <div className={`raid-pill raid-pill--${liveRaidSide ?? 'unknown'}`} role="status">
+                    <span className="raid-pill__dot" aria-hidden="true" />
+                    <span className="raid-pill__text">
+                      {t('raidPill.live', { map: liveRaidMapName })}
+                    </span>
+                    <span className="raid-pill__side">{t(`raidPill.${liveRaidSide ?? 'unknown'}`)}</span>
+                  </div>
+                )}
               </div>
             )}
             <div className="rail-panel__header">

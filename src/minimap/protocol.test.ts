@@ -41,7 +41,7 @@ describe('minimap protocol', () => {
     expect(headingAngle(90, 180)).toBe(270);
   });
 
-  it('collects objective positions (map variants included) and PMC extracts only', () => {
+  it('collects objective positions (map variants included) and no exits before an O+O read', () => {
     const pois: Poi[] = [
       { id: 'a', category: 'extract', mapId: GZ, position: { x: 1, y: 0, z: 2 }, label: 'PMC', source: 'tarkov-dev', meta: { faction: 'pmc' } },
       { id: 'b', category: 'extract', mapId: GZ, position: { x: 3, y: 0, z: 4 }, label: 'Scav', source: 'tarkov-dev', meta: { faction: 'scav' } },
@@ -55,12 +55,8 @@ describe('minimap protocol', () => {
       ],
       pois,
     );
-    expect(points).toEqual([
-      { x: 7, z: 8, kind: 'quest' },
-      { x: 1, z: 2, kind: 'extract' },
-    ]);
-    // On a Scav raid the Scav exit replaces the PMC one.
-    expect(minimapPoints(GZ, [], pois, 60, 'scav')).toEqual([{ x: 3, z: 4, kind: 'extract' }]);
+    // No O+O read yet: objectives only, no exits (not even the PMC ones).
+    expect(points).toEqual([{ x: 7, z: 8, kind: 'quest' }]);
   });
 });
 
@@ -85,7 +81,7 @@ describe('minimap exits read from O+O', () => {
       { id: 'extract:b', category: 'extract', mapId: GZ, position: { x: 3, y: 0, z: 4 }, label: 'B', source: 'tarkov-dev', meta: { faction: 'scav' } },
       { id: 'transit:t', category: 'transit', mapId: GZ, position: { x: 5, y: 0, z: 6 }, label: 'T', source: 'tarkov-dev' },
     ];
-    expect(minimapPoints(GZ, [], pois, 60, 'pmc', new Set(['extract:b', 'transit:t']))).toEqual([
+    expect(minimapPoints(GZ, [], pois, 60, new Set(['extract:b', 'transit:t']))).toEqual([
       { x: 3, z: 4, kind: 'extract', label: 'B' },
       { x: 5, z: 6, kind: 'transit', label: 'T' },
     ]);

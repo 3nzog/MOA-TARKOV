@@ -242,16 +242,17 @@ export function headingAngle(rotation: number, mapRotation: number): number {
 
 /**
  * Points worth showing on a small map: active quest objectives on this map and
- * PMC-usable extracts. Capped — a minimap crowded with pins is no minimap.
+ * the exits read from this raid's O+O list. No O+O read yet means no exits:
+ * the list is the only thing that says which exits are open for you this raid
+ * (PMC or Scav, and which ones the game picked). Capped — a minimap crowded
+ * with pins is no minimap.
  */
 export function minimapPoints(
   mapId: string,
   objectives: Array<{ objective: TaskObjective }>,
   pois: Poi[],
   max = 60,
-  /** Side of the raid in progress; null = unknown, treated as PMC. */
-  side: 'pmc' | 'scav' | null = null,
-  /** Exits read from the O+O list this raid: when known, exactly these are shown (transits included). */
+  /** Exits read from the O+O list this raid (transits included); null = none read yet. */
   onlyExits: ReadonlySet<string> | null = null,
 ): MinimapPoint[] {
   const target = canonicalMapId(mapId);
@@ -278,15 +279,6 @@ export function minimapPoints(
       });
       if (out.length >= max) break;
     }
-    return out;
-  }
-  for (const poi of pois) {
-    if (poi.category !== 'extract' || canonicalMapId(poi.mapId) !== target) continue;
-    // Shared exits work for both; otherwise only the exits of the side you are on.
-    const faction = (poi.meta as { faction?: string } | undefined)?.faction ?? 'shared';
-    if (faction !== 'shared' && faction !== (side === 'scav' ? 'scav' : 'pmc')) continue;
-    out.push({ x: poi.position.x, z: poi.position.z, kind: 'extract' });
-    if (out.length >= max) break;
   }
   return out;
 }

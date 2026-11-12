@@ -666,5 +666,11 @@
     "readSwitched_one": "Read {{count}} exit from the O+O screenshot — switched to {{map}}",
     "readSwitched_other": "Read {{count}} exits from the O+O screenshot — switched to {{map}}, showing only those",
     "missingOcrLanguage": "Windows cannot read text in the game’s language ({{lang}}). Add that language in Windows Settings → Time & language → Language, then try again."
+  },
+  "raidPill": {
+    "live": "In raid: {{map}}",
+    "pmc": "PMC",
+    "scav": "Scav",
+    "unknown": "side unknown"
   }
 }

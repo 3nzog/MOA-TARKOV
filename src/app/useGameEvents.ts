@@ -138,6 +138,22 @@ export function useGameEvents({ setProgress, setSelectedMapId, setHistory, onLiv
             .then((scan) => {
               if (cancelled) return;
               const at = (t: string | null) => parseLogTime(t);
+              // Opened in the middle of a raid: its GameStarted was written
+              // before the app was listening, so take the raid's map from the
+              // scan (the latest start with no end after it, under 3 h old).
+              const starts = scan.raids
+                .map((r) => ({ location: r.location, at: at(r.logTime) }))
+                .filter((r): r is { location: string | null; at: number } => r.at !== null)
+                .sort((a, b) => b.at - a.at);
+              const last = starts[0];
+              const endedAfter = last && scan.ends.some((e) => (at(e.logTime) ?? 0) >= last.at);
+              if (last && !endedAfter && Date.now() - last.at < 3 * 60 * 60 * 1000 && !liveRaidMapIdRef.current) {
+                const raidMap = last.location ? mapIdFromLogLocation(last.location) ?? null : null;
+                if (raidMap) {
+                  liveRaidMapIdRef.current = raidMap;
+                  setSelectedMapId((cur) => (cur === raidMap ? cur : raidMap));
+                }
+              }
               setHistory((h) =>
                 mergeSideScan(h, {
                   raids: scan.raids.map((r) => ({ location: r.location, profileKey: r.profileKey, at: at(r.logTime) })),

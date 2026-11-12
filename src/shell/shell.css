@@ -364,3 +364,39 @@
 .map-stage .leaflet-tile-pane {
   filter: brightness(var(--map-brightness, 1));
 }
+
+/* "In raid" pill under the map picker: the map and the side (PMC / Scav)
+   the app has worked out for the raid in progress. */
+.raid-pill {
+  margin-top: var(--sp-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--r-pill);
+  background: var(--live-soft);
+  color: var(--text);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+}
+.raid-pill__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  flex: none;
+  animation: floor-live-breathe 2s var(--ease-in-out) infinite;
+}
+.raid-pill__text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.raid-pill__side {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  background: var(--surface-3);
+  color: var(--text-dim);
+}
+.raid-pill--scav .raid-pill__side { background: var(--warn-soft); color: var(--warn); }
+.raid-pill--pmc .raid-pill__side { background: var(--info-soft); color: var(--info); }

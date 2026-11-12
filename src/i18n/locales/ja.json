@@ -666,5 +666,11 @@
     "readSwitched_one": "O+O のスクリーンショットから脱出地点を {{count}} 件読み取り、{{map}} に切り替えました",
     "readSwitched_other": "O+O のスクリーンショットから脱出地点を {{count}} 件読み取り、{{map}} に切り替えました(それだけを表示)",
     "missingOcrLanguage": "Windows はゲームの言語 ({{lang}}) の文字を読み取れません。Windows の設定 → 時刻と言語 → 言語 でその言語を追加してから、もう一度お試しください。"
+  },
+  "raidPill": {
+    "live": "レイド中：{{map}}",
+    "pmc": "PMC",
+    "scav": "Scav",
+    "unknown": "不明"
   }
 }

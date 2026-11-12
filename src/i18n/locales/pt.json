@@ -666,5 +666,11 @@
     "readSwitched_one": "{{count}} saída lida do print do O+O — mapa trocado para {{map}}",
     "readSwitched_other": "{{count}} saídas lidas do print do O+O — mapa trocado para {{map}}, mostrando só essas",
     "missingOcrLanguage": "O Windows não sabe ler texto no idioma do jogo ({{lang}}). Adicione esse idioma em Configurações do Windows → Hora e idioma → Idioma e tente de novo."
+  },
+  "raidPill": {
+    "live": "Em raid: {{map}}",
+    "pmc": "PMC",
+    "scav": "Scav",
+    "unknown": "lado desconhecido"
   }
 }

@@ -666,5 +666,11 @@
     "readSwitched_one": "{{count}} salida leída de la captura de O+O — mapa cambiado a {{map}}",
     "readSwitched_other": "{{count}} salidas leídas de la captura de O+O — mapa cambiado a {{map}}, solo se muestran esas",
     "missingOcrLanguage": "Windows no puede leer texto en el idioma del juego ({{lang}}). Añade ese idioma en Configuración de Windows → Hora e idioma → Idioma y vuelve a intentarlo."
+  },
+  "raidPill": {
+    "live": "En incursión: {{map}}",
+    "pmc": "PMC",
+    "scav": "Scav",
+    "unknown": "lado desconocido"
   }
 }
