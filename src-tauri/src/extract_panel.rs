@@ -34,6 +34,8 @@ pub fn panel_crop(w: u32, h: u32) -> PanelCrop {
 pub fn ocr_tag(eft: &str) -> String {
     match eft.to_ascii_lowercase().as_str() {
         "jp" => "ja".into(),
+        // EFT writes Portuguese as "po" (Brazilian Portuguese in game).
+        "po" => "pt-BR".into(),
         "ch" => "zh-Hans".into(),
         "kr" => "ko".into(),
         "ge" => "de".into(),
@@ -163,9 +165,10 @@ pub struct ScreenText {
 }
 
 /// Upscale for the whole screen: inventory short names are ~10 px tall at
-/// 1080p and read far better doubled, as long as the engine accepts the size.
+/// 1080p (~13 at 1440p) and read far better doubled, as long as the engine
+/// accepts the size. 4K text is big enough as is.
 pub fn screen_scale(w: u32, h: u32, max_dim: u32) -> u32 {
-    if h >= 1400 {
+    if h >= 2000 {
         return 1;
     }
     if w * 2 <= max_dim && h * 2 <= max_dim { 2 } else { 1 }
@@ -254,7 +257,8 @@ mod tests {
     fn doubles_1080p_for_the_screen_scan_only_when_the_engine_allows() {
         assert_eq!(screen_scale(1920, 1080, 10000), 2);
         assert_eq!(screen_scale(1920, 1080, 2600), 1);
-        assert_eq!(screen_scale(2560, 1440, 10000), 1);
+        assert_eq!(screen_scale(2560, 1440, 10000), 2);
+        assert_eq!(screen_scale(3840, 2160, 10000), 1);
     }
 
     #[test]
@@ -262,6 +266,7 @@ mod tests {
         assert_eq!(ocr_tag("jp"), "ja");
         assert_eq!(ocr_tag("ch"), "zh-Hans");
         assert_eq!(ocr_tag("ru"), "ru");
+        assert_eq!(ocr_tag("po"), "pt-BR");
     }
 
     #[test]
