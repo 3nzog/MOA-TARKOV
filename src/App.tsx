@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { ArrowsClockwise, ArrowsOutSimple } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import './App.css';
@@ -60,6 +60,10 @@ import { currentRaid, learnSides, raidSide, setManualSide, type RaidSide } from 
 import PlannerPanel, { type PlannerTab } from './planner/PlannerPanel';
 import { useAppearance } from './appearance/useAppearance';
 import GlassIntro from './intro/GlassIntro';
+import { effectiveStatus } from './state/localProgress';
+
+// The weapon bench and its ~2 MB of data load only when it is first opened.
+const GunsmithBench = lazy(() => import('./gunsmith/GunsmithBench'));
 import { knownSymbol, useSelfSymbol } from './squad/symbols';
 import { hexForColorId } from '../shared/squadProtocol';
 
@@ -84,6 +88,7 @@ function App() {
   );
   const [patchNotesOpen, setPatchNotesOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [gunsmithOpen, setGunsmithOpen] = useState(false);
   const [plannerTab, setPlannerTab] = useState<PlannerTab>('summary');
   const appearance = useAppearance();
   // The glass logo reveal plays once per launch (Settings → Appearance turns it off).
@@ -283,6 +288,9 @@ function App() {
     inRaid: !!liveRaid,
   });
   const relativeSynced = useRelativeTime(quests.lastSynced);
+  // Quest-unlocked trader offers in the weapon bench open once the quest is done.
+  const questProgress = quests.progress;
+  const taskDone = useCallback((id: string) => effectiveStatus(questProgress, id) === 'complete', [questProgress]);
   const relativeStale = useRelativeTime(quests.staleSince);
 
   // Hover belongs to the map it happened on.
@@ -391,6 +399,7 @@ function App() {
           onFeedback={() => setFeedbackOpen(true)}
           onHowTo={() => setOnboardingOpen(true)}
           onSettings={() => setSettingsOpen(true)}
+          onGunsmith={() => setGunsmithOpen(true)}
           onCompact={toggleCompact}
           hints={{
             quests: hotkeys.map.quests,
@@ -675,6 +684,15 @@ function App() {
           followZoom={settings.followZoom}
           onFollowZoomChange={settings.setFollowZoom}
         />
+      )}
+      {gunsmithOpen && (
+        <Suspense fallback={null}>
+          <GunsmithBench
+            onClose={() => setGunsmithOpen(false)}
+            playerLevel={quests.progress.levelSet ? quests.progress.playerLevel : null}
+            taskDone={taskDone}
+          />
+        </Suspense>
       )}
       {patchNotesOpen && (
         <PatchNotesModal onClose={() => setPatchNotesOpen(false)} />

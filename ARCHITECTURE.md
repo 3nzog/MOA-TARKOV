@@ -170,6 +170,20 @@ player's map symbol lives in `src/squad/symbols.ts`, which also builds the
 marker HTML shared by the player, squadmate and minimap markers. The opening
 animation is `src/intro/` (WebGL2, with a plain fade when WebGL2 is missing).
 
+## Weapon bench
+
+`src/gunsmith/` is a modding screen: pick a gun, fit parts slot by slot, watch
+ergonomics, recoil, weight and cost move, and see where each part comes from
+for this player (trader cash offers and barters by loyalty level, quest
+unlocks, the flea from its unlock level, hideout crafts). Its data is a
+snapshot of tarkov.dev's JSON dumps (`npm run data:weapons` →
+`data/snapshot/weapons*.json`, ~1.6 MB plus names), loaded only when the bench
+opens. Trader loyalty is not visible to a passive reader, so the player sets it
+once (estimated from their level until then). Presets are MoA's own, kept in
+localStorage and shareable as a `MOA1:` text code: the presets saved in the
+game live on Battlestate's servers, and the logs only record that the client
+asked for them, never their content.
+
 ## Squad mode: a relay, not P2P
 
 **Automatic party on a VPN LAN.** With Radmin VPN on, "Join party" needs no

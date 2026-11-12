@@ -16,6 +16,7 @@ import {
   GearSix,
   ListChecks,
   ArrowsInSimple,
+  Wrench,
 } from '@phosphor-icons/react';
 import { Tooltip } from '../ui';
 
@@ -39,6 +40,8 @@ export interface SpineProps {
   onFeedback: () => void;
   onHowTo: () => void;
   onSettings: () => void;
+  /** Opens the weapon bench. */
+  onGunsmith?: () => void;
   /** Hotkey hints shown in tooltips, keyed by section / tool. */
   hints?: Partial<Record<RailSection | 'compact', string | null>>;
   onCompact?: () => void;
@@ -93,6 +96,7 @@ export default function Spine({
   onFeedback,
   onHowTo,
   onSettings,
+  onGunsmith,
   hints,
   onCompact,
 }: SpineProps) {
@@ -137,6 +141,11 @@ export default function Spine({
         'planner',
         t('rail.planner'),
         <ListChecks weight={activeSection === 'planner' ? 'fill' : 'regular'} />,
+      )}
+      {onGunsmith && (
+        <SpineButton label={t('rail.gunsmith')} side={side} onClick={onGunsmith}>
+          <Wrench weight="regular" />
+        </SpineButton>
       )}
 
       <div className="spine__spacer" />
