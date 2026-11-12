@@ -24,6 +24,38 @@ if not exist "package.json" goto :no_project
 
 call :refresh_path
 
+rem ---- Atualizar pelo Git ---------------------------------------------------------
+rem  Se esta pasta veio do GitHub (tem .git), baixa a versao mais nova antes de
+rem  abrir. Sem internet, sem Git ou com mudancas locais que conflitam, segue com
+rem  a versao que ja esta aqui. Se a atualizacao trouxer um .bat novo, este
+rem  arquivo reinicia com ele (--atualizado evita repetir a busca).
+if /i "%~1"=="--atualizado" goto :updated
+if not exist ".git" goto :updated
+where git >nul 2>&1
+if errorlevel 1 goto :updated
+set "OLDHEAD="
+for /f %%H in ('git rev-parse HEAD 2^>nul') do set "OLDHEAD=%%H"
+echo  [..] Procurando atualizacao no GitHub...
+rem  Tudo num bloco so: o cmd le o bloco inteiro antes de rodar, entao trocar
+rem  este arquivo no meio do git pull nao atrapalha o que vem depois.
+(
+  git -c credential.helper= -c credential.helper=manager pull --ff-only --quiet >nul 2>&1
+  if errorlevel 1 (
+    echo  [!!] Nao deu para atualizar agora - sem internet, ou arquivos mudados aqui.
+    echo       Abrindo a versao que ja esta instalada.
+  ) else (
+    for /f %%H in ('git rev-parse HEAD 2^>nul') do (
+      if /i not "%%H"=="%OLDHEAD%" (
+        echo  [ok] Atualizado para a versao mais nova.
+        call "%~f0" --atualizado
+        exit /b
+      )
+    )
+    echo  [ok] Ja esta na versao mais nova.
+  )
+)
+:updated
+
 rem ---- winget ------------------------------------------------------------------
 where winget >nul 2>&1
 if errorlevel 1 set "NO_WINGET=1"
