@@ -72,6 +72,10 @@ export interface ExtractPanelPayload {
 export function subscribeExtractPanel(cb: (e: ExtractPanelPayload) => void): Promise<UnlistenFn> {
   return listen<ExtractPanelPayload>('extract-panel', (ev) => cb(ev.payload));
 }
+/** Every word OCR read on a screenshot, with positions (src/prices/scan.ts). */
+export function subscribeScreenText(cb: (e: import('../prices/scan').ScreenText) => void): Promise<UnlistenFn> {
+  return listen<import('../prices/scan').ScreenText>('screen-text', (ev) => cb(ev.payload));
+}
 export function subscribeRaidEnded(cb: (e: RaidEndedPayload) => void): Promise<UnlistenFn> {
   return listen<RaidEndedPayload>('raid-ended', (ev) => cb(ev.payload));
 }

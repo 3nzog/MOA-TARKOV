@@ -452,7 +452,7 @@
       "followZoom": "Zoom de seguimiento",
       "followZoomDesc": "Qué tan cerca queda la cámara al saltar.",
       "followZoomLabel": "Nivel de zoom de seguimiento",
-      "hint": "Cada pulsación guarda una captura; {{appName}} lee la posición al instante y borra el archivo. No se acumula nada en tus Documentos."
+      "hint": "Cada pulsación guarda una captura; {{appName}} lee la posición al instante. La imagen se queda en tu carpeta de capturas."
     },
     "ready": {
       "title": "Listo. La barra controla todo:",
@@ -766,5 +766,18 @@
     "maximize": "Maximizar",
     "restore": "Restaurar",
     "close": "Cerrar"
+  },
+  "prices": {
+    "title": "Precios",
+    "hovered": "Precio del objeto",
+    "inventory_one": "{{count}} objeto leído",
+    "inventory_other": "{{count}} objetos leídos",
+    "close": "Cerrar",
+    "flea": "Mercadillo",
+    "uncertain": "nombre de varios objetos",
+    "total": "Total (lo mejor entre mercadillo y comerciante)",
+    "uncertainNote_one": "{{count}} nombre sirve para más de un objeto: se muestra como rango y queda fuera del total.",
+    "uncertainNote_other": "{{count}} nombres sirven para más de un objeto: se muestran como rango y quedan fuera del total.",
+    "note": "Los precios son estimaciones de tarkov.dev de la última actualización."
   }
 }

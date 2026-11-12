@@ -452,7 +452,7 @@
       "followZoom": "Zoom de acompanhamento",
       "followZoomDesc": "Quão perto a câmera fica ao saltar.",
       "followZoomLabel": "Nível de zoom de acompanhamento",
-      "hint": "Cada toque salva um screenshot; o {{appName}} lê a posição na hora e apaga o arquivo. Nada se acumula nos seus Documentos."
+      "hint": "Cada toque salva um screenshot; o {{appName}} lê a posição na hora. O print continua na sua pasta de Screenshots."
     },
     "ready": {
       "title": "Tudo pronto. A barra comanda tudo:",
@@ -766,5 +766,18 @@
     "maximize": "Maximizar",
     "restore": "Restaurar",
     "close": "Fechar"
+  },
+  "prices": {
+    "title": "Preços",
+    "hovered": "Preço do item",
+    "inventory_one": "{{count}} item lido",
+    "inventory_other": "{{count}} itens lidos",
+    "close": "Fechar",
+    "flea": "Flea",
+    "uncertain": "nome de mais de um item",
+    "total": "Total (melhor entre flea e trader)",
+    "uncertainNote_one": "{{count}} nome serve para mais de um item: aparece como faixa de preço e fica fora do total.",
+    "uncertainNote_other": "{{count}} nomes servem para mais de um item: aparecem como faixa de preço e ficam fora do total.",
+    "note": "Preços são estimativas do tarkov.dev, da última atualização dos dados."
   }
 }

@@ -452,7 +452,7 @@
       "followZoom": "跟随缩放",
       "followZoomDesc": "跳转时镜头的远近。",
       "followZoomLabel": "跟随缩放级别",
-      "hint": "每次按下都会保存一张截图；{{appName}} 会立即读取位置并删除该文件。不会在你的“文档”里堆积。"
+      "hint": "每次按下都会保存一张截图；{{appName}} 会立即读取位置。截图会保留在你的截图文件夹里。"
     },
     "ready": {
       "title": "全部就绪。控制栏掌管一切：",
@@ -766,5 +766,18 @@
     "maximize": "最大化",
     "restore": "还原",
     "close": "关闭"
+  },
+  "prices": {
+    "title": "价格",
+    "hovered": "物品价格",
+    "inventory_one": "读到 {{count}} 件物品",
+    "inventory_other": "读到 {{count}} 件物品",
+    "close": "关闭",
+    "flea": "跳蚤市场",
+    "uncertain": "多个物品共用的名称",
+    "total": "合计（跳蚤市场与商人取高者）",
+    "uncertainNote_one": "{{count}} 个名称对应多个物品，以价格区间显示，不计入合计。",
+    "uncertainNote_other": "{{count}} 个名称对应多个物品，以价格区间显示，不计入合计。",
+    "note": "价格为 tarkov.dev 在最近一次数据更新时的估算。"
   }
 }

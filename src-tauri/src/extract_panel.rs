@@ -65,7 +65,6 @@ pub fn read_panel(path: &Path, game_lang: Option<&str>) -> windows::core::Result
         BitmapAlphaMode, BitmapBounds, BitmapDecoder, BitmapPixelFormat, BitmapTransform, ColorManagementMode,
         ExifOrientationMode,
     };
-    use windows::Media::Ocr::OcrEngine;
     use windows::Storage::{FileAccessMode, StorageFile};
 
     // The watcher thread is not a WinRT thread yet; a second call is harmless.
@@ -99,24 +98,7 @@ pub fn read_panel(path: &Path, game_lang: Option<&str>) -> windows::core::Result
             ColorManagementMode::DoNotColorManage,
         )?
         .get()?;
-    // The game's own language first, so Cyrillic or CJK lists are readable;
-    // Latin recognizers also read the English names the game leaves untranslated.
-    let mut missing_language = None;
-    let mut engine = None;
-    if let Some(code) = game_lang {
-        let tag = ocr_tag(code);
-        if let Ok(lang) = windows::Globalization::Language::CreateLanguage(&HSTRING::from(tag.as_str())) {
-            if OcrEngine::IsLanguageSupported(&lang).unwrap_or(false) {
-                engine = OcrEngine::TryCreateFromLanguage(&lang).ok();
-            } else {
-                missing_language = Some(tag);
-            }
-        }
-    }
-    let engine = match engine {
-        Some(e) => e,
-        None => OcrEngine::TryCreateFromUserProfileLanguages()?,
-    };
+    let (engine, missing_language) = pick_engine(game_lang)?;
     let result = engine.RecognizeAsync(&bitmap)?.get()?;
     let mut lines = Vec::new();
     for line in result.Lines()? {
@@ -127,6 +109,124 @@ pub fn read_panel(path: &Path, game_lang: Option<&str>) -> windows::core::Result
         }
     }
     Ok(PanelText { lines, missing_language })
+}
+
+/// The OCR recognizer for the game's language when Windows has it (Cyrillic and
+/// CJK need their own; Latin ones also read the English names the game leaves
+/// untranslated), else the Windows display language's. Also returns the game's
+/// language tag when Windows lacks it, so the player can be told.
+#[cfg(windows)]
+fn pick_engine(game_lang: Option<&str>) -> windows::core::Result<(windows::Media::Ocr::OcrEngine, Option<String>)> {
+    use windows::core::HSTRING;
+    use windows::Media::Ocr::OcrEngine;
+    let mut missing_language = None;
+    if let Some(code) = game_lang {
+        let tag = ocr_tag(code);
+        if let Ok(lang) = windows::Globalization::Language::CreateLanguage(&HSTRING::from(tag.as_str())) {
+            if OcrEngine::IsLanguageSupported(&lang).unwrap_or(false) {
+                if let Ok(e) = OcrEngine::TryCreateFromLanguage(&lang) {
+                    return Ok((e, None));
+                }
+            } else {
+                missing_language = Some(tag);
+            }
+        }
+    }
+    Ok((OcrEngine::TryCreateFromUserProfileLanguages()?, missing_language))
+}
+
+/// One word the OCR read, with its box in source-image pixels.
+#[derive(serde::Serialize, Clone, Debug)]
+pub struct ScreenWord {
+    pub text: String,
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+}
+
+#[derive(serde::Serialize, Clone, Debug)]
+pub struct ScreenLine {
+    pub text: String,
+    pub words: Vec<ScreenWord>,
+}
+
+/// All the text on a screenshot, for the price check: the hovered item's
+/// tooltip, or the short names on the inventory cells.
+#[derive(serde::Serialize, Clone, Debug)]
+pub struct ScreenText {
+    pub width: u32,
+    pub height: u32,
+    pub lines: Vec<ScreenLine>,
+    #[serde(rename = "missingLanguage")]
+    pub missing_language: Option<String>,
+}
+
+/// Upscale for the whole screen: inventory short names are ~10 px tall at
+/// 1080p and read far better doubled, as long as the engine accepts the size.
+pub fn screen_scale(w: u32, h: u32, max_dim: u32) -> u32 {
+    if h >= 1400 {
+        return 1;
+    }
+    if w * 2 <= max_dim && h * 2 <= max_dim { 2 } else { 1 }
+}
+
+/// OCR the whole screenshot, keeping where every word sits.
+#[cfg(windows)]
+pub fn read_screen(path: &Path, game_lang: Option<&str>) -> windows::core::Result<ScreenText> {
+    use windows::core::HSTRING;
+    use windows::Graphics::Imaging::{
+        BitmapAlphaMode, BitmapDecoder, BitmapPixelFormat, BitmapTransform, ColorManagementMode, ExifOrientationMode,
+    };
+    use windows::Media::Ocr::OcrEngine;
+    use windows::Storage::{FileAccessMode, StorageFile};
+
+    unsafe {
+        let _ = windows::Win32::System::WinRT::RoInitialize(windows::Win32::System::WinRT::RO_INIT_MULTITHREADED);
+    }
+    let file = StorageFile::GetFileFromPathAsync(&HSTRING::from(path.as_os_str()))?.get()?;
+    let stream = file.OpenAsync(FileAccessMode::Read)?.get()?;
+    let decoder = BitmapDecoder::CreateAsync(&stream)?.get()?;
+    let (w, h) = (decoder.PixelWidth()?, decoder.PixelHeight()?);
+    if w < 200 || h < 200 {
+        return Ok(ScreenText { width: w, height: h, lines: Vec::new(), missing_language: None });
+    }
+    let max_dim = OcrEngine::MaxImageDimension().unwrap_or(4096);
+    let scale = std::env::var("MOA_OCR_SCALE").ok().and_then(|v| v.parse().ok()).filter(|k: &u32| w * k <= max_dim && h * k <= max_dim).unwrap_or_else(|| screen_scale(w, h, max_dim));
+    let transform = BitmapTransform::new()?;
+    transform.SetScaledWidth(w * scale)?;
+    transform.SetScaledHeight(h * scale)?;
+    let bitmap = decoder
+        .GetSoftwareBitmapTransformedAsync(
+            BitmapPixelFormat::Bgra8,
+            BitmapAlphaMode::Premultiplied,
+            &transform,
+            ExifOrientationMode::IgnoreExifOrientation,
+            ColorManagementMode::DoNotColorManage,
+        )?
+        .get()?;
+    let (engine, missing_language) = pick_engine(game_lang)?;
+    let result = engine.RecognizeAsync(&bitmap)?.get()?;
+    let k = scale as f32;
+    let mut lines = Vec::new();
+    for line in result.Lines()? {
+        let text = line.Text()?.to_string().trim().to_owned();
+        if text.is_empty() || text.len() > 160 {
+            continue;
+        }
+        let mut words = Vec::new();
+        for word in line.Words()? {
+            let r = word.BoundingRect()?;
+            words.push(ScreenWord { text: word.Text()?.to_string(), x: r.X / k, y: r.Y / k, w: r.Width / k, h: r.Height / k });
+        }
+        lines.push(ScreenLine { text, words });
+    }
+    Ok(ScreenText { width: w, height: h, lines, missing_language })
+}
+
+#[cfg(not(windows))]
+pub fn read_screen(_path: &Path, _game_lang: Option<&str>) -> Result<ScreenText, String> {
+    Ok(ScreenText { width: 0, height: 0, lines: Vec::new(), missing_language: None })
 }
 
 #[cfg(all(not(windows), test))]
@@ -151,6 +251,13 @@ mod tests {
     }
 
     #[test]
+    fn doubles_1080p_for_the_screen_scan_only_when_the_engine_allows() {
+        assert_eq!(screen_scale(1920, 1080, 10000), 2);
+        assert_eq!(screen_scale(1920, 1080, 2600), 1);
+        assert_eq!(screen_scale(2560, 1440, 10000), 1);
+    }
+
+    #[test]
     fn maps_eft_language_codes() {
         assert_eq!(ocr_tag("jp"), "ja");
         assert_eq!(ocr_tag("ch"), "zh-Hans");
@@ -163,6 +270,25 @@ mod tests {
         assert_eq!(c.x + c.width, 3440);
         assert_eq!(c.width, 864);
         assert_eq!(c.scale, 1);
+    }
+
+    /// Whole-screen OCR on an image: cargo test screen_ -- --ignored --nocapture
+    /// with MOA_OCR_SAMPLE set to a screenshot path.
+    #[test]
+    #[ignore]
+    #[cfg(windows)]
+    fn screen_reads_a_sample() {
+        let Ok(p) = std::env::var("MOA_OCR_SAMPLE") else { return };
+        let started = std::time::Instant::now();
+        let t = read_screen(Path::new(&p), std::env::var("MOA_OCR_LANG").ok().as_deref()).expect("ocr");
+        println!("{} ms, {}x{}", started.elapsed().as_millis(), t.width, t.height);
+        if let Ok(out) = std::env::var("MOA_OCR_JSON") {
+            std::fs::write(out, serde_json::to_string(&t).unwrap()).unwrap();
+        }
+        for l in t.lines {
+            let first = l.words.first().map(|w| (w.x as i32, w.y as i32)).unwrap_or((0, 0));
+            println!("| {:?} {}", first, l.text);
+        }
     }
 
     /// Runs real OCR on an image: cargo test ocr_ -- --ignored --nocapture

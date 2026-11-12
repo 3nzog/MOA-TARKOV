@@ -61,6 +61,8 @@ import PlannerPanel, { type PlannerTab } from './planner/PlannerPanel';
 import { useAppearance } from './appearance/useAppearance';
 import GlassIntro from './intro/GlassIntro';
 import TitleBar from './shell/TitleBar';
+import PriceScanCard from './prices/PriceScan';
+import { usePriceScan } from './prices/usePriceScan';
 import PlaceLabelLayer from './map/PlaceLabelLayer';
 import { collectObjectiveMaps } from './quests/derive';
 import type { TarkovTask, TaskObjective } from './api/types';
@@ -127,6 +129,9 @@ function App() {
   });
   // O+O screenshot → the exits open to you this raid. The handler is assigned
   // further down, once the map's POIs and the live raid are known.
+  // Until when a screenshot's text is an O+O list, not something to price.
+  const extractSkipUntil = useRef(0);
+  const priceScan = usePriceScan(() => extractSkipUntil.current);
   const extractPanelHandler = useRef<((lines: string[], missingLanguage: string | null) => void) | null>(null);
   // Every exit's name in all six languages, so the list is read whatever
   // language the game runs in. Loaded once in the background (cached a week).
@@ -218,6 +223,8 @@ function App() {
       return questState ? resolveMapName(id, questState.availableTasksByMap, questState.availableObjectivesByMap) : id;
     };
     extractPanelHandler.current = (lines, missingLanguage) => {
+      // The same screenshot's text arrives next for the price check: an O+O list is not an inventory.
+      extractSkipUntil.current = Date.now() + 3000;
       // Try every map: the list itself says where you are. Ties go to the raid's map, then the one shown.
       const raidMap = liveRaid?.location ? mapIdFromLogLocation(liveRaid.location) ?? null : null;
       const sidePois = Object.fromEntries(
@@ -411,6 +418,7 @@ function App() {
       <TitleBar />
       {showIntro && <GlassIntro onDone={() => setShowIntro(false)} />}
       <Toast message={toast} onDismiss={() => setToast(null)} />
+      {priceScan.result && <PriceScanCard result={priceScan.result} onClose={priceScan.clear} />}
       <div
         className={`shell shell--${settings.railSide}${compact.compact ? ' shell--compact' : ''}`}
         style={{ '--chrome-w': `${chromeWidth}px` } as CSSProperties}

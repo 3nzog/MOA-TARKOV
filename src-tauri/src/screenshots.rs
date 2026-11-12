@@ -1,9 +1,9 @@
 // Screenshot watcher.
 //
 // Watches the EFT Screenshots dir. When the game writes a new PNG with the
-// position-encoded filename, parse it, emit `player-position { x, y, z, rotation }`,
-// and delete the file. Auto-delete keeps the folder lean and prevents the user
-// from accumulating thousands of position-debug PNGs.
+// position-encoded filename, parse it and emit `player-position { x, y, z, rotation }`;
+// then read its text (O+O extract list, item prices). The file is left where it
+// is: it is the player's picture.
 //
 // Filename format (derived 2026-05-27 from a real EFT screenshot):
 //   2026-05-27[22-51]_-44.40, 25.75, 28.54_0.06418, 0.40166, -0.02823, 0.91310_6.76 (0).png
@@ -66,21 +66,20 @@ fn process_screenshot(app: &AppHandle, path: &Path, re: &Regex) {
     let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
         return;
     };
-    if !name.to_lowercase().ends_with(".png") {
+    if !name.to_lowercase().ends_with(".png") || !is_game_screenshot(name) {
         return;
     }
-    let Some(pos) = parse_filename(name, re) else {
-        eprintln!("[screenshots] unrecognized filename: {}", name);
-        return;
-    };
-    if let Err(e) = app.emit("player-position", pos) {
-        eprintln!("[screenshots] emit failed: {}", e);
-        return;
+    // In a raid the name carries the position; in the stash or the hideout it
+    // may not, and the picture is still worth reading for prices.
+    if let Some(pos) = parse_filename(name, re) {
+        if let Err(e) = app.emit("player-position", pos) {
+            eprintln!("[screenshots] emit failed: {}", e);
+        }
     }
+    let game_lang = crate::game_lang::get_game_language();
     // O+O: if the extract list was open, its text is in the top-right corner.
     // Two lines minimum — every raid has at least two exits, and it keeps a
     // stray word from the game scene from looking like a list.
-    let game_lang = crate::game_lang::get_game_language();
     match crate::extract_panel::read_panel(path, game_lang.as_deref()) {
         Ok(p) if p.lines.len() >= 2 => {
             let payload = serde_json::json!({ "lines": p.lines, "missingLanguage": p.missing_language });
@@ -91,10 +90,28 @@ fn process_screenshot(app: &AppHandle, path: &Path, re: &Regex) {
         Ok(_) => {}
         Err(e) => eprintln!("[screenshots] extract OCR failed: {}", e),
     }
-    // Auto-delete (safe per project-tarkov-tracker memory).
-    if let Err(e) = std::fs::remove_file(path) {
-        eprintln!("[screenshots] failed to delete {}: {}", path.display(), e);
+    // Price check: every word on the screen with its position (the hovered
+    // item's tooltip, or the short names on the inventory cells).
+    match crate::extract_panel::read_screen(path, game_lang.as_deref()) {
+        Ok(t) if !t.lines.is_empty() => {
+            if let Err(e) = app.emit("screen-text", t) {
+                eprintln!("[screenshots] emit screen-text failed: {}", e);
+            }
+        }
+        Ok(_) => {}
+        Err(e) => eprintln!("[screenshots] screen OCR failed: {}", e),
     }
+    // The screenshot stays where the game put it: it is the player's picture
+    // (the app used to delete it after reading; players want to keep them).
+}
+
+/// The game names its screenshots "2026-11-08[21-01]_...png"; anything else in
+/// the folder is the player's own file and is left alone.
+fn is_game_screenshot(name: &str) -> bool {
+    let b = name.as_bytes();
+    b.len() > 18
+        && b[..10].iter().enumerate().all(|(i, c)| if i == 4 || i == 7 { *c == b'-' } else { c.is_ascii_digit() })
+        && b[10] == b'['
 }
 
 /// Shared mutable state holding the screenshots dir. Allows the Tauri command
@@ -181,6 +198,14 @@ pub fn start(app: AppHandle, state: Arc<Mutex<Option<PathBuf>>>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tells_game_screenshots_from_other_files() {
+        assert!(is_game_screenshot("2026-11-08[21-01]_520.87, 9.66, 202.48_-0.00346, -0.99620, -0.04704, 0.07327_15.18 (0).png"));
+        assert!(is_game_screenshot("2026-11-12[15-30]_(0).png"));
+        assert!(!is_game_screenshot("minha foto.png"));
+        assert!(!is_game_screenshot("2026-11-12.png"));
+    }
 
     #[test]
     fn parses_real_filename() {

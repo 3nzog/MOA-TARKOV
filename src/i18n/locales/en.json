@@ -452,7 +452,7 @@
       "followZoom": "Follow zoom",
       "followZoomDesc": "How close the camera sits when it jumps.",
       "followZoomLabel": "Follow zoom level",
-      "hint": "Each press saves a screenshot; {{appName}} reads the position instantly and deletes the file. Nothing piles up in your Documents."
+      "hint": "Each press saves a screenshot; {{appName}} reads the position instantly. The picture stays in your Screenshots folder."
     },
     "ready": {
       "title": "You're set. The rail runs everything:",
@@ -766,5 +766,18 @@
     "maximize": "Maximize",
     "restore": "Restore",
     "close": "Close"
+  },
+  "prices": {
+    "title": "Prices",
+    "hovered": "Item price",
+    "inventory_one": "{{count}} item read",
+    "inventory_other": "{{count}} items read",
+    "close": "Close",
+    "flea": "Flea",
+    "uncertain": "name shared by several items",
+    "total": "Total (best of flea and trader)",
+    "uncertainNote_one": "{{count}} name fits more than one item, shown as a price range and left out of the total.",
+    "uncertainNote_other": "{{count}} names fit more than one item, shown as price ranges and left out of the total.",
+    "note": "Prices are tarkov.dev estimates from the last data update."
   }
 }

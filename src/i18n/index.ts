@@ -56,7 +56,7 @@ export function normalizeLang(raw: string | null | undefined): Lang | null {
   }
 }
 
-async function detectGameLang(): Promise<Lang | null> {
+export async function detectGameLang(): Promise<Lang | null> {
   try {
     const raw = await invoke<string | null>('get_game_language');
     return normalizeLang(raw);
