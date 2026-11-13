@@ -1044,3 +1044,13 @@ button:disabled {
 .tc-quest-upcoming { opacity: 0.72; }
 .tc-quest-upcoming .tc-quest-label { color: #c9d8e6; font-weight: 600; }
 .tc-quest-upcoming.tc-hl { opacity: 1; }
+
+/* Exits that are not the player's this raid (other side / not in the O+O
+   list): still on the map, faded, so the whole picture stays readable. */
+.tc-poi-other {
+  opacity: 0.38;
+  filter: grayscale(0.7);
+}
+.tc-poi-other.tc-hl {
+  opacity: 0.85;
+}

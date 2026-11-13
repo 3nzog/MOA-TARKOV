@@ -9,6 +9,7 @@ import './index.css'
 import './squad/squad.css'
 import App from './App.tsx'
 import { SquadProvider } from './squad/SquadContext'
+import { LinkProvider } from './link/LinkProvider'
 import { setupI18n } from './i18n'
 import MinimapApp from './minimap/MinimapApp'
 import { initAppearance } from './appearance/useAppearance'
@@ -29,9 +30,11 @@ void setupI18n().finally(() => {
       {isMinimap ? (
         <MinimapApp />
       ) : (
-        <SquadProvider>
-          <App />
-        </SquadProvider>
+        <LinkProvider>
+          <SquadProvider>
+            <App />
+          </SquadProvider>
+        </LinkProvider>
       )}
     </StrictMode>,
   )

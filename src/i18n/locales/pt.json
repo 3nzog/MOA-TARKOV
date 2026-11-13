@@ -207,7 +207,8 @@
       "hotkeys": "Atalhos",
       "party": "Party",
       "integrations": "Integrações",
-      "about": "Sobre"
+      "about": "Sobre",
+      "devices": "Outros PCs"
     },
     "desktopOnly": "Disponível no app para Windows.",
     "creditsIntro": "Animação de abertura: efeito de vidro adaptado de zanwei/glass-icon-reveal (MIT).",
@@ -302,7 +303,9 @@
       "questNames": "Nome da missão nos marcadores",
       "questNamesHint": "Escreve o nome da missão ao lado de cada local dela.",
       "upcomingQuests": "Missões que posso pegar",
-      "upcomingQuestsHint": "Marca também, numa cor mais suave, as missões que você já pode começar (requisitos e nível ok), não só as que o jogo registrou como aceitas."
+      "upcomingQuestsHint": "Marca também, numa cor mais suave, as missões que você já pode começar (requisitos e nível ok), não só as que o jogo registrou como aceitas.",
+      "otherExits": "Mostrar as outras extrações",
+      "otherExitsHint": "Na raid, as extrações que não são suas (do outro lado ou fora da lista do O+O) ficam apagadas no mapa e no minimapa. Desligado, elas somem."
     }
   },
   "errors": {
@@ -341,8 +344,8 @@
     "leaveSquad": "Sair do esquadrão",
     "party": {
       "join": "Entrar na party",
-      "hint": "Na sua rede do Radmin VPN: se um amigo já estiver numa party, você entra nela; se não, você hospeda e os próximos entram em você. Sem código.",
-      "radminOff": "Ligue o Radmin VPN (e entre na rede dos seus amigos) para a party automática.",
+      "hint": "No Radmin VPN ou na mesma rede de casa: se alguém já estiver numa party, você entra nela; se não, você hospeda e os próximos entram em você. Sem código.",
+      "radminOff": "Ligue o Radmin VPN, ou conecte os PCs no mesmo roteador, para a party automática.",
       "otherWays": "Outras formas de entrar (código)",
       "title": "Party do Radmin",
       "hosting": "Você está hospedando a party",
@@ -351,10 +354,15 @@
       "portBusy": "Outro programa está usando a porta da party (8787). Feche-o e tente de novo.",
       "failed": "Não deu para iniciar a party. Tente de novo.",
       "firewallDeclined": "A permissão do firewall não foi dada: seus amigos podem não conseguir entrar. Saia e entre na party de novo para ver o pedido.",
-      "yourIp": "Seu IP no Radmin:",
-      "byIp": "Ou entre pelo IP do Radmin do amigo",
-      "byIpHint": "Peça ao amigo que está hospedando o IP que aparece na tela dele.",
-      "notAtIp": "Nenhuma party respondeu em {{ip}}. O seu amigo precisa estar com a party aberta no MoA, e na primeira vez que ele hospeda o Windows pede para liberar no firewall."
+      "yourIp": "Seus IPs:",
+      "byIp": "Ou entre pelo IP do amigo",
+      "byIpHint": "Peça ao amigo que está hospedando o IP que aparece na tela dele (Radmin 26.x ou rede de casa 192.168.x).",
+      "notAtIp": "Nenhuma party respondeu em {{ip}}. O seu amigo precisa estar com a party aberta no MoA, e na primeira vez que ele hospeda o Windows pede para liberar no firewall.",
+      "noNetwork": "Nenhuma rede encontrada. Ligue o Radmin VPN (amigos de longe) ou conecte o PC ao roteador (mesma casa).",
+      "lanPublic": "A rede de casa está como Pública no Windows e o Radmin está desligado. Ligue o Radmin, ou marque a rede como Privada nas configurações de rede do Windows.",
+      "netRadmin": "Radmin",
+      "netLan": "rede de casa",
+      "netPublic": "Pública: sem party nela"
     }
   },
   "feedback": {
@@ -651,7 +659,7 @@
     "side": {
       "pmcNow": "Raid atual: PMC",
       "scavNow": "Raid atual: Scav — mostrando extrações de Scav",
-      "unknownNow": "Raid atual: ainda não sei se é PMC ou Scav — mostrando extrações de PMC",
+      "unknownNow": "Raid atual: ainda não sei se é PMC ou Scav — extrações apagadas até você tirar print do O+O ou marcar abaixo",
       "scavQuests": "De Scav, a maioria das quests de PMC não avança.",
       "markPmc": "É PMC",
       "markScav": "É Scav",
@@ -659,7 +667,8 @@
       "source": {
         "manual": "marcado por você",
         "group": "aprendido numa raid em grupo",
-        "elimination": "deduzido (o outro perfil já é conhecido)"
+        "elimination": "deduzido (o outro perfil já é conhecido)",
+        "panel": "lido na lista do O+O"
       }
     }
   },
@@ -678,7 +687,9 @@
     "hint": "Na raid, aperte O duas vezes e tire um print com a lista aberta: o MoA lê suas saídas dele.",
     "readSwitched_one": "{{count}} saída lida do print do O+O — mapa trocado para {{map}}",
     "readSwitched_other": "{{count}} saídas lidas do print do O+O — mapa trocado para {{map}}, mostrando só essas",
-    "missingOcrLanguage": "O Windows não sabe ler texto no idioma do jogo ({{lang}}). Adicione esse idioma em Configurações do Windows → Hora e idioma → Idioma e tente de novo."
+    "missingOcrLanguage": "O Windows não sabe ler texto no idioma do jogo ({{lang}}). Adicione esse idioma em Configurações do Windows → Hora e idioma → Idioma e tente de novo.",
+    "provedScav": "Pela lista: você está de Scav (o app vai lembrar).",
+    "provedPmc": "Pela lista: você está de PMC (o app vai lembrar)."
   },
   "raidPill": {
     "live": "Em raid: {{map}}",
@@ -787,5 +798,128 @@
     "uncertainNote_one": "{{count}} nome serve para mais de um item: aparece como faixa de preço e fica fora do total.",
     "uncertainNote_other": "{{count}} nomes servem para mais de um item: aparecem como faixa de preço e ficam fora do total.",
     "note": "Preços são estimativas do tarkov.dev, da última atualização dos dados."
+  },
+  "link": {
+    "main": {
+      "title": "Este é o PC do jogo",
+      "allow": "Deixar meus outros PCs mostrarem este jogo",
+      "allowHint": "Ligue no PC onde você joga. O outro PC mostra o mapa, a sua posição, as extrações e as missões como se fosse mais um monitor deste.",
+      "thisPc": "Nome deste PC na rede: {{name}}",
+      "firewallOff": "O firewall não foi liberado: o outro PC pode não conseguir chegar. Use Testar conexão → Liberar no firewall.",
+      "none": "Nenhum PC anexado ainda. No outro PC, abra esta aba e clique em Procurar meus PCs.",
+      "connected": "conectado agora",
+      "away": "desligado",
+      "forget": "Remover"
+    },
+    "screen": {
+      "title": "Este PC é a tela extra",
+      "hint": "No PC que fica só com o mapa: procure o PC do jogo e anexe. O PC do jogo precisa estar com o MoA aberto e a opção acima ligada.",
+      "search": "Procurar meus PCs",
+      "noneFound": "Nenhum PC encontrado. No PC do jogo, ligue \"Deixar meus outros PCs mostrarem este jogo\" e procure de novo, ou digite o IP dele abaixo.",
+      "link": "Anexar",
+      "byIp": "Ou pelo IP do PC do jogo",
+      "confirm": "Confirme no PC do jogo ({{host}}). O código lá deve ser:",
+      "codeLabel": "Código de confirmação",
+      "state": {
+        "connecting": "Conectando a {{name}}…",
+        "linked": "Anexado a {{name}}: este PC mostra o jogo de lá.",
+        "lost": "A conexão com {{name}} caiu. Tentando de novo sozinho…"
+      },
+      "unlink": "Desanexar",
+      "refused": "O PC do jogo não permitiu (ou removeu este PC). Procure de novo para pedir outra vez.",
+      "partyNote": "Na tela extra a party funciona para ver os amigos, mas não manda posição: quem manda é o PC do jogo."
+    },
+    "request": {
+      "title": "Anexar um PC?",
+      "body": "{{name}} ({{ip}}) quer mostrar o jogo deste PC: mapa, posição, extrações e missões.",
+      "check": "Só permita se for seu. Confira se o código na tela dele é:",
+      "allow": "Permitir",
+      "refuse": "Recusar"
+    },
+    "chip": {
+      "showing": "Tela de {{name}}",
+      "confirm": "Confirme no PC do jogo: {{code}}",
+      "reconnecting": "Reconectando a {{name}}…",
+      "linked_one": "{{count}} PC anexado",
+      "linked_other": "{{count}} PCs anexados"
+    },
+    "error": {
+      "port_busy": "Outro programa está usando a porta 8789. Feche-o e tente de novo.",
+      "bad_ip": "IP inválido: use o do Radmin (26.x) ou o da rede de casa (192.168.x).",
+      "other": "Não deu certo. Use Testar conexão abaixo para ver o motivo."
+    }
+  },
+  "net": {
+    "test": {
+      "title": "Testar conexão",
+      "hint": "Confere, passo a passo, tudo o que a conexão entre dois PCs precisa. Se quiser testar até um PC específico, digite o IP dele.",
+      "targetPlaceholder": "IP do outro PC (opcional)",
+      "run": "Testar conexão",
+      "fixFirewall": "Liberar no firewall",
+      "openLog": "Abrir registro de conexão"
+    },
+    "step": {
+      "radmin": {
+        "ok": "Radmin VPN ligado: {{ips}}",
+        "info": "Radmin VPN desligado (só precisa para jogar com amigos de longe)"
+      },
+      "lan": {
+        "ok": "Rede de casa: {{ips}}",
+        "info": "Este PC não está numa rede de casa"
+      },
+      "noNetwork": {
+        "fail": "Nenhuma rede encontrada",
+        "help": "Ligue o Radmin VPN ou conecte o PC ao roteador e teste de novo."
+      },
+      "lanPublic": {
+        "warn": "A rede de casa ({{ip}}) está como Pública no Windows",
+        "help": "O PC anexado funciona mesmo assim. Só a party pela rede de casa fica desligada; para liberar, em Configurações do Windows → Rede e Internet → propriedades da rede, escolha Privada."
+      },
+      "firewall": {
+        "ok": "Firewall liberado para o MoA",
+        "warn": "O firewall ainda não foi liberado para o MoA",
+        "help": "Sem isso, os outros PCs podem não conseguir chegar neste. Clique em Liberar no firewall e aceite o aviso do Windows."
+      },
+      "partyPort": {
+        "ok": "Porta da party ({{port}}) ok",
+        "fail": "A porta da party ({{port}}) está ocupada por outro programa",
+        "help": "Feche o programa que usa essa porta e teste de novo."
+      },
+      "linkPort": {
+        "ok": "Porta do PC anexado ({{port}}) ok",
+        "fail": "A porta do PC anexado ({{port}}) está ocupada por outro programa",
+        "help": "Feche o programa que usa essa porta e teste de novo."
+      },
+      "partyFound": {
+        "ok": "Party aberta na rede: {{host}}",
+        "info": "Nenhuma party aberta na rede agora"
+      },
+      "linkFound": {
+        "ok": "PCs aceitando anexar: {{pcs}}",
+        "info": "Nenhum PC aceitando anexar na rede agora"
+      },
+      "target": {
+        "ok": "{{ip}} está na mesma rede deste PC",
+        "warn": "{{ip}} não está numa rede deste PC",
+        "fail": "{{ip}} não é um IP do Radmin nem da rede de casa",
+        "help": "Confira o IP. Os dois PCs precisam estar no mesmo Radmin ou no mesmo roteador."
+      },
+      "targetParty": {
+        "ok": "A party desse PC responde ({{ms}} ms)",
+        "warn": "Esse PC responde, mas a conexão da party não abre",
+        "info": "Esse PC não está hospedando party agora",
+        "help": "O firewall dele deve estar bloqueando. No outro PC, rode este teste e clique em Liberar no firewall."
+      },
+      "targetLink": {
+        "ok": "Ligação com esse PC funcionando ({{ms}} ms ida e volta)",
+        "warn": "A porta desse PC abre, mas ele não responde",
+        "info": "Esse PC não está aceitando anexar agora",
+        "help": "Atualize o MoA nos dois PCs e teste de novo."
+      },
+      "crashed": {
+        "fail": "O teste não conseguiu rodar",
+        "help": "Feche e abra o MoA e tente de novo."
+      }
+    }
   }
 }

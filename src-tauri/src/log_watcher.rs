@@ -718,7 +718,19 @@ fn scan_sides_in_text(text: &str, out: &mut SideScan) {
 pub async fn scan_raid_sides(state: State<'_, eft_config::EftConfigState>) -> Result<SideScan, String> {
     let cfg = state.0.lock().map_err(|e| e.to_string())?.clone();
     let logs_dir = eft_config::resolve_logs_dir(&cfg)?;
-    tauri::async_runtime::spawn_blocking(move || {
+    tauri::async_runtime::spawn_blocking(move || scan_sides_in_dir(&logs_dir)).await.map_err(|e| e.to_string())
+}
+
+/// The same scan, for the linked PC (blocking; None when the logs folder is unknown).
+pub fn scan_sides_for(app: &AppHandle) -> Option<SideScan> {
+    let state = app.try_state::<eft_config::EftConfigState>()?;
+    let cfg = state.0.lock().ok()?.clone();
+    let logs_dir = eft_config::resolve_logs_dir(&cfg).ok()?;
+    Some(scan_sides_in_dir(&logs_dir))
+}
+
+fn scan_sides_in_dir(logs_dir: &Path) -> SideScan {
+    {
         fn collect(dir: &Path, out: &mut Vec<PathBuf>) {
             let Ok(entries) = fs::read_dir(dir) else { return };
             for entry in entries.flatten() {
@@ -731,7 +743,7 @@ pub async fn scan_raid_sides(state: State<'_, eft_config::EftConfigState>) -> Re
             }
         }
         let mut files = Vec::new();
-        collect(&logs_dir, &mut files);
+        collect(logs_dir, &mut files);
         let mut scan = SideScan::default();
         for f in files {
             if let Ok(text) = fs::read_to_string(&f) {
@@ -739,9 +751,7 @@ pub async fn scan_raid_sides(state: State<'_, eft_config::EftConfigState>) -> Re
             }
         }
         scan
-    })
-    .await
-    .map_err(|e| e.to_string())
+    }
 }
 
 #[tauri::command]

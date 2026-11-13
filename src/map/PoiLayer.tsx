@@ -30,6 +30,8 @@ export interface PoiLayerProps {
   mapId: string;
   pois: Poi[];
   isVisible: (poi: Poi) => boolean;
+  /** Drawn faded (exits that are not the player's this raid). */
+  isDimmed?: (poi: Poi) => boolean;
   /** Ids of POIs currently highlighted — several at once, like quest pins. */
   selectedPoiIds?: Set<string>;
   onSelect?: (poi: Poi) => void;
@@ -80,6 +82,7 @@ interface PoiMarkerProps {
   poi: Poi;
   highlighted: boolean;
   offFloor: boolean;
+  dimmed: boolean;
   latLng: [number, number];
   onHover?: (poiId: string | null) => void;
   onSelect?: (poi: Poi) => void;
@@ -89,6 +92,7 @@ function PoiMarker({
   poi,
   highlighted,
   offFloor,
+  dimmed,
   latLng,
   onHover,
   onSelect,
@@ -102,7 +106,8 @@ function PoiMarker({
     if (!el) return;
     el.classList.toggle("tc-hl", highlighted);
     el.classList.toggle("tc-marker-offfloor", offFloor);
-  }, [highlighted, offFloor]);
+    el.classList.toggle("tc-poi-other", dimmed);
+  }, [highlighted, offFloor, dimmed]);
 
   return (
     <Marker
@@ -132,6 +137,7 @@ export default function PoiLayer({
   mapId,
   pois,
   isVisible,
+  isDimmed,
   selectedPoiIds,
   onSelect,
   onHover,
@@ -157,6 +163,7 @@ export default function PoiLayer({
             poi={poi}
             highlighted={selectedPoiIds?.has(poi.id) ?? false}
             offFloor={offFloor}
+            dimmed={isDimmed?.(poi) ?? false}
             latLng={toLatLng(poi.position.x, poi.position.z)}
             onHover={onHover}
             onSelect={onSelect}

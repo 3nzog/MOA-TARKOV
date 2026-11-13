@@ -9,7 +9,9 @@ import { Copy, Check, SignOut, Handshake, X, UsersThree } from "@phosphor-icons/
 import { useSquad } from "./useSquad";
 import { SQUAD_COLORS } from "../../shared/squadProtocol";
 import SquadCard from "./SquadCard";
-import { partyAvailable, partyRadminIps } from "./partyApi";
+import { partyAvailable } from "./partyApi";
+import { netLocalIps, type LocalIp } from "../net/netApi";
+import { isNetworkIp } from "../link/linkApi";
 import { getRelayOverride } from "./config";
 import { Button, Field, Input, IconButton, SectionLabel } from "../ui";
 
@@ -36,18 +38,19 @@ export default function SquadSection({
   const [copied, setCopied] = useState(false);
   // Which action is in flight — so ONLY that button spins (not both).
   const [pending, setPending] = useState<"create" | "join" | "party" | null>(null);
-  // This PC's Radmin VPN address(es), shown so a friend can join by IP.
-  const [radminIps, setRadminIps] = useState<string[] | null>(null);
-  const radmin = radminIps === null ? null : radminIps.length > 0;
+  // This PC's Radmin / home-network addresses, shown so a friend can join by IP.
+  const [localIps, setLocalIps] = useState<LocalIp[] | null>(null);
+  const usable = localIps?.filter((n) => n.kind === "radmin" || !n.public) ?? null;
+  const radmin = usable === null ? null : usable.length > 0;
   const [hostIp, setHostIp] = useState("");
   // The code flow needs a relay server; it is shown only when one is set up.
   const hasRelay = !!getRelayOverride();
   useEffect(() => {
     if (!partyAvailable() || squad.inSquad) return;
     let alive = true;
-    partyRadminIps()
-      .then((ips) => alive && setRadminIps(ips))
-      .catch(() => alive && setRadminIps([]));
+    netLocalIps()
+      .then((ips) => alive && setLocalIps(ips))
+      .catch(() => alive && setLocalIps([]));
     return () => {
       alive = false;
     };
@@ -73,7 +76,7 @@ export default function SquadSection({
     }
   };
   const handlePartyAt = () => {
-    if (nameOk && /^26\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostIp.trim())) {
+    if (nameOk && isNetworkIp(hostIp)) {
       setPending("party");
       squad.joinPartyAt(hostIp.trim(), name.trim(), colorId);
     }
@@ -155,9 +158,17 @@ export default function SquadSection({
                 {t('squad.party.join')}
               </Button>
               <p className="squad-shared-hint">{t('squad.party.hint')}</p>
-              {radminIps && radminIps.length > 0 && (
+              {localIps && localIps.length > 0 && (
                 <p className="squad-shared-hint">
-                  {t('squad.party.yourIp')} <strong className="mono">{radminIps.join(', ')}</strong>
+                  {t('squad.party.yourIp')}{' '}
+                  {localIps.map((n, i) => (
+                    <span key={n.ip}>
+                      {i > 0 && ' · '}
+                      {t(n.kind === 'radmin' ? 'squad.party.netRadmin' : 'squad.party.netLan')}{' '}
+                      <strong className="mono">{n.ip}</strong>
+                      {n.kind === 'lan' && n.public && <> ({t('squad.party.netPublic')})</>}
+                    </span>
+                  ))}
                 </p>
               )}
               <SectionLabel>{t('squad.party.byIp')}</SectionLabel>
@@ -166,13 +177,13 @@ export default function SquadSection({
                   mono
                   value={hostIp}
                   maxLength={15}
-                  placeholder="26.x.x.x"
+                  placeholder="26.x.x.x / 192.168.x.x"
                   onChange={(e) => setHostIp(e.target.value.replace(/[^\d.]/g, ''))}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handlePartyAt();
                   }}
                 />
-                <Button disabled={!nameOk || busy || !/^26\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostIp.trim())} onClick={handlePartyAt}>
+                <Button disabled={!nameOk || busy || !isNetworkIp(hostIp)} onClick={handlePartyAt}>
                   {t('squad.join')}
                 </Button>
               </div>

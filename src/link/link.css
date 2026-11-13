@@ -1,0 +1,160 @@
+/* Linked second PC (Settings → Other PCs), its request dialog and title-bar
+   chip, and the connection test. */
+
+.link-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.link-list__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-1);
+}
+.link-list__name {
+  font-weight: 600;
+  color: var(--text);
+}
+.link-list__state {
+  flex: 1;
+  color: var(--text-faint);
+  font-size: var(--fs-caption);
+}
+.link-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex: none;
+}
+.link-dot.is-on {
+  background: var(--live);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 25%, transparent);
+}
+
+.link-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+}
+.link-status p {
+  margin: 0;
+}
+.link-status--linked {
+  border-color: color-mix(in srgb, var(--live) 55%, var(--border));
+}
+.link-status--pending,
+.link-status--lost {
+  border-color: color-mix(in srgb, var(--warn) 55%, var(--border));
+}
+
+.link-code {
+  margin: 4px 0;
+  font-family: var(--font-mono);
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-align: center;
+  align-self: stretch;
+}
+
+.link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  margin-right: 8px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--live) 45%, var(--border));
+  background: color-mix(in srgb, var(--live) 12%, transparent);
+  color: var(--text);
+  font-size: var(--fs-micro);
+  white-space: nowrap;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.link-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.link-chip--wait {
+  border-color: color-mix(in srgb, var(--warn) 55%, var(--border));
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+
+.conn-test {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.conn-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.conn-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+}
+.conn-step__icon {
+  flex: none;
+  font-size: 18px;
+  line-height: 1;
+  margin-top: 1px;
+}
+.conn-step__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.conn-step--ok .conn-step__icon {
+  color: var(--live);
+}
+.conn-step--warn .conn-step__icon {
+  color: var(--warn);
+}
+.conn-step--fail .conn-step__icon {
+  color: var(--danger);
+}
+.conn-step--info .conn-step__icon {
+  color: var(--text-faint);
+}
+.conn-step--fail {
+  border-color: color-mix(in srgb, var(--danger) 50%, var(--border));
+}
+.conn-step--warn {
+  border-color: color-mix(in srgb, var(--warn) 50%, var(--border));
+}

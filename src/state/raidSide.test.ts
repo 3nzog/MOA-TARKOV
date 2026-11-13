@@ -11,6 +11,7 @@ import {
   recordRaidEnd,
   recordRaidStart,
   setManualSide,
+  setPanelSide,
   type RaidHistory,
 } from './raidHistory';
 
@@ -118,5 +119,44 @@ describe('learning sides from a scan of the logs on disk', () => {
     const live = { ...scan, raids: [...scan.raids, { location: 'Woods', profileKey: SCAV, at: 120 * MIN }] };
     const h = mergeSideScan(EMPTY_HISTORY, live);
     expect(raidSide(currentRaid(h, 125 * MIN)!, learnSides(h))).toBe('scav');
+  });
+});
+
+describe('side proven by the O+O list', () => {
+  // A solo player: no group notification ever, two profiles seen.
+  function solo(): RaidHistory {
+    let h = EMPTY_HISTORY;
+    h = recordRaidStart(h, 'bigmap', 0, PMC);
+    h = recordRaidEnd(h, 'bigmap', 30 * MIN);
+    h = recordRaidStart(h, 'Woods', 60 * MIN, SCAV);
+    return h;
+  }
+
+  it('teaches both profiles from one list (the other by elimination)', () => {
+    const before = learnSides(solo());
+    expect(before.sides.size).toBe(0);
+    const k = learnSides(setPanelSide(solo(), SCAV, 'scav'));
+    expect(k.sides.get(SCAV)).toBe('scav');
+    expect(k.source.get(SCAV)).toBe('panel');
+    expect(k.sides.get(PMC)).toBe('pmc');
+    expect(k.source.get(PMC)).toBe('elimination');
+  });
+
+  it('corrects an older wrong manual mark, and a newer manual mark wins again', () => {
+    let h = setManualSide(solo(), SCAV, 'pmc');
+    h = setPanelSide(h, SCAV, 'scav');
+    expect(learnSides(h).sides.get(SCAV)).toBe('scav');
+    h = setManualSide(h, SCAV, 'pmc');
+    expect(learnSides(h).sides.get(SCAV)).toBe('pmc');
+    // "Detect on its own" forgets both.
+    h = setManualSide(h, SCAV, null);
+    expect(learnSides(h).sides.has(SCAV)).toBe(false);
+  });
+
+  it('survives saving and loading', () => {
+    const h = setPanelSide(solo(), SCAV, 'scav');
+    const back = parseHistory(JSON.stringify(h));
+    expect(back.panelSides).toEqual({ [SCAV]: 'scav' });
+    expect(parseHistory(JSON.stringify({ ...h, panelSides: { nothex: 'scav', [PMC]: 'boss' } })).panelSides).toEqual({});
   });
 });

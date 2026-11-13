@@ -207,7 +207,8 @@
       "hotkeys": "快捷键",
       "party": "小队",
       "integrations": "集成",
-      "about": "关于"
+      "about": "关于",
+      "devices": "其他电脑"
     },
     "desktopOnly": "在桌面应用中可用。",
     "creditsIntro": "开场动画：玻璃效果改编自 zanwei/glass-icon-reveal（MIT）。",
@@ -302,7 +303,9 @@
       "questNames": "标记旁显示任务名",
       "questNamesHint": "在任务的每个地点旁写上任务名。",
       "upcomingQuests": "我能接的任务",
-      "upcomingQuestsHint": "除了已接受的任务，也用浅色标出现在就能开始的任务（前置和等级已满足）。"
+      "upcomingQuestsHint": "除了已接受的任务，也用浅色标出现在就能开始的任务（前置和等级已满足）。",
+      "otherExits": "显示其他撤离点",
+      "otherExitsHint": "在战局中，不属于你的撤离点（另一方的，或不在 O+O 列表中的）会在地图和小地图上变淡。关闭后将隐藏。"
     }
   },
   "errors": {
@@ -341,8 +344,8 @@
     "leaveSquad": "退出小队",
     "party": {
       "join": "加入组队",
-      "hint": "在你的 Radmin VPN 网络中:如果朋友已在组队中,你会加入他;否则由你主持,之后的人加入你。无需代码。",
-      "radminOff": "请开启 Radmin VPN(并加入朋友的网络)以使用自动组队。",
+      "hint": "在 Radmin VPN 或同一家庭网络中：如果已有人在小队里就加入；否则由你做主机，后来的人加入你。无需代码。",
+      "radminOff": "打开 Radmin VPN，或把电脑连到同一个路由器，即可自动组队。",
       "otherWays": "其他加入方式(代码)",
       "title": "Radmin 组队",
       "hosting": "你正在主持组队",
@@ -351,10 +354,15 @@
       "portBusy": "组队端口 (8787) 被其他程序占用。请关闭后重试。",
       "failed": "无法启动组队,请重试。",
       "firewallDeclined": "未授予防火墙权限:朋友可能无法加入。退出并重新加入组队即可再次看到提示。",
-      "yourIp": "你的 Radmin IP：",
-      "byIp": "或用朋友的 Radmin IP 加入",
-      "byIpHint": "向主机朋友要他屏幕上显示的 IP。",
-      "notAtIp": "{{ip}} 没有小队响应。朋友需要在 MoA 里开着小队；第一次做主机时，Windows 会请求在防火墙中允许。"
+      "yourIp": "你的 IP：",
+      "byIp": "或用朋友的 IP 加入",
+      "byIpHint": "向主机朋友要他屏幕上显示的 IP（Radmin 26.x 或家庭网络 192.168.x）。",
+      "notAtIp": "{{ip}} 没有小队响应。朋友需要在 MoA 里开着小队；第一次做主机时，Windows 会请求在防火墙中允许。",
+      "noNetwork": "没有找到网络。打开 Radmin VPN（远方的朋友），或把电脑连到路由器（同一个家）。",
+      "lanPublic": "Windows 把家庭网络标为公用，而且 Radmin 已关闭。打开 Radmin，或在 Windows 网络设置中把网络设为专用。",
+      "netRadmin": "Radmin",
+      "netLan": "家庭网络",
+      "netPublic": "公用：不在其上组队"
     }
   },
   "feedback": {
@@ -651,7 +659,7 @@
     "side": {
       "pmcNow": "当前战局:PMC",
       "scavNow": "当前战局:Scav — 显示 Scav 撤离点",
-      "unknownNow": "当前战局:尚不确定是 PMC 还是 Scav — 显示 PMC 撤离点",
+      "unknownNow": "当前战局：还不确定是 PMC 还是 Scav — 在你截取 O+O 或在下方标记之前，撤离点显示为淡色",
       "scavQuests": "以 Scav 身份时,大多数 PMC 任务不会推进。",
       "markPmc": "是 PMC",
       "markScav": "是 Scav",
@@ -659,7 +667,8 @@
       "source": {
         "manual": "由你设置",
         "group": "从小队战局中得知",
-        "elimination": "推断(另一个档案已知)"
+        "elimination": "推断(另一个档案已知)",
+        "panel": "从 O+O 列表读取"
       }
     }
   },
@@ -678,7 +687,9 @@
     "hint": "战局中按两次 O,并在列表打开时截图:MoA 会从截图中读取你的撤离点。",
     "readSwitched_one": "已从 O+O 截图读取 {{count}} 个撤离点 — 已切换到 {{map}}",
     "readSwitched_other": "已从 O+O 截图读取 {{count}} 个撤离点 — 已切换到 {{map}},只显示这些",
-    "missingOcrLanguage": "Windows 无法识别游戏语言 ({{lang}}) 的文字。请在 Windows 设置 → 时间和语言 → 语言 中添加该语言,然后重试。"
+    "missingOcrLanguage": "Windows 无法识别游戏语言 ({{lang}}) 的文字。请在 Windows 设置 → 时间和语言 → 语言 中添加该语言,然后重试。",
+    "provedScav": "根据列表：你是 Scav（应用会记住）。",
+    "provedPmc": "根据列表：你是 PMC（应用会记住）。"
   },
   "raidPill": {
     "live": "战局中：{{map}}",
@@ -787,5 +798,128 @@
     "uncertainNote_one": "{{count}} 个名称对应多个物品，以价格区间显示，不计入合计。",
     "uncertainNote_other": "{{count}} 个名称对应多个物品，以价格区间显示，不计入合计。",
     "note": "价格为 tarkov.dev 在最近一次数据更新时的估算。"
+  },
+  "link": {
+    "main": {
+      "title": "这是游戏电脑",
+      "allow": "允许我的其他电脑显示这台的游戏",
+      "allowHint": "在你玩游戏的电脑上打开。另一台电脑会像这台的另一个显示器一样，显示地图、你的位置、撤离点和任务。",
+      "thisPc": "这台电脑在网络上的名字：{{name}}",
+      "firewallOff": "防火墙未放行：另一台电脑可能连不上。请用 测试连接 → 放行防火墙。",
+      "none": "还没有关联的电脑。在另一台电脑上打开这个标签页，点 查找我的电脑。",
+      "connected": "已连接",
+      "away": "未连接",
+      "forget": "移除"
+    },
+    "screen": {
+      "title": "这台电脑是副屏",
+      "hint": "在只显示地图的电脑上：找到游戏电脑并关联。游戏电脑需要开着 MoA 并打开上面的选项。",
+      "search": "查找我的电脑",
+      "noneFound": "没有找到电脑。在游戏电脑上打开“允许我的其他电脑显示这台的游戏”后再找，或在下面输入它的 IP。",
+      "link": "关联",
+      "byIp": "或用游戏电脑的 IP",
+      "confirm": "请在游戏电脑（{{host}}）上确认。那边的代码应为：",
+      "codeLabel": "确认代码",
+      "state": {
+        "connecting": "正在连接 {{name}}…",
+        "linked": "已关联 {{name}}：这台电脑显示那边的游戏。",
+        "lost": "与 {{name}} 的连接断了，正在自动重连…"
+      },
+      "unlink": "取消关联",
+      "refused": "游戏电脑没有允许（或移除了这台电脑）。再找一次可以重新请求。",
+      "partyNote": "副屏上的小队可以看到朋友，但不会发送位置：位置由游戏电脑发送。"
+    },
+    "request": {
+      "title": "关联一台电脑？",
+      "body": "{{name}}（{{ip}}）想显示这台电脑的游戏：地图、位置、撤离点和任务。",
+      "check": "只有是你自己的电脑才允许。确认它屏幕上的代码是：",
+      "allow": "允许",
+      "refuse": "拒绝"
+    },
+    "chip": {
+      "showing": "{{name}} 的副屏",
+      "confirm": "请在游戏电脑上确认：{{code}}",
+      "reconnecting": "正在重连 {{name}}…",
+      "linked_other": "已关联 {{count}} 台电脑",
+      "linked_one": "已关联 {{count}} 台电脑"
+    },
+    "error": {
+      "port_busy": "其他程序占用了端口 8789。关闭它后再试。",
+      "bad_ip": "IP 无效：请用 Radmin 的（26.x）或家庭网络的（192.168.x）。",
+      "other": "没有成功。用下面的 测试连接 查看原因。"
+    }
+  },
+  "net": {
+    "test": {
+      "title": "测试连接",
+      "hint": "逐步检查两台电脑连接所需的一切。要测试到某台电脑，输入它的 IP。",
+      "targetPlaceholder": "另一台电脑的 IP（可选）",
+      "run": "测试连接",
+      "fixFirewall": "放行防火墙",
+      "openLog": "打开连接日志"
+    },
+    "step": {
+      "radmin": {
+        "ok": "Radmin VPN 已开：{{ips}}",
+        "info": "Radmin VPN 已关（只有和远方朋友玩时才需要）"
+      },
+      "lan": {
+        "ok": "家庭网络：{{ips}}",
+        "info": "这台电脑不在家庭网络中"
+      },
+      "noNetwork": {
+        "fail": "没有找到网络",
+        "help": "打开 Radmin VPN 或把电脑连到路由器后再测试。"
+      },
+      "lanPublic": {
+        "warn": "Windows 把家庭网络（{{ip}}）标为公用",
+        "help": "关联的电脑照样能用。只有家庭网络上的组队被关闭；要允许，在 Windows 设置 → 网络和 Internet → 网络属性 中选择“专用”。"
+      },
+      "firewall": {
+        "ok": "防火墙已为 MoA 放行",
+        "warn": "防火墙还没有为 MoA 放行",
+        "help": "否则其他电脑可能连不到这台。点 放行防火墙 并接受 Windows 的提示。"
+      },
+      "partyPort": {
+        "ok": "小队端口（{{port}}）正常",
+        "fail": "小队端口（{{port}}）被其他程序占用",
+        "help": "关闭占用该端口的程序后再测试。"
+      },
+      "linkPort": {
+        "ok": "关联电脑端口（{{port}}）正常",
+        "fail": "关联电脑端口（{{port}}）被其他程序占用",
+        "help": "关闭占用该端口的程序后再测试。"
+      },
+      "partyFound": {
+        "ok": "网络上开着的小队：{{host}}",
+        "info": "现在网络上没有开着的小队"
+      },
+      "linkFound": {
+        "ok": "接受关联的电脑：{{pcs}}",
+        "info": "现在网络上没有接受关联的电脑"
+      },
+      "target": {
+        "ok": "{{ip}} 和这台电脑在同一网络",
+        "warn": "{{ip}} 不在这台电脑的网络中",
+        "fail": "{{ip}} 既不是 Radmin IP 也不是家庭网络 IP",
+        "help": "检查 IP。两台电脑要在同一个 Radmin 或同一个路由器下。"
+      },
+      "targetParty": {
+        "ok": "那台电脑的小队有响应（{{ms}} 毫秒）",
+        "warn": "那台电脑有响应，但小队连接打不开",
+        "info": "那台电脑现在没有做小队主机",
+        "help": "可能是它的防火墙拦住了。在那台电脑上运行这个测试并点 放行防火墙。"
+      },
+      "targetLink": {
+        "ok": "与那台电脑的关联正常（往返 {{ms}} 毫秒）",
+        "warn": "那台电脑的端口能打开，但没有响应",
+        "info": "那台电脑现在不接受关联",
+        "help": "两台电脑都更新 MoA 后再测试。"
+      },
+      "crashed": {
+        "fail": "测试没能运行",
+        "help": "重新打开 MoA 后再试。"
+      }
+    }
   }
 }

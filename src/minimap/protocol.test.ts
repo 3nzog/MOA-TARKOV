@@ -41,7 +41,7 @@ describe('minimap protocol', () => {
     expect(headingAngle(90, 180)).toBe(270);
   });
 
-  it('collects objective positions (map variants included) and no exits before an O+O read', () => {
+  it('collects objective positions (map variants included), and no exits without a tier', () => {
     const pois: Poi[] = [
       { id: 'a', category: 'extract', mapId: GZ, position: { x: 1, y: 0, z: 2 }, label: 'PMC', source: 'tarkov-dev', meta: { faction: 'pmc' } },
       { id: 'b', category: 'extract', mapId: GZ, position: { x: 3, y: 0, z: 4 }, label: 'Scav', source: 'tarkov-dev', meta: { faction: 'scav' } },
@@ -55,7 +55,6 @@ describe('minimap protocol', () => {
       ],
       pois,
     );
-    // No O+O read yet: objectives only, no exits (not even the PMC ones).
     expect(points).toEqual([{ x: 7, z: 8, kind: 'quest' }]);
   });
 });
@@ -73,15 +72,25 @@ describe('minimap placement after a size change', () => {
   });
 });
 
-describe('minimap exits read from O+O', () => {
-  it('shows exactly the listed exits, transits included, whatever the side', () => {
+describe('minimap exits', () => {
+  it('names the player\'s exits first, then the others faded and unnamed', () => {
     const GZ = '653e6760052c01c1c805532f';
     const pois: Poi[] = [
       { id: 'extract:a', category: 'extract', mapId: GZ, position: { x: 1, y: 0, z: 2 }, label: 'A', source: 'tarkov-dev', meta: { faction: 'pmc' } },
       { id: 'extract:b', category: 'extract', mapId: GZ, position: { x: 3, y: 0, z: 4 }, label: 'B', source: 'tarkov-dev', meta: { faction: 'scav' } },
       { id: 'transit:t', category: 'transit', mapId: GZ, position: { x: 5, y: 0, z: 6 }, label: 'T', source: 'tarkov-dev' },
     ];
-    expect(minimapPoints(GZ, [], pois, 60, new Set(['extract:b', 'transit:t']))).toEqual([
+    const listed = new Set(['extract:b', 'transit:t']);
+    const tier = (p: Poi) => (listed.has(p.id) ? 'mine' : 'other');
+    expect(minimapPoints(GZ, [], pois, 60, tier)).toEqual([
+      { x: 3, z: 4, kind: 'extract', label: 'B' },
+      { x: 5, z: 6, kind: 'transit', label: 'T' },
+      { x: 1, z: 2, kind: 'extract', dim: true },
+    ]);
+    // Others turned off: only the player's.
+    expect(minimapPoints(GZ, [], pois, 60, tier, false)).toHaveLength(2);
+    // A full list keeps the player's exits and drops the others.
+    expect(minimapPoints(GZ, [], pois, 2, tier)).toEqual([
       { x: 3, z: 4, kind: 'extract', label: 'B' },
       { x: 5, z: 6, kind: 'transit', label: 'T' },
     ]);

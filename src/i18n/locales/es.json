@@ -207,7 +207,8 @@
       "hotkeys": "Atajos",
       "party": "Grupo",
       "integrations": "Integraciones",
-      "about": "Acerca de"
+      "about": "Acerca de",
+      "devices": "Otros PC"
     },
     "desktopOnly": "Disponible en la app de escritorio.",
     "creditsIntro": "Animación de apertura: efecto de cristal adaptado de zanwei/glass-icon-reveal (MIT).",
@@ -302,7 +303,9 @@
       "questNames": "Nombre de la misión en los marcadores",
       "questNamesHint": "Escribe el nombre de la misión junto a cada uno de sus lugares.",
       "upcomingQuests": "Misiones que puedo coger",
-      "upcomingQuestsHint": "También marca, en un color más suave, las misiones que ya puedes empezar (requisitos y nivel cumplidos), no solo las aceptadas."
+      "upcomingQuestsHint": "También marca, en un color más suave, las misiones que ya puedes empezar (requisitos y nivel cumplidos), no solo las aceptadas.",
+      "otherExits": "Mostrar las otras extracciones",
+      "otherExitsHint": "En la incursión, las extracciones que no son tuyas (del otro bando o fuera de la lista de O+O) quedan atenuadas en el mapa y el minimapa. Apagado: se ocultan."
     }
   },
   "errors": {
@@ -341,8 +344,8 @@
     "leaveSquad": "Salir de la escuadra",
     "party": {
       "join": "Unirse a la party",
-      "hint": "En tu red de Radmin VPN: si un amigo ya está en una party, te unes; si no, tú la alojas y los siguientes se unen a ti. Sin código.",
-      "radminOff": "Activa Radmin VPN (y únete a la red de tus amigos) para la party automática.",
+      "hint": "En Radmin VPN o en la misma red de casa: si alguien ya está en un grupo, entras en él; si no, alojas tú y los siguientes entran contigo. Sin código.",
+      "radminOff": "Enciende Radmin VPN, o conecta los PC al mismo router, para el grupo automático.",
       "otherWays": "Otras formas de unirse (código)",
       "title": "Party de Radmin",
       "hosting": "Estás alojando la party",
@@ -351,10 +354,15 @@
       "portBusy": "Otro programa usa el puerto de la party (8787). Ciérralo y vuelve a intentarlo.",
       "failed": "No se pudo iniciar la party. Inténtalo de nuevo.",
       "firewallDeclined": "No se dio el permiso del firewall: puede que tus amigos no puedan unirse. Sal y vuelve a unirte para ver la solicitud.",
-      "yourIp": "Tu IP de Radmin:",
-      "byIp": "O entra con la IP de Radmin de tu amigo",
-      "byIpHint": "Pide al amigo que aloja la IP que aparece en su pantalla.",
-      "notAtIp": "Ningún grupo respondió en {{ip}}. Tu amigo debe tener el grupo abierto en MoA; la primera vez que aloja, Windows pide permitirlo en el firewall."
+      "yourIp": "Tus IP:",
+      "byIp": "O entra con la IP de tu amigo",
+      "byIpHint": "Pide al amigo que aloja la IP que aparece en su pantalla (Radmin 26.x o red de casa 192.168.x).",
+      "notAtIp": "Ningún grupo respondió en {{ip}}. Tu amigo debe tener el grupo abierto en MoA; la primera vez que aloja, Windows pide permitirlo en el firewall.",
+      "noNetwork": "No se encontró ninguna red. Enciende Radmin VPN (amigos lejos) o conecta el PC al router (misma casa).",
+      "lanPublic": "Windows marca la red de casa como Pública y Radmin está apagado. Enciende Radmin o marca la red como Privada en la configuración de red de Windows.",
+      "netRadmin": "Radmin",
+      "netLan": "red de casa",
+      "netPublic": "Pública: sin grupo en ella"
     }
   },
   "feedback": {
@@ -651,7 +659,7 @@
     "side": {
       "pmcNow": "Incursión actual: PMC",
       "scavNow": "Incursión actual: Scav — mostrando extracciones de Scav",
-      "unknownNow": "Incursión actual: aún no se sabe si es PMC o Scav — mostrando extracciones de PMC",
+      "unknownNow": "Incursión actual: aún no sé si es PMC o Scav — extracciones atenuadas hasta que hagas captura de O+O o lo marques abajo",
       "scavQuests": "Como Scav, la mayoría de las misiones de PMC no avanzan.",
       "markPmc": "Es PMC",
       "markScav": "Es Scav",
@@ -659,7 +667,8 @@
       "source": {
         "manual": "marcado por ti",
         "group": "aprendido en una incursión en grupo",
-        "elimination": "deducido (el otro perfil ya se conoce)"
+        "elimination": "deducido (el otro perfil ya se conoce)",
+        "panel": "leído de la lista de O+O"
       }
     }
   },
@@ -678,7 +687,9 @@
     "hint": "En la incursión pulsa O dos veces y haz una captura con la lista abierta: MoA lee tus salidas de ella.",
     "readSwitched_one": "{{count}} salida leída de la captura de O+O — mapa cambiado a {{map}}",
     "readSwitched_other": "{{count}} salidas leídas de la captura de O+O — mapa cambiado a {{map}}, solo se muestran esas",
-    "missingOcrLanguage": "Windows no puede leer texto en el idioma del juego ({{lang}}). Añade ese idioma en Configuración de Windows → Hora e idioma → Idioma y vuelve a intentarlo."
+    "missingOcrLanguage": "Windows no puede leer texto en el idioma del juego ({{lang}}). Añade ese idioma en Configuración de Windows → Hora e idioma → Idioma y vuelve a intentarlo.",
+    "provedScav": "Por la lista: eres Scav (la app lo recordará).",
+    "provedPmc": "Por la lista: eres PMC (la app lo recordará)."
   },
   "raidPill": {
     "live": "En incursión: {{map}}",
@@ -787,5 +798,128 @@
     "uncertainNote_one": "{{count}} nombre sirve para más de un objeto: se muestra como rango y queda fuera del total.",
     "uncertainNote_other": "{{count}} nombres sirven para más de un objeto: se muestran como rango y quedan fuera del total.",
     "note": "Los precios son estimaciones de tarkov.dev de la última actualización."
+  },
+  "link": {
+    "main": {
+      "title": "Este es el PC del juego",
+      "allow": "Dejar que mis otros PC muestren este juego",
+      "allowHint": "Actívalo en el PC donde juegas. El otro PC muestra el mapa, tu posición, las extracciones y las misiones como si fuera otro monitor de este.",
+      "thisPc": "Nombre de este PC en la red: {{name}}",
+      "firewallOff": "No se abrió el firewall: el otro PC puede no llegar a este. Usa Probar conexión → Abrir firewall.",
+      "none": "Aún no hay PC vinculados. En el otro PC, abre esta pestaña y pulsa Buscar mis PC.",
+      "connected": "conectado ahora",
+      "away": "apagado",
+      "forget": "Quitar"
+    },
+    "screen": {
+      "title": "Este PC es la pantalla extra",
+      "hint": "En el PC que solo muestra el mapa: busca el PC del juego y vincúlalo. Ese PC debe tener MoA abierto con la opción de arriba activada.",
+      "search": "Buscar mis PC",
+      "noneFound": "No se encontró ningún PC. En el PC del juego, activa \"Dejar que mis otros PC muestren este juego\" y busca de nuevo, o escribe su IP abajo.",
+      "link": "Vincular",
+      "byIp": "O con la IP del PC del juego",
+      "confirm": "Confirma en el PC del juego ({{host}}). El código allí debe ser:",
+      "codeLabel": "Código de confirmación",
+      "state": {
+        "connecting": "Conectando a {{name}}…",
+        "linked": "Vinculado a {{name}}: este PC muestra el juego de allí.",
+        "lost": "Se cayó la conexión con {{name}}. Reintentando solo…"
+      },
+      "unlink": "Desvincular",
+      "refused": "El PC del juego no lo permitió (o quitó este PC). Busca de nuevo para pedirlo otra vez.",
+      "partyNote": "En la pantalla extra el grupo sirve para ver a tus amigos, pero no envía posición: la envía el PC del juego."
+    },
+    "request": {
+      "title": "¿Vincular un PC?",
+      "body": "{{name}} ({{ip}}) quiere mostrar el juego de este PC: mapa, posición, extracciones y misiones.",
+      "check": "Permítelo solo si es tuyo. Comprueba que el código en su pantalla es:",
+      "allow": "Permitir",
+      "refuse": "Rechazar"
+    },
+    "chip": {
+      "showing": "Pantalla de {{name}}",
+      "confirm": "Confirma en el PC del juego: {{code}}",
+      "reconnecting": "Reconectando a {{name}}…",
+      "linked_one": "{{count}} PC vinculado",
+      "linked_other": "{{count}} PC vinculados"
+    },
+    "error": {
+      "port_busy": "Otro programa usa el puerto 8789. Ciérralo y vuelve a intentarlo.",
+      "bad_ip": "IP no válida: usa la de Radmin (26.x) o la de la red de casa (192.168.x).",
+      "other": "No funcionó. Usa Probar conexión abajo para ver el motivo."
+    }
+  },
+  "net": {
+    "test": {
+      "title": "Probar conexión",
+      "hint": "Comprueba, paso a paso, todo lo que necesita la conexión entre dos PC. Para probar hasta un PC concreto, escribe su IP.",
+      "targetPlaceholder": "IP del otro PC (opcional)",
+      "run": "Probar conexión",
+      "fixFirewall": "Abrir firewall",
+      "openLog": "Abrir registro de conexión"
+    },
+    "step": {
+      "radmin": {
+        "ok": "Radmin VPN activo: {{ips}}",
+        "info": "Radmin VPN apagado (solo hace falta para jugar con amigos lejos)"
+      },
+      "lan": {
+        "ok": "Red de casa: {{ips}}",
+        "info": "Este PC no está en una red de casa"
+      },
+      "noNetwork": {
+        "fail": "No se encontró ninguna red",
+        "help": "Enciende Radmin VPN o conecta el PC al router y prueba de nuevo."
+      },
+      "lanPublic": {
+        "warn": "Windows marca la red de casa ({{ip}}) como Pública",
+        "help": "El PC vinculado funciona igual. Solo el grupo por la red de casa queda apagado; para permitirlo, en Configuración de Windows → Red e Internet → propiedades de la red, elige Privada."
+      },
+      "firewall": {
+        "ok": "Firewall abierto para MoA",
+        "warn": "El firewall aún no está abierto para MoA",
+        "help": "Sin esto, otros PC pueden no llegar a este. Pulsa Abrir firewall y acepta el aviso de Windows."
+      },
+      "partyPort": {
+        "ok": "Puerto del grupo ({{port}}) correcto",
+        "fail": "El puerto del grupo ({{port}}) lo usa otro programa",
+        "help": "Cierra el programa que usa ese puerto y prueba de nuevo."
+      },
+      "linkPort": {
+        "ok": "Puerto del PC vinculado ({{port}}) correcto",
+        "fail": "El puerto del PC vinculado ({{port}}) lo usa otro programa",
+        "help": "Cierra el programa que usa ese puerto y prueba de nuevo."
+      },
+      "partyFound": {
+        "ok": "Grupo abierto en la red: {{host}}",
+        "info": "Ningún grupo abierto en la red ahora"
+      },
+      "linkFound": {
+        "ok": "PC que aceptan vincular: {{pcs}}",
+        "info": "Ningún PC acepta vincular en la red ahora"
+      },
+      "target": {
+        "ok": "{{ip}} está en una red de este PC",
+        "warn": "{{ip}} no está en una red de este PC",
+        "fail": "{{ip}} no es una IP de Radmin ni de la red de casa",
+        "help": "Revisa la IP. Ambos PC deben estar en el mismo Radmin o en el mismo router."
+      },
+      "targetParty": {
+        "ok": "El grupo de ese PC responde ({{ms}} ms)",
+        "warn": "Ese PC responde, pero la conexión del grupo no abre",
+        "info": "Ese PC no aloja un grupo ahora",
+        "help": "Su firewall probablemente bloquea. En el otro PC, ejecuta esta prueba y pulsa Abrir firewall."
+      },
+      "targetLink": {
+        "ok": "El vínculo con ese PC funciona ({{ms}} ms ida y vuelta)",
+        "warn": "El puerto de ese PC abre, pero no responde",
+        "info": "Ese PC no acepta vincular ahora",
+        "help": "Actualiza MoA en ambos PC y prueba de nuevo."
+      },
+      "crashed": {
+        "fail": "La prueba no pudo ejecutarse",
+        "help": "Cierra y abre MoA y vuelve a intentarlo."
+      }
+    }
   }
 }

@@ -101,3 +101,10 @@ export interface SideScanPayload {
 export async function scanRaidSides(): Promise<SideScanPayload> {
   return await invoke<SideScanPayload>('scan_raid_sides');
 }
+/** The game PC's scan, sent to a linked extra screen when it links (src-tauri/src/link.rs). */
+export function subscribeLinkSideScan(cb: (e: SideScanPayload) => void): Promise<UnlistenFn> {
+  return listen<SideScanPayload>('link-side-scan', (ev) => {
+    const p = ev.payload;
+    if (p && Array.isArray(p.raids) && Array.isArray(p.groups) && Array.isArray(p.ends)) cb(p);
+  });
+}

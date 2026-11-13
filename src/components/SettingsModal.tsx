@@ -14,7 +14,10 @@ import TrackerSettings from './TrackerSettings';
 import SquadServerSettings from './SquadServerSettings';
 import type { TrackerApi } from '../app/useTracker';
 import AppearanceSettings from './AppearanceSettings';
+import LinkSettings from '../link/LinkSettings';
+import ConnectionTest from '../net/ConnectionTest';
 import {
+  Desktop,
   Info,
   Keyboard,
   MapTrifold,
@@ -24,7 +27,7 @@ import {
   UsersThree,
 } from '@phosphor-icons/react';
 
-export type SettingsTab = 'general' | 'appearance' | 'minimap' | 'hotkeys' | 'party' | 'integrations' | 'about';
+export type SettingsTab = 'general' | 'appearance' | 'minimap' | 'hotkeys' | 'party' | 'devices' | 'integrations' | 'about';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -181,6 +184,7 @@ export default function SettingsModal({
     { id: 'minimap', label: t('settings.tabs.minimap'), icon: <MapTrifold weight="duotone" /> },
     { id: 'hotkeys', label: t('settings.tabs.hotkeys'), icon: <Keyboard weight="duotone" /> },
     { id: 'party', label: t('settings.tabs.party'), icon: <UsersThree weight="duotone" /> },
+    { id: 'devices', label: t('settings.tabs.devices'), icon: <Desktop weight="duotone" /> },
     { id: 'integrations', label: t('settings.tabs.integrations'), icon: <PlugsConnected weight="duotone" /> },
     { id: 'about', label: t('settings.tabs.about'), icon: <Info weight="duotone" /> },
   ];
@@ -296,8 +300,17 @@ export default function SettingsModal({
           )}
           {tab === 'party' && (
             <div className="settings-body">
+              <SectionLabel>{t('net.test.title')}</SectionLabel>
+              <ConnectionTest />
               <SectionLabel>{t('settings.squadServer.title')}</SectionLabel>
               <SquadServerSettings />
+            </div>
+          )}
+          {tab === 'devices' && (
+            <div className="settings-body">
+              <LinkSettings />
+              <SectionLabel>{t('net.test.title')}</SectionLabel>
+              <ConnectionTest />
             </div>
           )}
           {tab === 'integrations' && (

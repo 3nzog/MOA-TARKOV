@@ -289,14 +289,15 @@ export default function MinimapApp() {
                   <CircleMarker
                     key={i}
                     center={toLatLng(p.x, p.z)}
-                    radius={p.kind === 'quest' ? 5 : 4}
+                    radius={p.kind === 'quest' ? 5 : p.dim ? 3 : 4}
                     interactive={false}
                     pathOptions={{
                       color: TOKEN_HEX.bgSunken,
-                      weight: 1.5,
+                      weight: p.dim ? 1 : 1.5,
+                      opacity: p.dim ? 0.45 : 1,
                       // Same roles as the main map: quest gold, PMC-extract green.
                       fillColor: colorOf(p),
-                      fillOpacity: 1,
+                      fillOpacity: p.dim ? 0.35 : 1,
                     }}
                   />
                 ))}

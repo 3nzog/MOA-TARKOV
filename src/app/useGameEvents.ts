@@ -8,6 +8,8 @@ import {
   subscribeExtractPanel,
   scanRaidSides,
   subscribePlayerPosition,
+  subscribeLinkSideScan,
+  type SideScanPayload,
   replayPastLogs,
   parseLogTime,
   isLiveEvent,
@@ -132,11 +134,10 @@ export function useGameEvents({ setProgress, setSelectedMapId, setHistory, onLiv
           }
         });
         // Learn which profile is the Scav from every log on disk (about a
-        // megabyte), so a fresh install or a new season knows it at once.
-        if (setHistory) {
-          scanRaidSides()
-            .then((scan) => {
-              if (cancelled) return;
+        // megabyte), so a fresh install or a new season knows it at once. An
+        // extra screen (linked PC) gets the game PC's scan instead.
+        const applyScan = (scan: SideScanPayload) => {
+              if (cancelled || !setHistory) return;
               const at = (t: string | null) => parseLogTime(t);
               // Opened in the middle of a raid: its GameStarted was written
               // before the app was listening, so take the raid's map from the
@@ -161,13 +162,17 @@ export function useGameEvents({ setProgress, setSelectedMapId, setHistory, onLiv
                   ends: scan.ends.map((e) => ({ location: e.location, at: at(e.logTime) })),
                 }),
               );
-            })
+        };
+        if (setHistory) {
+          scanRaidSides()
+            .then(applyScan)
             .catch((e) => console.warn('[tauriEvents] side scan failed:', e));
         }
+        const u7 = await subscribeLinkSideScan(applyScan);
         if (cancelled) {
-          u1(); u2(); u3(); u4(); u5(); u6();
+          u1(); u2(); u3(); u4(); u5(); u6(); u7();
         } else {
-          unlistens.push(u1, u2, u3, u4, u5, u6);
+          unlistens.push(u1, u2, u3, u4, u5, u6, u7);
         }
       } catch (e) {
         // Running outside Tauri (e.g. plain `vite dev`) — listen() throws. Swallow.

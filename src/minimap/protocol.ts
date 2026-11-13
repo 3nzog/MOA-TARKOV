@@ -78,8 +78,10 @@ export interface MinimapPoint {
   x: number;
   z: number;
   kind: 'quest' | 'extract' | 'transit';
-  /** Exits read from the O+O list carry a name; the overlay points to them from its edge. */
+  /** The player's own exits carry a name; the overlay points to them from its edge. */
   label?: string;
+  /** Not the player's (other side, or not in the O+O list): drawn faded, no name. */
+  dim?: boolean;
 }
 
 const LABEL_MAX = 18;
@@ -254,8 +256,10 @@ export function minimapPoints(
   objectives: Array<{ objective: TaskObjective }>,
   pois: Poi[],
   max = 60,
-  /** Exits read from the O+O list this raid (transits included); null = none read yet. */
-  onlyExits: ReadonlySet<string> | null = null,
+  /** Which exits are the player's (src/poi/exitTier.ts); null = no exits at all. */
+  tierOf: ((p: Poi) => 'mine' | 'other' | null) | null = null,
+  /** Also draw the others, faded. */
+  showOthers = true,
 ): MinimapPoint[] {
   const target = canonicalMapId(mapId);
   const out: MinimapPoint[] = [];
@@ -268,18 +272,23 @@ export function minimapPoints(
     if (p) out.push({ x: p.x, z: p.z, kind: 'quest' });
     if (out.length >= max) return out;
   }
-  if (onlyExits) {
-    for (const poi of pois) {
-      if ((poi.category !== 'extract' && poi.category !== 'transit') || !onlyExits.has(poi.id)) continue;
-      if (canonicalMapId(poi.mapId) !== target) continue;
-      const dest = (poi.meta as { destMapName?: string } | undefined)?.destMapName;
-      out.push({
-        x: poi.position.x,
-        z: poi.position.z,
-        kind: poi.category === 'transit' ? 'transit' : 'extract',
-        label: shortExitLabel(poi.category === 'transit' && dest ? dest : poi.label),
-      });
-      if (out.length >= max) break;
+  if (!tierOf) return out;
+  const exits = pois.filter(
+    (poi) => (poi.category === 'extract' || poi.category === 'transit') && canonicalMapId(poi.mapId) === target,
+  );
+  // The player's own first, so a full list never drops one of them.
+  for (const want of ['mine', 'other'] as const) {
+    if (want === 'other' && !showOthers) break;
+    for (const poi of exits) {
+      if (tierOf(poi) !== want) continue;
+      const kind = poi.category === 'transit' ? 'transit' : 'extract';
+      if (want === 'other') {
+        out.push({ x: poi.position.x, z: poi.position.z, kind, dim: true });
+      } else {
+        const dest = (poi.meta as { destMapName?: string } | undefined)?.destMapName;
+        out.push({ x: poi.position.x, z: poi.position.z, kind, label: shortExitLabel(poi.category === 'transit' && dest ? dest : poi.label) });
+      }
+      if (out.length >= max) return out;
     }
   }
   return out;

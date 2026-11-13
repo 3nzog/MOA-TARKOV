@@ -52,7 +52,7 @@ interface Props {
   mapPois: Poi[];
   squadQuestStates: Record<string, DerivedQuestState>;
   raidSide: RaidSide | null;
-  raidSideSource: 'manual' | 'group' | 'elimination' | null;
+  raidSideSource: 'manual' | 'panel' | 'group' | 'elimination' | null;
   raidInProgress: boolean;
   canSetRaidSide: boolean;
   onSetRaidSide: (side: RaidSide | null) => void;

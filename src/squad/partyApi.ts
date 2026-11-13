@@ -1,13 +1,17 @@
-// Automatic party over a VPN LAN (Radmin VPN) — bridge to src-tauri/src/party.rs.
+// Automatic party over Radmin VPN or the home network — bridge to
+// src-tauri/src/party.rs.
 //
-// "Join party" asks the Radmin network whether anyone is hosting; if so it
-// connects to them, else this app hosts. No server to run, no code to share.
+// "Join party" asks the networks whether anyone is hosting; if so it connects
+// to them, else this app hosts. No server to run, no code to share.
 import { invoke } from '@tauri-apps/api/core';
+import { isNetworkIp } from '../link/linkApi';
 
 export interface FoundParty {
   host: string;
   port: number;
   room: string;
+  /** The host's id for this session (two hosts at once: the higher id joins the other). */
+  id: string;
 }
 
 export interface HostInfo {
@@ -15,6 +19,7 @@ export interface HostInfo {
   ips: string[];
   /** False when the player declined the firewall prompt: others may not reach this PC. */
   firewall: boolean;
+  id: string;
 }
 
 export const partyAvailable = (): boolean => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -31,7 +36,7 @@ const LAST_HOST_KEY = 'tc_party_last_host_v1';
 export function lastPartyHosts(): string[] {
   try {
     const v = localStorage.getItem(LAST_HOST_KEY);
-    return v && /^26\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(v) ? [v] : [];
+    return v && isNetworkIp(v) ? [v] : [];
   } catch {
     return [];
   }
@@ -45,8 +50,13 @@ export function rememberPartyHost(ip: string): void {
   }
 }
 
-/** Numeric IPv4 order: when two players host at once, the higher address joins the lower. */
+/** Numeric IPv4 order. */
 export function compareIpv4(a: string, b: string): number {
   const n = (ip: string) => ip.split('.').reduce((acc, p) => acc * 256 + (Number(p) || 0), 0);
   return n(a) - n(b);
+}
+
+/** When two PCs host at once, the one whose id is higher joins the other. */
+export function shouldYieldTo(found: FoundParty, myId: string): boolean {
+  return !!found.id && !!myId && found.id !== myId && found.id < myId;
 }

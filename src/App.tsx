@@ -56,12 +56,17 @@ import { getExitAliases } from './api/tarkov-dev';
 import type { Poi } from './poi/types';
 import { canonicalMapId } from './map/canonicalMap';
 import { mapIdFromLogLocation } from './map/logLocationMap';
-import { currentRaid, learnSides, raidSide, setManualSide, type RaidSide } from './state/raidHistory';
+import { currentRaid, learnSides, raidSide, setManualSide, setPanelSide, type RaidSide } from './state/raidHistory';
+import { exitTier, sideFromPanel } from './poi/exitTier';
+import { facetDefaultOn } from './poi/facets';
 import PlannerPanel, { type PlannerTab } from './planner/PlannerPanel';
 import { scannedItems } from './planner/scanned';
 import { useAppearance } from './appearance/useAppearance';
 import GlassIntro from './intro/GlassIntro';
 import TitleBar from './shell/TitleBar';
+import { SUPPORTED_MAP_NAMES } from './map/mapDefs';
+import LinkRequestDialog from './link/LinkRequestDialog';
+import type { SettingsTab } from './components/SettingsModal';
 import PriceScanCard from './prices/PriceScan';
 import { usePriceScan } from './prices/usePriceScan';
 import PlaceLabelLayer from './map/PlaceLabelLayer';
@@ -89,6 +94,7 @@ function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [railSection, setRailSection] = useState<RailSection | null>('quests');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   // Onboarding wizard: auto-opens on first run only (tc_onboarded_v1); the
   // spine's Help button reopens it as the how-to guide.
   const [onboardingOpen, setOnboardingOpen] = useState(
@@ -232,10 +238,21 @@ function App() {
     extractPanelHandler.current = (lines, missingLanguage) => {
       // Try every map: the list itself says where you are. Ties go to the raid's map, then the one shown.
       const raidMap = liveRaid?.location ? mapIdFromLogLocation(liveRaid.location) ?? null : null;
+      const prefer = raidMap ?? selectedMapId;
+      // First against every exit: PMC-only or Scav-only exits in the list
+      // prove the side, which then sticks to this profile for later raids
+      // (and corrects a wrong guess).
+      const anySide = findPanelMap(lines, pois.poisByMapId, exitAliases, prefer);
+      const proven = anySide ? sideFromPanel(anySide.match.ids, pois.poisByMapId[anySide.mapId] ?? [], exitAliases) : null;
+      const side = proven ?? liveRaidSide;
       const sidePois = Object.fromEntries(
-        Object.entries(pois.poisByMapId).map(([id, list]) => [id, exitsForSide(list, liveRaidSide)]),
+        Object.entries(pois.poisByMapId).map(([id, list]) => [id, exitsForSide(list, side)]),
       );
-      const found = findPanelMap(lines, sidePois, exitAliases, raidMap ?? selectedMapId);
+      const found = findPanelMap(lines, sidePois, exitAliases, prefer) ?? anySide;
+      const key = liveRaid?.profileKey;
+      if (proven && key && sideKnowledge.sides.get(key) !== proven) {
+        setHistory((h) => setPanelSide(h, key, proven));
+      }
       if (!found) {
         // Three or more lines may be the list; say so instead of failing
         // silently, unless the same screenshot turns out to be an inventory
@@ -266,20 +283,36 @@ function App() {
       const head = switching
         ? t('extractPanel.readSwitched', { count: found.match.ids.size, map: mapLabel(found.mapId) })
         : t('extractPanel.read', { count: found.match.ids.size });
-      setToast(`${head} ${names.join(' · ')}`);
+      const sideNote = proven && proven !== liveRaidSide ? ` ${t(proven === 'scav' ? 'extractPanel.provedScav' : 'extractPanel.provedPmc')}` : '';
+      setToast(`${head} ${names.join(' · ')}${sideNote}`);
     };
   });
   const panelExitNames = useMemo(
     () => (panelExitIds ? pois.currentPois.filter((p) => panelExitIds.has(p.id)).map((p) => p.label) : null),
     [panelExitIds, pois.currentPois],
   );
-  // On the map, exits not in the O+O list are hidden while it applies.
+  // Exits that are not the player's this raid (src/poi/exitTier.ts) fade on
+  // the map and the minimap, or are hidden if the player turned them off.
   const { poiVisible } = pois;
+  const inRaid = !!liveRaid;
+  const tierOf = useCallback((p: Poi) => exitTier(p, liveRaidSide, panelExitIds, inRaid), [liveRaidSide, panelExitIds, inRaid]);
+  const showOtherExits = appearance.otherExits;
+  // In a raid the side decides which exits are shown, not the PMC / Scav
+  // filter chips (Scav exits are off there by default, which would hide a
+  // Scav's own exits). Both chips off still means "no exits".
+  const facetEnabled = pois.filterState.enabled;
+  const extractsOn =
+    (facetEnabled['extract:pmc'] ?? facetDefaultOn('extract:pmc')) ||
+    (facetEnabled['extract:scav'] ?? facetDefaultOn('extract:scav'));
   const isPoiVisible = useCallback(
-    (p: Poi) =>
-      poiVisible(p) && (!panelExitIds || (p.category !== 'extract' && p.category !== 'transit') || panelExitIds.has(p.id)),
-    [poiVisible, panelExitIds],
+    (p: Poi) => {
+      const tier = tierOf(p);
+      if (inRaid && tier && p.category === 'extract') return extractsOn && (tier === 'mine' || showOtherExits);
+      return poiVisible(p) && (showOtherExits || tier !== 'other');
+    },
+    [poiVisible, showOtherExits, tierOf, inRaid, extractsOn],
   );
+  const isPoiDimmed = useCallback((p: Poi) => tierOf(p) === 'other', [tierOf]);
 
   // Minimap overlay window: fed the map, the last position fix, the floor and
   // a few points (active objectives, the extracts of your side) on this map.
@@ -291,10 +324,11 @@ function App() {
             questState.availableObjectivesByMap[selectedMapId] ?? [],
             pois.currentPois,
             60,
-            panelExitIds,
+            tierOf,
+            showOtherExits,
           )
         : [],
-    [selectedMapId, questState, pois.currentPois, panelExitIds],
+    [selectedMapId, questState, pois.currentPois, tierOf, showOtherExits],
   );
   const minimapSelf = useMemo(() => ({ symbol: selfSymbol, color: selfColor }), [selfSymbol, selfColor]);
   // Raid clock: time left for a PMC (map length from the raid's start), time in raid otherwise.
@@ -416,14 +450,20 @@ function App() {
   );
   const hotkeys = useHotkeys(hotkeyHandlers);
 
-  // Name of the map the live raid is on, for the "in raid" pill.
+  // Name of the map the live raid is on, for the "in raid" pill. The fixed
+  // list first (as the map picker does): the quest data only names maps that
+  // have an active quest, and "Unknown map" helps nobody.
   const liveRaidMapName = useMemo(() => {
     const id = liveRaid?.location ? mapIdFromLogLocation(liveRaid.location) : null;
     if (!id) return liveRaid?.location ?? '';
-    return questState ? resolveMapName(id, questState.availableTasksByMap, questState.availableObjectivesByMap) : id;
+    if (SUPPORTED_MAP_NAMES[id]) return SUPPORTED_MAP_NAMES[id];
+    const n = questState ? resolveMapName(id, questState.availableTasksByMap, questState.availableObjectivesByMap) : id;
+    return n === 'Unknown map' ? id : n;
   }, [liveRaid, questState]);
   const selectedMapName = useMemo(() => {
-    if (!questState || !selectedMapId) return '';
+    if (!selectedMapId) return '';
+    if (SUPPORTED_MAP_NAMES[selectedMapId]) return SUPPORTED_MAP_NAMES[selectedMapId];
+    if (!questState) return '';
     return resolveMapName(
       selectedMapId,
       questState.availableTasksByMap,
@@ -450,7 +490,13 @@ function App() {
 
   return (
     <div className="app-container">
-      <TitleBar />
+      <TitleBar
+        onOpenLink={() => {
+          setSettingsTab('devices');
+          setSettingsOpen(true);
+        }}
+      />
+      <LinkRequestDialog />
       {showIntro && <GlassIntro onDone={() => setShowIntro(false)} />}
       <Toast message={toast} onDismiss={() => setToast(null)} />
       {priceScan.result && !onMarketTab && <PriceScanCard result={priceScan.result} onClose={priceScan.clear} />}
@@ -476,7 +522,10 @@ function App() {
           syncingLogs={logReplay.replaying}
           onFeedback={() => setFeedbackOpen(true)}
           onHowTo={() => setOnboardingOpen(true)}
-          onSettings={() => setSettingsOpen(true)}
+          onSettings={() => {
+            setSettingsTab('general');
+            setSettingsOpen(true);
+          }}
           onGunsmith={() => setGunsmithOpen(true)}
           onCompact={toggleCompact}
           hints={{
@@ -695,6 +744,7 @@ function App() {
                       mapId={selectedMapId}
                       pois={pois.currentPois}
                       isVisible={isPoiVisible}
+                      isDimmed={isPoiDimmed}
                       selectedPoiIds={pois.selectedPoiIds}
                       floors={selectedMapDef?.floors}
                       activeFloorId={floors.activeFloorId}
@@ -753,6 +803,7 @@ function App() {
       </div>
       {settingsOpen && (
         <SettingsModal
+          initialTab={settingsTab}
           onClose={() => setSettingsOpen(false)}
           railSide={settings.railSide}
           onRailSideChange={settings.setRailSide}

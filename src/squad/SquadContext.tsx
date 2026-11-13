@@ -15,13 +15,15 @@ import { useTranslation } from "react-i18next";
 import { SquadCtx } from "./useSquad";
 import { getRelayUrl } from "./config";
 import {
-  compareIpv4,
   lastPartyHosts,
   partyFind,
   partyHostStart,
   partyHostStop,
   rememberPartyHost,
+  shouldYieldTo,
 } from "./partyApi";
+import { isLinkedViewer } from "../link/linkApi";
+import { netLog } from "../net/netApi";
 import { SquadTransport, type ConnStatus } from "./transport";
 import { loadIdentity, saveIdentity, type SquadIdentity } from "./identity";
 import { getSelfSymbol, useSelfSymbol } from "./symbols";
@@ -118,6 +120,24 @@ function omit<T>(rec: Record<string, T>, key: string): Record<string, T> {
 
 export function SquadProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
+  // The party's Rust error codes, worded for the player.
+  const partyError = useCallback(
+    (code: string) => {
+      netLog(`party: erro ${code}`);
+      switch (code) {
+        case "no_radmin":
+        case "no_network":
+          return t("squad.party.noNetwork");
+        case "lan_public":
+          return t("squad.party.lanPublic");
+        case "port_busy":
+          return t("squad.party.portBusy");
+        default:
+          return t("squad.party.failed");
+      }
+    },
+    [t],
+  );
   const [state, setState] = useState<SquadState>(EMPTY);
   const [identity, setIdentityState] = useState<SquadIdentity>(() => loadIdentity());
   const [hiddenQuests, setHiddenQuests] = useState<Record<string, boolean>>({});
@@ -125,8 +145,8 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   const transportRef = useRef<SquadTransport | null>(null);
   const [partyRole, setPartyRole] = useState<"host" | "guest" | null>(null);
   const [partyNotice, setPartyNotice] = useState<string | null>(null);
-  // This PC's Radmin addresses while hosting (for the two-hosts tie-break).
-  const hostIpsRef = useRef<string[]>([]);
+  // This PC's id while hosting (for the two-hosts tie-break).
+  const hostIdRef = useRef<string>("");
   const partyBusyRef = useRef(false);
   // identityRef mirrors the latest identity for the connect/setIdentity
   // callbacks, which read it outside render — sync it after each commit.
@@ -342,7 +362,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
         }
         // Nobody is hosting: this PC becomes the host.
         const host = await partyHostStart();
-        hostIpsRef.current = host.ips;
+        hostIdRef.current = host.id;
         if (!host.firewall) setPartyNotice(t("squad.party.firewallDeclined"));
         setPartyRole("host");
         connectTo(`ws://127.0.0.1:${host.port}`, null, name, colorId);
@@ -351,18 +371,13 @@ export function SquadProvider({ children }: { children: ReactNode }) {
         setPartyRole(null);
         setState({
           ...EMPTY,
-          error:
-            code === "no_radmin"
-              ? t("squad.party.noRadmin")
-              : code === "port_busy"
-                ? t("squad.party.portBusy")
-                : t("squad.party.failed"),
+          error: partyError(code),
         });
       } finally {
         partyBusyRef.current = false;
       }
     },
-    [connectTo, persist, resetSelf, t],
+    [connectTo, partyError, persist, resetSelf, t],
   );
   const joinPartyAt = useCallback(
     async (ip: string, name: string, colorId: string | null) => {
@@ -383,12 +398,12 @@ export function SquadProvider({ children }: { children: ReactNode }) {
         connectTo(`ws://${found.host}:${found.port}`, found.room, name, colorId);
       } catch (e) {
         setPartyRole(null);
-        setState({ ...EMPTY, error: String(e) === "no_radmin" ? t("squad.party.noRadmin") : t("squad.party.failed") });
+        setState({ ...EMPTY, error: partyError(String(e)) });
       } finally {
         partyBusyRef.current = false;
       }
     },
-    [connectTo, persist, resetSelf, t],
+    [connectTo, partyError, persist, resetSelf, t],
   );
   const joinPartyRef = useRef(joinParty);
   useEffect(() => {
@@ -418,8 +433,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
     const id = window.setInterval(() => {
       void (async () => {
         const found = await partyFind([], 800).catch(() => null);
-        const mine = hostIpsRef.current[0];
-        if (!found || !mine || compareIpv4(found.host, mine) >= 0) return;
+        if (!found || !shouldYieldTo(found, hostIdRef.current)) return;
         transportRef.current?.close();
         await partyHostStop().catch(() => undefined);
         rememberPartyHost(found.host);
@@ -464,6 +478,8 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   );
 
   const broadcastPosition = useCallback((p: PositionPayload) => {
+    // An extra screen replays the game PC's position; the game PC sends it.
+    if (isLinkedViewer()) return;
     const withSymbol = { ...p, symbol: getSelfSymbol() };
     selfPos.current = withSymbol;
     transportRef.current?.send("position", withSymbol);
@@ -479,6 +495,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   }, [selfSymbol]);
 
   const broadcastQuests = useCallback((ids: string[]) => {
+    if (isLinkedViewer()) return;
     selfQuests.current = ids;
     transportRef.current?.send("quests", { activeQuestIds: ids });
   }, []);

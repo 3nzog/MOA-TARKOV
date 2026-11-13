@@ -48,6 +48,8 @@ export interface Appearance {
   questNames: boolean;
   /** Also pin quests the player can take but has not accepted yet (dimmer). */
   upcomingQuests: boolean;
+  /** Exits that are not the player's this raid stay on the map, faded (else hidden). */
+  otherExits: boolean;
 }
 
 export const ACCENTS: { id: string; hex: string }[] = [
@@ -84,6 +86,7 @@ export const DEFAULT_APPEARANCE: Appearance = {
   placeLabels: true,
   questNames: true,
   upcomingQuests: true,
+  otherExits: true,
 };
 
 export const APPEARANCE_KEY = 'tc_appearance_v1';
@@ -123,6 +126,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
     placeLabels: typeof r.placeLabels === 'boolean' ? r.placeLabels : d.placeLabels,
     questNames: typeof r.questNames === 'boolean' ? r.questNames : d.questNames,
     upcomingQuests: typeof r.upcomingQuests === 'boolean' ? r.upcomingQuests : d.upcomingQuests,
+    otherExits: typeof r.otherExits === 'boolean' ? r.otherExits : d.otherExits,
   };
 }
 

@@ -5,12 +5,15 @@ mod eft_logs;
 mod extract_panel;
 mod game_lang;
 mod log_watcher;
+mod diag;
+mod link;
+mod net;
 mod party;
 mod screenshots;
 mod tracker;
 
 use std::sync::{Arc, Mutex};
-use tauri::Manager;
+use tauri::{Listener, Manager};
 
 fn main() {
     let screenshots_dir = Arc::new(Mutex::new(None));
@@ -32,6 +35,16 @@ fn main() {
         })
         .setup(move |app| {
             let handle = app.handle().clone();
+
+            // Connection log (conexao.log), for "it doesn't connect" reports.
+            if let Ok(dir) = app.path().app_log_dir() {
+                net::set_log_dir(dir);
+            }
+            // Whatever the log and screenshot readers tell this window also
+            // goes to a linked second PC (link.rs), when there is one.
+            for event in link::FORWARDED {
+                app.listen_any(event, move |e| link::on_local_event(event, e.payload()));
+            }
 
             // EFT config: load persisted user choice, fall back to defaults.
             let cfg = eft_config::load(&handle);
@@ -72,6 +85,19 @@ fn main() {
             party::party_host_stop,
             party::party_find,
             party::party_radmin_ips,
+            party::party_firewall_request,
+            net::net_local_ips,
+            net::net_log_write,
+            net::net_log_open,
+            diag::net_diagnose,
+            link::link_host_start,
+            link::link_host_stop,
+            link::link_host_status,
+            link::link_answer,
+            link::link_forget,
+            link::link_find,
+            link::link_connect,
+            link::link_disconnect,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

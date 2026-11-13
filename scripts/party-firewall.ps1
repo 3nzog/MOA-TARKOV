@@ -1,14 +1,19 @@
-# Lets players on the Radmin VPN network (26.0.0.0/8) reach a party hosted by
-# Tarkov MoA on this PC: TCP 8787 (the squad relay) and UDP 8788 (the "is anyone
-# hosting?" question). Nobody on the internet or the home LAN can. The app runs
-# this the first time it hosts; Windows asks for admin rights with its own
-# prompt. Run with -Remove to delete both rules.
+# Lets other Tarkov MoA PCs reach this one:
+#   TCP 8787  the party relay        UDP 8788  "is anyone hosting a party?"
+#   TCP 8789  a linked second PC     UDP 8790  "is a PC of mine here?"
+# Only from the Radmin VPN network (26.0.0.0/8) and from this PC's own home
+# subnet (LocalSubnet). Nobody on the internet can. The app itself also refuses
+# anyone outside those networks, and keeps the party off networks Windows calls
+# Public. The app runs this the first time it needs it; Windows asks for admin
+# rights with its own prompt. Run with -Remove to delete the rules.
 param([switch]$Remove)
 
 $ErrorActionPreference = 'Stop'
 $Rules = @(
-  @{ Name = 'Tarkov MoA party'; Protocol = 'TCP'; Port = 8787 },
-  @{ Name = 'Tarkov MoA party (busca)'; Protocol = 'UDP'; Port = 8788 }
+  @{ Name = 'Tarkov MoA party'; Protocol = 'TCP'; Ports = @('8787', '8789'); Remote = '26.0.0.0/8' },
+  @{ Name = 'Tarkov MoA party (busca)'; Protocol = 'UDP'; Ports = @('8788', '8790'); Remote = '26.0.0.0/8' },
+  @{ Name = 'Tarkov MoA rede de casa'; Protocol = 'TCP'; Ports = @('8787', '8789'); Remote = 'LocalSubnet' },
+  @{ Name = 'Tarkov MoA rede de casa (busca)'; Protocol = 'UDP'; Ports = @('8788', '8790'); Remote = 'LocalSubnet' }
 )
 
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
@@ -26,7 +31,7 @@ foreach ($r in $Rules) {
   }
   if (-not $Remove) {
     New-NetFirewallRule -DisplayName $r.Name -Direction Inbound -Action Allow -Protocol $r.Protocol `
-      -LocalPort $r.Port -RemoteAddress '26.0.0.0/8' -Profile Any | Out-Null
+      -LocalPort $r.Ports -RemoteAddress $r.Remote -Profile Any | Out-Null
   }
 }
 exit 0

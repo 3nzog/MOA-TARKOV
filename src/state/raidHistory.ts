@@ -46,6 +46,8 @@ export interface RaidHistory {
   groupSides?: GroupSideRecord[];
   /** Fingerprint → side, set by the player; wins over anything inferred. */
   manualSides?: Record<string, RaidSide>;
+  /** Fingerprint → side proven by an O+O list (PMC-only or Scav-only exits in it). */
+  panelSides?: Record<string, RaidSide>;
 }
 
 export const EMPTY_HISTORY: RaidHistory = { raids: [], questEvents: [] };
@@ -140,20 +142,38 @@ export function setManualSide(h: RaidHistory, profileKey: string, side: RaidSide
   const next = { ...(h.manualSides ?? {}) };
   if (side) next[profileKey] = side;
   else delete next[profileKey];
-  return { ...h, manualSides: next };
+  // "Detect on its own" forgets what the O+O list said too.
+  const panel = { ...(h.panelSides ?? {}) };
+  if (!side) delete panel[profileKey];
+  return { ...h, manualSides: next, panelSides: panel };
 }
+
+/**
+ * The O+O list proved this profile's side. It is fresh evidence, so it
+ * replaces an older manual mark for the same profile (a later manual mark
+ * replaces it in turn: the last word wins).
+ */
+export function setPanelSide(h: RaidHistory, profileKey: string, side: RaidSide): RaidHistory {
+  const panel = { ...(h.panelSides ?? {}), [profileKey]: side };
+  const manual = { ...(h.manualSides ?? {}) };
+  delete manual[profileKey];
+  return { ...h, panelSides: panel, manualSides: manual };
+}
+
+export type SideSource = 'manual' | 'panel' | 'group' | 'elimination';
 
 export interface SideKnowledge {
   /** Fingerprint → side. */
   sides: Map<string, RaidSide>;
   /** How each entry was learned. */
-  source: Map<string, 'manual' | 'group' | 'elimination'>;
+  source: Map<string, SideSource>;
 }
 
 /**
  * Which profile fingerprint is the PMC and which the Scav.
  *
- *  1. The player said so (manual).
+ *  1. The player said so (manual), or an O+O list proved it (panel); the
+ *     newer of the two is kept (setPanelSide / setManualSide).
  *  2. A group-ready notification said the squad goes in as Scav / PMC, and a
  *     raid started shortly after: that raid's fingerprint is that side. Votes
  *     are counted, so one odd pairing cannot flip a well-established answer.
@@ -162,10 +182,15 @@ export interface SideKnowledge {
  */
 export function learnSides(h: RaidHistory): SideKnowledge {
   const sides = new Map<string, RaidSide>();
-  const source = new Map<string, 'manual' | 'group' | 'elimination'>();
+  const source = new Map<string, SideSource>();
   for (const [key, side] of Object.entries(h.manualSides ?? {})) {
     sides.set(key, side);
     source.set(key, 'manual');
+  }
+  for (const [key, side] of Object.entries(h.panelSides ?? {})) {
+    if (sides.has(key)) continue;
+    sides.set(key, side);
+    source.set(key, 'panel');
   }
 
   const votes = new Map<string, { pmc: number; scav: number }>();
@@ -286,6 +311,11 @@ export function parseHistory(raw: string | null): RaidHistory {
       ),
       manualSides: Object.fromEntries(
         Object.entries(p.manualSides && typeof p.manualSides === 'object' ? p.manualSides : {}).filter(
+          ([k, v]) => /^[0-9a-f]{16}$/.test(k) && (v === 'pmc' || v === 'scav'),
+        ),
+      ) as Record<string, RaidSide>,
+      panelSides: Object.fromEntries(
+        Object.entries(p.panelSides && typeof p.panelSides === 'object' ? p.panelSides : {}).filter(
           ([k, v]) => /^[0-9a-f]{16}$/.test(k) && (v === 'pmc' || v === 'scav'),
         ),
       ) as Record<string, RaidSide>,

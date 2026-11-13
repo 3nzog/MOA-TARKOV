@@ -106,6 +106,9 @@ export default function AppearanceSettings({ onReplayIntro }: { onReplayIntro?: 
       <Row label={t('settings.appearance.upcomingQuests')} hint={t('settings.appearance.upcomingQuestsHint')}>
         <Toggle checked={a.upcomingQuests} onChange={(v) => setAppearance({ upcomingQuests: v })} label={t('settings.appearance.upcomingQuests')} />
       </Row>
+      <Row label={t('settings.appearance.otherExits')} hint={t('settings.appearance.otherExitsHint')}>
+        <Toggle checked={a.otherExits} onChange={(v) => setAppearance({ otherExits: v })} label={t('settings.appearance.otherExits')} />
+      </Row>
       <Row label={t('settings.appearance.mapBrightness')} hint={t('settings.appearance.mapBrightnessHint')}>
         <Slider label={t('settings.appearance.mapBrightness')} min={0.4} max={1.2} step={0.05} value={a.mapBrightness}
           onChange={(v) => setAppearance({ mapBrightness: v })} valueText={pct(a.mapBrightness)} />

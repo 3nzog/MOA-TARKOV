@@ -207,7 +207,8 @@
       "hotkeys": "Hotkeys",
       "party": "Party",
       "integrations": "Integrations",
-      "about": "About"
+      "about": "About",
+      "devices": "Other PCs"
     },
     "desktopOnly": "Available in the desktop app.",
     "creditsIntro": "Opening animation: glass reveal adapted from zanwei/glass-icon-reveal (MIT).",
@@ -302,7 +303,9 @@
       "questNames": "Quest names on the pins",
       "questNamesHint": "Writes the quest's name next to each of its places.",
       "upcomingQuests": "Quests I can take",
-      "upcomingQuestsHint": "Also pins quests you can start now (prerequisites and level met) in a softer colour, not only the ones the game logged as accepted."
+      "upcomingQuestsHint": "Also pins quests you can start now (prerequisites and level met) in a softer colour, not only the ones the game logged as accepted.",
+      "otherExits": "Show the other exits",
+      "otherExitsHint": "In a raid, exits that are not yours (the other side's, or not in the O+O list) stay faded on the map and the minimap. Off: they are hidden."
     }
   },
   "errors": {
@@ -341,8 +344,8 @@
     "leaveSquad": "Leave squad",
     "party": {
       "join": "Join party",
-      "hint": "On your Radmin VPN network: if a friend is already in a party you join them, otherwise you host and the next ones join you. No code needed.",
-      "radminOff": "Turn on Radmin VPN (and join your friends’ network) for the automatic party.",
+      "hint": "On Radmin VPN or the same home network: if someone is already in a party you join it; if not, you host and the next players join you. No code.",
+      "radminOff": "Turn on Radmin VPN, or connect the PCs to the same router, for the automatic party.",
       "otherWays": "Other ways to join (code)",
       "title": "Radmin party",
       "hosting": "You are hosting the party",
@@ -351,10 +354,15 @@
       "portBusy": "Another program is using the party port (8787). Close it and try again.",
       "failed": "Could not start the party. Try again.",
       "firewallDeclined": "The firewall permission was not given: friends may not be able to join you. Leave and join the party again to see the prompt.",
-      "yourIp": "Your Radmin IP:",
-      "byIp": "Or join by your friend's Radmin IP",
-      "byIpHint": "Ask the friend hosting for the IP shown on their screen.",
-      "notAtIp": "No party answered at {{ip}}. Your friend must have the party open in MoA, and the first time they host, Windows asks to allow it in the firewall."
+      "yourIp": "Your IPs:",
+      "byIp": "Or join by your friend's IP",
+      "byIpHint": "Ask the friend hosting for the IP shown on their screen (Radmin 26.x or home network 192.168.x).",
+      "notAtIp": "No party answered at {{ip}}. Your friend must have the party open in MoA, and the first time they host, Windows asks to allow it in the firewall.",
+      "noNetwork": "No network found. Turn on Radmin VPN (friends far away) or connect the PC to the router (same house).",
+      "lanPublic": "Windows marks the home network as Public and Radmin is off. Turn Radmin on, or mark the network as Private in Windows network settings.",
+      "netRadmin": "Radmin",
+      "netLan": "home network",
+      "netPublic": "Public: no party on it"
     }
   },
   "feedback": {
@@ -651,7 +659,7 @@
     "side": {
       "pmcNow": "This raid: PMC",
       "scavNow": "This raid: Scav — showing Scav extracts",
-      "unknownNow": "This raid: PMC or Scav not known yet — showing PMC extracts",
+      "unknownNow": "Current raid: not sure yet whether PMC or Scav — exits faded until you screenshot O+O or mark it below",
       "scavQuests": "On a Scav run most PMC quests do not progress.",
       "markPmc": "It is PMC",
       "markScav": "It is Scav",
@@ -659,7 +667,8 @@
       "source": {
         "manual": "set by you",
         "group": "learned from a squad raid",
-        "elimination": "deduced (the other profile is known)"
+        "elimination": "deduced (the other profile is known)",
+        "panel": "read from the O+O list"
       }
     }
   },
@@ -678,7 +687,9 @@
     "hint": "Press O twice in raid and take a screenshot with the list open: MoA reads your exits from it.",
     "readSwitched_one": "Read {{count}} exit from the O+O screenshot — switched to {{map}}",
     "readSwitched_other": "Read {{count}} exits from the O+O screenshot — switched to {{map}}, showing only those",
-    "missingOcrLanguage": "Windows cannot read text in the game’s language ({{lang}}). Add that language in Windows Settings → Time & language → Language, then try again."
+    "missingOcrLanguage": "Windows cannot read text in the game’s language ({{lang}}). Add that language in Windows Settings → Time & language → Language, then try again.",
+    "provedScav": "From the list: you are a Scav (the app will remember).",
+    "provedPmc": "From the list: you are a PMC (the app will remember)."
   },
   "raidPill": {
     "live": "In raid: {{map}}",
@@ -787,5 +798,128 @@
     "uncertainNote_one": "{{count}} name fits more than one item, shown as a price range and left out of the total.",
     "uncertainNote_other": "{{count}} names fit more than one item, shown as price ranges and left out of the total.",
     "note": "Prices are tarkov.dev estimates from the last data update."
+  },
+  "link": {
+    "main": {
+      "title": "This is the game PC",
+      "allow": "Let my other PCs show this game",
+      "allowHint": "Turn this on on the PC you play on. The other PC shows the map, your position, the exits and the quests as if it were another monitor of this one.",
+      "thisPc": "This PC's name on the network: {{name}}",
+      "firewallOff": "The firewall was not opened: the other PC may not reach this one. Use Test connection → Open firewall.",
+      "none": "No PC linked yet. On the other PC, open this tab and click Find my PCs.",
+      "connected": "connected now",
+      "away": "off",
+      "forget": "Remove"
+    },
+    "screen": {
+      "title": "This PC is the extra screen",
+      "hint": "On the PC that only shows the map: find the game PC and link. The game PC must have MoA open with the option above on.",
+      "search": "Find my PCs",
+      "noneFound": "No PC found. On the game PC, turn on \"Let my other PCs show this game\" and search again, or type its IP below.",
+      "link": "Link",
+      "byIp": "Or by the game PC's IP",
+      "confirm": "Confirm on the game PC ({{host}}). The code there should be:",
+      "codeLabel": "Confirmation code",
+      "state": {
+        "connecting": "Connecting to {{name}}…",
+        "linked": "Linked to {{name}}: this PC shows the game from there.",
+        "lost": "The connection to {{name}} dropped. Retrying on its own…"
+      },
+      "unlink": "Unlink",
+      "refused": "The game PC did not allow it (or removed this PC). Search again to ask once more.",
+      "partyNote": "On the extra screen the party works to see your friends, but it does not send a position: the game PC does."
+    },
+    "request": {
+      "title": "Link a PC?",
+      "body": "{{name}} ({{ip}}) wants to show this PC's game: map, position, exits and quests.",
+      "check": "Only allow it if it is yours. Check that the code on its screen is:",
+      "allow": "Allow",
+      "refuse": "Refuse"
+    },
+    "chip": {
+      "showing": "Screen of {{name}}",
+      "confirm": "Confirm on the game PC: {{code}}",
+      "reconnecting": "Reconnecting to {{name}}…",
+      "linked_one": "{{count}} PC linked",
+      "linked_other": "{{count}} PCs linked"
+    },
+    "error": {
+      "port_busy": "Another program is using port 8789. Close it and try again.",
+      "bad_ip": "Invalid IP: use the Radmin one (26.x) or the home network one (192.168.x).",
+      "other": "That did not work. Use Test connection below to see why."
+    }
+  },
+  "net": {
+    "test": {
+      "title": "Test connection",
+      "hint": "Checks, step by step, everything a connection between two PCs needs. To test up to a specific PC, type its IP.",
+      "targetPlaceholder": "Other PC's IP (optional)",
+      "run": "Test connection",
+      "fixFirewall": "Open firewall",
+      "openLog": "Open connection log"
+    },
+    "step": {
+      "radmin": {
+        "ok": "Radmin VPN on: {{ips}}",
+        "info": "Radmin VPN off (only needed to play with friends far away)"
+      },
+      "lan": {
+        "ok": "Home network: {{ips}}",
+        "info": "This PC is not on a home network"
+      },
+      "noNetwork": {
+        "fail": "No network found",
+        "help": "Turn on Radmin VPN or connect the PC to the router and test again."
+      },
+      "lanPublic": {
+        "warn": "Windows marks the home network ({{ip}}) as Public",
+        "help": "A linked PC works anyway. Only the party over the home network is off; to allow it, in Windows Settings → Network & Internet → network properties, choose Private."
+      },
+      "firewall": {
+        "ok": "Firewall open for MoA",
+        "warn": "The firewall is not open for MoA yet",
+        "help": "Without it, other PCs may not reach this one. Click Open firewall and accept the Windows prompt."
+      },
+      "partyPort": {
+        "ok": "Party port ({{port}}) ok",
+        "fail": "The party port ({{port}}) is taken by another program",
+        "help": "Close the program using that port and test again."
+      },
+      "linkPort": {
+        "ok": "Linked-PC port ({{port}}) ok",
+        "fail": "The linked-PC port ({{port}}) is taken by another program",
+        "help": "Close the program using that port and test again."
+      },
+      "partyFound": {
+        "ok": "Party open on the network: {{host}}",
+        "info": "No party open on the network right now"
+      },
+      "linkFound": {
+        "ok": "PCs accepting links: {{pcs}}",
+        "info": "No PC accepting links on the network right now"
+      },
+      "target": {
+        "ok": "{{ip}} is on a network of this PC",
+        "warn": "{{ip}} is not on a network of this PC",
+        "fail": "{{ip}} is neither a Radmin nor a home-network IP",
+        "help": "Check the IP. Both PCs must be on the same Radmin or the same router."
+      },
+      "targetParty": {
+        "ok": "That PC's party answers ({{ms}} ms)",
+        "warn": "That PC answers, but the party connection does not open",
+        "info": "That PC is not hosting a party right now",
+        "help": "Its firewall is probably blocking. On the other PC, run this test and click Open firewall."
+      },
+      "targetLink": {
+        "ok": "Link with that PC works ({{ms}} ms round trip)",
+        "warn": "That PC's port opens, but it does not answer",
+        "info": "That PC is not accepting links right now",
+        "help": "Update MoA on both PCs and test again."
+      },
+      "crashed": {
+        "fail": "The test could not run",
+        "help": "Close and reopen MoA and try again."
+      }
+    }
   }
 }
