@@ -49,12 +49,14 @@ export const best = (p: Price | undefined) => Math.max(p?.a ?? 0, p?.sp ?? 0);
  * Listens for screenshot text and keeps the last price result. `skipUntil`
  * (ms) lets an O+O screenshot, already read as an extract list, pass silently.
  */
-export function usePriceScan(skipUntil: () => number) {
+export function usePriceScan(skipUntil: () => number, onFound?: () => void) {
   const [result, setResult] = useState<ScanResult>(null);
   const skipRef = useRef(skipUntil);
+  const foundRef = useRef(onFound);
   useEffect(() => {
     skipRef.current = skipUntil;
-  }, [skipUntil]);
+    foundRef.current = onFound;
+  }, [skipUntil, onFound]);
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     let alive = true;
@@ -62,7 +64,10 @@ export function usePriceScan(skipUntil: () => number) {
       if (Date.now() < skipRef.current()) return;
       const [index, prices] = await Promise.all([loadIndex(), loadPrices()]);
       const r = scanScreen(text, index, (id) => best(prices[id]) > 0);
-      if (alive && r) setResult(r);
+      if (alive && r) {
+        foundRef.current?.();
+        setResult(r);
+      }
     })
       .then((u) => {
         if (alive) unlisten = u;

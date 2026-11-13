@@ -350,7 +350,11 @@
       "noRadmin": "Radmin VPN 未开启。请开启并加入朋友的网络后重试。",
       "portBusy": "组队端口 (8787) 被其他程序占用。请关闭后重试。",
       "failed": "无法启动组队,请重试。",
-      "firewallDeclined": "未授予防火墙权限:朋友可能无法加入。退出并重新加入组队即可再次看到提示。"
+      "firewallDeclined": "未授予防火墙权限:朋友可能无法加入。退出并重新加入组队即可再次看到提示。",
+      "yourIp": "你的 Radmin IP：",
+      "byIp": "或用朋友的 Radmin IP 加入",
+      "byIpHint": "向主机朋友要他屏幕上显示的 IP。",
+      "notAtIp": "{{ip}} 没有小队响应。朋友需要在 MoA 里开着小队；第一次做主机时，Windows 会请求在防火墙中允许。"
     }
   },
   "feedback": {
@@ -640,7 +644,9 @@
       "traderBuy": "从商人购买",
       "noFlea": "禁止在跳蚤出售",
       "noPriceItem": "没有价格记录。",
-      "fleaEach": "跳蚤每个约 {{price}}(估算)"
+      "fleaEach": "跳蚤每个约 {{price}}(估算)",
+      "fromShot": "来自截图：{{count}} 件",
+      "clearShot": "清除"
     },
     "side": {
       "pmcNow": "当前战局:PMC",

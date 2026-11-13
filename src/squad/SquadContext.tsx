@@ -71,6 +71,8 @@ export interface SquadApi extends SquadState {
   joinSquad: (code: string, name: string, colorId: string | null) => void;
   /** Automatic party on the Radmin network: join whoever hosts, else host. */
   joinParty: (name: string, colorId: string | null) => void;
+  /** Join the party hosted at this Radmin address (when the automatic search finds nobody). */
+  joinPartyAt: (ip: string, name: string, colorId: string | null) => void;
   /** In an automatic party: whether this PC hosts it. null = not in one. */
   partyRole: "host" | "guest" | null;
   /** Non-fatal party notice (e.g. the firewall prompt was declined). */
@@ -362,6 +364,32 @@ export function SquadProvider({ children }: { children: ReactNode }) {
     },
     [connectTo, persist, resetSelf, t],
   );
+  const joinPartyAt = useCallback(
+    async (ip: string, name: string, colorId: string | null) => {
+      if (partyBusyRef.current) return;
+      partyBusyRef.current = true;
+      persist(name, colorId);
+      resetSelf();
+      setPartyNotice(null);
+      setState({ ...EMPTY, status: "connecting" });
+      try {
+        const found = await partyFind([ip.trim()], 2500);
+        if (!found) {
+          setState({ ...EMPTY, error: t("squad.party.notAtIp", { ip: ip.trim() }) });
+          return;
+        }
+        rememberPartyHost(found.host);
+        setPartyRole("guest");
+        connectTo(`ws://${found.host}:${found.port}`, found.room, name, colorId);
+      } catch (e) {
+        setPartyRole(null);
+        setState({ ...EMPTY, error: String(e) === "no_radmin" ? t("squad.party.noRadmin") : t("squad.party.failed") });
+      } finally {
+        partyBusyRef.current = false;
+      }
+    },
+    [connectTo, persist, resetSelf, t],
+  );
   const joinPartyRef = useRef(joinParty);
   useEffect(() => {
     joinPartyRef.current = joinParty;
@@ -483,6 +511,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
       createSquad,
       joinSquad,
       joinParty: (name: string, colorId: string | null) => void joinParty(name, colorId),
+      joinPartyAt: (ip: string, name: string, colorId: string | null) => void joinPartyAt(ip, name, colorId),
       partyRole,
       partyNotice,
       leaveSquad,
@@ -500,6 +529,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
     [
       state,
       identity,
+      joinPartyAt,
       createSquad,
       joinSquad,
       joinParty,

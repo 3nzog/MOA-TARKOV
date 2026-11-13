@@ -350,7 +350,11 @@
       "noRadmin": "O Radmin VPN não está ligado. Ligue, entre na rede dos seus amigos e tente de novo.",
       "portBusy": "Outro programa está usando a porta da party (8787). Feche-o e tente de novo.",
       "failed": "Não deu para iniciar a party. Tente de novo.",
-      "firewallDeclined": "A permissão do firewall não foi dada: seus amigos podem não conseguir entrar. Saia e entre na party de novo para ver o pedido."
+      "firewallDeclined": "A permissão do firewall não foi dada: seus amigos podem não conseguir entrar. Saia e entre na party de novo para ver o pedido.",
+      "yourIp": "Seu IP no Radmin:",
+      "byIp": "Ou entre pelo IP do Radmin do amigo",
+      "byIpHint": "Peça ao amigo que está hospedando o IP que aparece na tela dele.",
+      "notAtIp": "Nenhuma party respondeu em {{ip}}. O seu amigo precisa estar com a party aberta no MoA, e na primeira vez que ele hospeda o Windows pede para liberar no firewall."
     }
   },
   "feedback": {
@@ -640,7 +644,9 @@
       "traderBuy": "Comprar de trader",
       "noFlea": "Proibido no flea",
       "noPriceItem": "Sem preço registrado.",
-      "fleaEach": "≈ {{price}} cada no flea (estimativa)"
+      "fleaEach": "≈ {{price}} cada no flea (estimativa)",
+      "fromShot": "Do seu print: {{count}} itens",
+      "clearShot": "Limpar"
     },
     "side": {
       "pmcNow": "Raid atual: PMC",

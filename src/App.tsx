@@ -58,6 +58,7 @@ import { canonicalMapId } from './map/canonicalMap';
 import { mapIdFromLogLocation } from './map/logLocationMap';
 import { currentRaid, learnSides, raidSide, setManualSide, type RaidSide } from './state/raidHistory';
 import PlannerPanel, { type PlannerTab } from './planner/PlannerPanel';
+import { scannedItems } from './planner/scanned';
 import { useAppearance } from './appearance/useAppearance';
 import GlassIntro from './intro/GlassIntro';
 import TitleBar from './shell/TitleBar';
@@ -131,7 +132,12 @@ function App() {
   // further down, once the map's POIs and the live raid are known.
   // Until when a screenshot's text is an O+O list, not something to price.
   const extractSkipUntil = useRef(0);
-  const priceScan = usePriceScan(() => extractSkipUntil.current);
+  // An O+O warning waits a moment: if the screenshot was an inventory instead, it is dropped.
+  const panelToastTimer = useRef<number | undefined>(undefined);
+  const priceScan = usePriceScan(
+    () => extractSkipUntil.current,
+    () => window.clearTimeout(panelToastTimer.current),
+  );
   const extractPanelHandler = useRef<((lines: string[], missingLanguage: string | null) => void) | null>(null);
   // Every exit's name in all six languages, so the list is read whatever
   // language the game runs in. Loaded once in the background (cached a week).
@@ -223,8 +229,6 @@ function App() {
       return questState ? resolveMapName(id, questState.availableTasksByMap, questState.availableObjectivesByMap) : id;
     };
     extractPanelHandler.current = (lines, missingLanguage) => {
-      // The same screenshot's text arrives next for the price check: an O+O list is not an inventory.
-      extractSkipUntil.current = Date.now() + 3000;
       // Try every map: the list itself says where you are. Ties go to the raid's map, then the one shown.
       const raidMap = liveRaid?.location ? mapIdFromLogLocation(liveRaid.location) ?? null : null;
       const sidePois = Object.fromEntries(
@@ -232,11 +236,22 @@ function App() {
       );
       const found = findPanelMap(lines, sidePois, exitAliases, raidMap ?? selectedMapId);
       if (!found) {
-        // Three or more lines look like the list; say so instead of failing silently.
-        if (missingLanguage) setToast(t('extractPanel.missingOcrLanguage', { lang: missingLanguage }));
-        else if (lines.length >= 3) setToast(t('extractPanel.notMatched'));
+        // Three or more lines may be the list; say so instead of failing
+        // silently, unless the same screenshot turns out to be an inventory
+        // (its item names fill that corner too) — then the price card shows.
+        const msg = missingLanguage
+          ? t('extractPanel.missingOcrLanguage', { lang: missingLanguage })
+          : lines.length >= 3
+            ? t('extractPanel.notMatched')
+            : null;
+        if (msg) {
+          window.clearTimeout(panelToastTimer.current);
+          panelToastTimer.current = window.setTimeout(() => setToast(msg), 1500);
+        }
         return;
       }
+      // The same screenshot's text arrives next for the price check: an O+O list is not an inventory.
+      extractSkipUntil.current = Date.now() + 3000;
       setExtractPanel({ lines, mapId: found.mapId, raidStartedAt: liveRaid?.startedAt ?? null });
       const switching = !selectedMapId || canonicalMapId(found.mapId) !== canonicalMapId(selectedMapId);
       if (switching) setSelectedMapId(found.mapId);
@@ -329,6 +344,8 @@ function App() {
     return out;
   }, [selectedMapId, questState, questTasks, questStatuses]);
   const relativeSynced = useRelativeTime(quests.lastSynced);
+  // On the planner's market tab, an inventory screenshot fills that tab's price list instead of the card.
+  const onMarketTab = railSection === 'planner' && plannerTab === 'market' && !compact.compact;
   // Quest-unlocked trader offers in the weapon bench open once the quest is done.
   const questProgress = quests.progress;
   const taskDone = useCallback((id: string) => effectiveStatus(questProgress, id) === 'complete', [questProgress]);
@@ -418,7 +435,7 @@ function App() {
       <TitleBar />
       {showIntro && <GlassIntro onDone={() => setShowIntro(false)} />}
       <Toast message={toast} onDismiss={() => setToast(null)} />
-      {priceScan.result && <PriceScanCard result={priceScan.result} onClose={priceScan.clear} />}
+      {priceScan.result && !onMarketTab && <PriceScanCard result={priceScan.result} onClose={priceScan.clear} />}
       <div
         className={`shell shell--${settings.railSide}${compact.compact ? ' shell--compact' : ''}`}
         style={{ '--chrome-w': `${chromeWidth}px` } as CSSProperties}
@@ -521,6 +538,8 @@ function App() {
             <div className="rail-panel__body">
               {railSection === 'planner' ? (
                 <PlannerPanel
+                  scanned={onMarketTab ? scannedItems(priceScan.result) : null}
+                  onClearScan={priceScan.clear}
                   load={progressionLoad}
                   tasks={quests.tasks}
                   statuses={questStatuses}

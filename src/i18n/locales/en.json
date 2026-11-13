@@ -350,7 +350,11 @@
       "noRadmin": "Radmin VPN is not on. Turn it on, join your friends’ network and try again.",
       "portBusy": "Another program is using the party port (8787). Close it and try again.",
       "failed": "Could not start the party. Try again.",
-      "firewallDeclined": "The firewall permission was not given: friends may not be able to join you. Leave and join the party again to see the prompt."
+      "firewallDeclined": "The firewall permission was not given: friends may not be able to join you. Leave and join the party again to see the prompt.",
+      "yourIp": "Your Radmin IP:",
+      "byIp": "Or join by your friend's Radmin IP",
+      "byIpHint": "Ask the friend hosting for the IP shown on their screen.",
+      "notAtIp": "No party answered at {{ip}}. Your friend must have the party open in MoA, and the first time they host, Windows asks to allow it in the firewall."
     }
   },
   "feedback": {
@@ -640,7 +644,9 @@
       "traderBuy": "Buy from trader",
       "noFlea": "Banned on flea",
       "noPriceItem": "No price recorded.",
-      "fleaEach": "≈ {{price}} each on the flea (estimate)"
+      "fleaEach": "≈ {{price}} each on the flea (estimate)",
+      "fromShot": "From your screenshot: {{count}} items",
+      "clearShot": "Clear"
     },
     "side": {
       "pmcNow": "This raid: PMC",

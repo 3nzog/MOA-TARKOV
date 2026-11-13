@@ -314,12 +314,30 @@ pub fn radmin_ips() -> Vec<Ipv4Addr> {
             ])
             .creation_flags(CREATE_NO_WINDOW)
             .output();
-        let Ok(out) = out else { return Vec::new() };
-        parse_radmin_ips(&String::from_utf8_lossy(&out.stdout))
+        let mut ips = out.map(|o| parse_radmin_ips(&String::from_utf8_lossy(&o.stdout))).unwrap_or_default();
+        // PowerShell can be missing, slow or blocked on some PCs. The route to
+        // the Radmin network tells the same thing: ask the OS which local
+        // address it would use to reach 26.0.0.1 (nothing is sent).
+        if ips.is_empty() {
+            if let Some(ip) = radmin_route_ip() {
+                ips.push(ip);
+            }
+        }
+        ips
     }
     #[cfg(not(windows))]
     {
         Vec::new()
+    }
+}
+
+/// The local address the OS picks to reach the Radmin network, if it is one.
+fn radmin_route_ip() -> Option<Ipv4Addr> {
+    let sock = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
+    sock.connect("26.0.0.1:9").ok()?;
+    match sock.local_addr().ok()?.ip() {
+        std::net::IpAddr::V4(v4) if v4.octets()[0] == 26 => Some(v4),
+        _ => None,
     }
 }
 

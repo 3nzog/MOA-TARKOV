@@ -19,6 +19,7 @@ import NeedsTab from './NeedsTab';
 import HideoutTab from './HideoutTab';
 import RaidPrepTab from './RaidPrepTab';
 import MarketTab from './MarketTab';
+import type { ScannedItems } from './scanned';
 import './planner.css';
 
 export type PlannerTab = 'summary' | 'quests' | 'items' | 'hideout' | 'raid' | 'market';
@@ -34,6 +35,9 @@ export interface PlannerCtx {
 }
 
 interface Props {
+  /** Items from an inventory screenshot, shown on the market tab. */
+  scanned?: ScannedItems | null;
+  onClearScan?: () => void;
   load: ProgressionLoad;
   tasks: TarkovTask[];
   statuses: Map<string, QuestInfo>;
@@ -139,7 +143,7 @@ export default function PlannerPanel(props: Props) {
             onOpenQuest={openQuest}
           />
         )}
-        {tab === 'market' && <MarketTab ctx={ctx} />}
+        {tab === 'market' && <MarketTab ctx={ctx} scanned={props.scanned} onClearScan={props.onClearScan} />}
       </div>
       <p className="planner-source">
         {t(data.source === 'remote' ? 'planner.sourceRemote' : 'planner.sourceBundled', {

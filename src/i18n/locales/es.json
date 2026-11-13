@@ -350,7 +350,11 @@
       "noRadmin": "Radmin VPN no está activo. Actívalo, únete a la red de tus amigos y vuelve a intentarlo.",
       "portBusy": "Otro programa usa el puerto de la party (8787). Ciérralo y vuelve a intentarlo.",
       "failed": "No se pudo iniciar la party. Inténtalo de nuevo.",
-      "firewallDeclined": "No se dio el permiso del firewall: puede que tus amigos no puedan unirse. Sal y vuelve a unirte para ver la solicitud."
+      "firewallDeclined": "No se dio el permiso del firewall: puede que tus amigos no puedan unirse. Sal y vuelve a unirte para ver la solicitud.",
+      "yourIp": "Tu IP de Radmin:",
+      "byIp": "O entra con la IP de Radmin de tu amigo",
+      "byIpHint": "Pide al amigo que aloja la IP que aparece en su pantalla.",
+      "notAtIp": "Ningún grupo respondió en {{ip}}. Tu amigo debe tener el grupo abierto en MoA; la primera vez que aloja, Windows pide permitirlo en el firewall."
     }
   },
   "feedback": {
@@ -640,7 +644,9 @@
       "traderBuy": "Comprar a comerciante",
       "noFlea": "Prohibido en el mercadillo",
       "noPriceItem": "Sin precio registrado.",
-      "fleaEach": "≈ {{price}} cada uno en el mercadillo (estimación)"
+      "fleaEach": "≈ {{price}} cada uno en el mercadillo (estimación)",
+      "fromShot": "De tu captura: {{count}} objetos",
+      "clearShot": "Limpiar"
     },
     "side": {
       "pmcNow": "Incursión actual: PMC",

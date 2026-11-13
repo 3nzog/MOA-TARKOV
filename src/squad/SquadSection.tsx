@@ -10,6 +10,7 @@ import { useSquad } from "./useSquad";
 import { SQUAD_COLORS } from "../../shared/squadProtocol";
 import SquadCard from "./SquadCard";
 import { partyAvailable, partyRadminIps } from "./partyApi";
+import { getRelayOverride } from "./config";
 import { Button, Field, Input, IconButton, SectionLabel } from "../ui";
 
 
@@ -35,14 +36,18 @@ export default function SquadSection({
   const [copied, setCopied] = useState(false);
   // Which action is in flight — so ONLY that button spins (not both).
   const [pending, setPending] = useState<"create" | "join" | "party" | null>(null);
-  // Radmin VPN on? Then the party is automatic (one button, no code).
-  const [radmin, setRadmin] = useState<boolean | null>(partyAvailable() ? null : false);
+  // This PC's Radmin VPN address(es), shown so a friend can join by IP.
+  const [radminIps, setRadminIps] = useState<string[] | null>(null);
+  const radmin = radminIps === null ? null : radminIps.length > 0;
+  const [hostIp, setHostIp] = useState("");
+  // The code flow needs a relay server; it is shown only when one is set up.
+  const hasRelay = !!getRelayOverride();
   useEffect(() => {
     if (!partyAvailable() || squad.inSquad) return;
     let alive = true;
     partyRadminIps()
-      .then((ips) => alive && setRadmin(ips.length > 0))
-      .catch(() => alive && setRadmin(false));
+      .then((ips) => alive && setRadminIps(ips))
+      .catch(() => alive && setRadminIps([]));
     return () => {
       alive = false;
     };
@@ -65,6 +70,12 @@ export default function SquadSection({
     if (nameOk) {
       setPending("party");
       squad.joinParty(name.trim(), colorId);
+    }
+  };
+  const handlePartyAt = () => {
+    if (nameOk && /^26\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostIp.trim())) {
+      setPending("party");
+      squad.joinPartyAt(hostIp.trim(), name.trim(), colorId);
     }
   };
   const handleCreate = () => {
@@ -131,7 +142,7 @@ export default function SquadSection({
         <div className="squad-divider" />
 
         <div className="squad-actions">
-          {radmin && (
+          {partyAvailable() && (
             <>
               <Button
                 variant="primary"
@@ -144,14 +155,38 @@ export default function SquadSection({
                 {t('squad.party.join')}
               </Button>
               <p className="squad-shared-hint">{t('squad.party.hint')}</p>
+              {radminIps && radminIps.length > 0 && (
+                <p className="squad-shared-hint">
+                  {t('squad.party.yourIp')} <strong className="mono">{radminIps.join(', ')}</strong>
+                </p>
+              )}
+              <SectionLabel>{t('squad.party.byIp')}</SectionLabel>
+              <div className="squad-join-row">
+                <Input
+                  mono
+                  value={hostIp}
+                  maxLength={15}
+                  placeholder="26.x.x.x"
+                  onChange={(e) => setHostIp(e.target.value.replace(/[^\d.]/g, ''))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handlePartyAt();
+                  }}
+                />
+                <Button disabled={!nameOk || busy || !/^26\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostIp.trim())} onClick={handlePartyAt}>
+                  {t('squad.join')}
+                </Button>
+              </div>
+              <p className="squad-shared-hint">{t('squad.party.byIpHint')}</p>
             </>
           )}
           {radmin === false && partyAvailable() && <p className="squad-shared-hint">{t('squad.party.radminOff')}</p>}
         </div>
 
-        {/* With Radmin on, the code flow is only a fallback (a relay elsewhere). */}
-        <details className="squad-other-ways" open={radmin !== true}>
-          {radmin === true && <summary>{t('squad.party.otherWays')}</summary>}
+        {/* The code flow needs a relay server (Settings -> Party); without one
+            its buttons could only fail, so they appear once one is set up. */}
+        {(hasRelay || !partyAvailable()) && (
+        <details className="squad-other-ways" open={!partyAvailable()}>
+          {partyAvailable() && <summary>{t('squad.party.otherWays')}</summary>}
         <div className="squad-actions">
           <Button
             variant="secondary"
@@ -186,6 +221,7 @@ export default function SquadSection({
 
         </div>
         </details>
+        )}
 
         <div className="squad-actions">
           {busy && (
