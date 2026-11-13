@@ -188,6 +188,8 @@ export interface MinimapState {
   /** Your marker: the symbol you picked and your colour. */
   self?: { symbol: string; color?: string };
   /** Squadmates on this map (last known position), drawn like on the big map. */
+  /** The raid's clock: ends at (PMC, time left) or only its start (time in raid). */
+  raidClock?: { startedAt: number; endsAt: number | null } | null;
   mates?: { id: string; name: string; color: string; symbol: string | null; x: number; z: number; rotation: number; ts: number }[];
   settings: Pick<MinimapSettings, 'locked' | 'headingUp' | 'zoom' | 'opacity' | 'shape'>;
   /** Localized strings, so the overlay needs no i18n bootstrapping of its own. */

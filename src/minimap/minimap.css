@@ -118,3 +118,20 @@ html.minimap-root #root {
 /* Markers keep their symbol upright while the heading-up rotor turns the map. */
 .minimap .tc-mk__disc { transform: rotate(var(--counter, 0deg)); }
 .minimap .tc-mk { transform: scale(calc(var(--marker-scale, 1) * 0.8)); }
+
+/* Raid clock (time left for a PMC, time in raid otherwise). */
+.minimap__clock {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #eceee8;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+.minimap__clock.is-low { color: #ff8a8a; }

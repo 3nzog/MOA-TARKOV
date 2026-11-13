@@ -65,6 +65,7 @@ import TitleBar from './shell/TitleBar';
 import PriceScanCard from './prices/PriceScan';
 import { usePriceScan } from './prices/usePriceScan';
 import PlaceLabelLayer from './map/PlaceLabelLayer';
+import { clock, raidMinutes } from './map/raidDuration';
 import { collectObjectiveMaps } from './quests/derive';
 import type { TarkovTask, TaskObjective } from './api/types';
 import { effectiveStatus } from './state/localProgress';
@@ -296,6 +297,22 @@ function App() {
     [selectedMapId, questState, pois.currentPois, panelExitIds],
   );
   const minimapSelf = useMemo(() => ({ symbol: selfSymbol, color: selfColor }), [selfSymbol, selfColor]);
+  // Raid clock: time left for a PMC (map length from the raid's start), time in raid otherwise.
+  const liveRaidMapId = liveRaid?.location ? mapIdFromLogLocation(liveRaid.location) ?? null : null;
+  const minimapRaid = useMemo(() => {
+    if (!liveRaid?.startedAt) return null;
+    const minutes = raidMinutes(liveRaidMapId);
+    return {
+      startedAt: liveRaid.startedAt,
+      endsAt: liveRaidSide === 'pmc' && minutes ? liveRaid.startedAt + minutes * 60_000 : null,
+    };
+  }, [liveRaid, liveRaidMapId, liveRaidSide]);
+  const [clockNow, setClockNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!liveRaid) return;
+    const id = window.setInterval(() => setClockNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [liveRaid]);
   const minimapMates = useMemo(
     () =>
       squad.members.flatMap((m) => {
@@ -322,6 +339,7 @@ function App() {
     self: minimapSelf,
     mates: minimapMates,
     inRaid: !!liveRaid,
+    raidClock: minimapRaid,
   });
   // Quests the player can take now (prerequisites and level met) but the logs
   // never saw accepted: pinned dimmer on the map, so the places of "my" quests
@@ -498,6 +516,11 @@ function App() {
                     <span className="raid-pill__text">
                       {t('raidPill.live', { map: liveRaidMapName })}
                     </span>
+                    {minimapRaid && (
+                      <span className="raid-pill__clock mono" title={t(minimapRaid.endsAt ? 'raidPill.leftHint' : 'raidPill.elapsedHint')}>
+                        {minimapRaid.endsAt ? clock(minimapRaid.endsAt - clockNow) : `+${clock(clockNow - minimapRaid.startedAt)}`}
+                      </span>
+                    )}
                     {liveRaid.profileKey ? (
                       // Wrong side? One click flips it, and the app remembers it for this profile.
                       <button

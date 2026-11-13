@@ -444,3 +444,4 @@
 }
 .titlebar__btn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
 .titlebar__btn--close:hover:not(:disabled) { background: #d83b3b; color: #fff; }
+.raid-pill__clock { flex: none; font-size: var(--fs-caption); color: var(--text); }

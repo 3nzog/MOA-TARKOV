@@ -685,7 +685,9 @@
     "pmc": "PMC",
     "scav": "Scav",
     "unknown": "lado desconocido",
-    "fix": "¿Lado equivocado? Haz clic para cambiar PMC / Scav (se recuerda para este perfil)"
+    "fix": "¿Lado equivocado? Haz clic para cambiar PMC / Scav (se recuerda para este perfil)",
+    "leftHint": "Tiempo restante de la incursión (PMC: desde el inicio y la duración del mapa)",
+    "elapsedHint": "Tiempo en la incursión (el Scav entra con menos tiempo, que el juego no indica)"
   },
   "gunsmith": {
     "title": "Banco de armas",

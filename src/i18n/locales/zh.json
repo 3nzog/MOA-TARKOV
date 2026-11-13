@@ -685,7 +685,9 @@
     "pmc": "PMC",
     "scav": "Scav",
     "unknown": "身份未知",
-    "fix": "身份不对？点击切换 PMC / Scav（会记住该档案）"
+    "fix": "身份不对？点击切换 PMC / Scav（会记住该档案）",
+    "leftHint": "战局剩余时间（PMC：按开局时间与地图时长计算）",
+    "elapsedHint": "已在战局中的时间（Scav 进入时剩余时间更少，游戏不提供该信息）"
   },
   "gunsmith": {
     "title": "改枪台",

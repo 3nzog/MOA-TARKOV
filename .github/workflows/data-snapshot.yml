@@ -36,6 +36,15 @@ jobs:
         run: node scripts/fetch-progression.mjs
         continue-on-error: true
 
+      # Weapon bench (guns, parts, where each comes from) and map place names.
+      # Nice-to-haves too: a failure keeps the committed copies.
+      - name: Fetch weapon bench data from tarkov.dev
+        run: node scripts/fetch-weapons.mjs
+        continue-on-error: true
+      - name: Fetch map place names from tarkov.dev
+        run: node scripts/fetch-map-labels.mjs
+        continue-on-error: true
+
       # generatedAt changes on every run, so a naive `git diff` is always dirty.
       # Compare everything EXCEPT that field to decide whether the data moved.
       - name: Detect a real data change

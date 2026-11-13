@@ -685,7 +685,9 @@
     "pmc": "PMC",
     "scav": "Scav",
     "unknown": "lado desconhecido",
-    "fix": "Lado errado? Clique para trocar PMC / Scav (fica salvo para este perfil)"
+    "fix": "Lado errado? Clique para trocar PMC / Scav (fica salvo para este perfil)",
+    "leftHint": "Tempo restante da raid (PMC: desde o começo da raid e a duração do mapa)",
+    "elapsedHint": "Tempo dentro da raid (o Scav entra com menos tempo, que o jogo não informa)"
   },
   "gunsmith": {
     "title": "Mesa de armas",

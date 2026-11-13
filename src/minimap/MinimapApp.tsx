@@ -17,6 +17,7 @@ import FloorVisualOverlay from '../map/FloorVisualOverlay';
 import { ALL_FLOORS } from '../map/FloorSwitcher';
 import PlayerMarker from '../map/PlayerMarker';
 import { markerHtml } from '../squad/symbols';
+import { clock } from '../map/raidDuration';
 import { TOKEN_HEX } from '../ui/tokens';
 import { MARKER_COLORS } from '../poi/registry';
 import {
@@ -113,6 +114,21 @@ function useNow(intervalMs: number): number {
     return () => window.clearInterval(id);
   }, [intervalMs]);
   return now;
+}
+
+/** The raid clock in a corner: time left for a PMC, time in raid otherwise. */
+function RaidClock({ c }: { c: NonNullable<MinimapState['raidClock']> }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const left = c.endsAt !== null ? c.endsAt - now : null;
+  return (
+    <div className={`minimap__clock mono${left !== null && left < 5 * 60_000 ? ' is-low' : ''}`}>
+      {left !== null ? clock(left) : `+${clock(now - c.startedAt)}`}
+    </div>
+  );
 }
 
 /** A squadmate on the minimap: same marker as the big map, smaller, fading with age. */
@@ -329,6 +345,7 @@ export default function MinimapApp() {
               })()}
             </svg>
           )}
+          {state.raidClock && <RaidClock c={state.raidClock} />}
           {settings.headingUp && pos && (
             <div className="minimap__north" style={{ transform: `rotate(${turn}deg)` }}>
               <span>N</span>

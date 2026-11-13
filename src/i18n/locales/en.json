@@ -685,7 +685,9 @@
     "pmc": "PMC",
     "scav": "Scav",
     "unknown": "side unknown",
-    "fix": "Wrong side? Click to switch PMC / Scav (remembered for this profile)"
+    "fix": "Wrong side? Click to switch PMC / Scav (remembered for this profile)",
+    "leftHint": "Time left in the raid (PMC: from the raid's start and the map's length)",
+    "elapsedHint": "Time in the raid (a Scav joins with less time, which the game does not tell)"
   },
   "gunsmith": {
     "title": "Weapon bench",
