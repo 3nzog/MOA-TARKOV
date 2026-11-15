@@ -18,6 +18,11 @@ function isUserPoi(p: unknown): p is Poi {
   );
 }
 
+/** Markers sent by a linked game PC: only well-formed user markers. */
+export function normalizeCustomPois(raw: unknown): Poi[] {
+  return Array.isArray(raw) ? raw.filter(isUserPoi) : [];
+}
+
 export function loadCustomPois(): Poi[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

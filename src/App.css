@@ -1054,3 +1054,40 @@ button:disabled {
 .tc-poi-other.tc-hl {
   opacity: 0.85;
 }
+
+/* TarkovTracker key field (Settings → Integrations). */
+.tracker-key {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 6px 0 10px;
+}
+.tracker-key .squad-join-row {
+  align-self: stretch;
+}
+.tracker-key__label {
+  font-size: var(--fs-caption);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Scav snipers: the brightest red on the map, pulsing so they read from afar. */
+.tc-poi-danger .tc-poi-glyph {
+  filter: drop-shadow(0 0 4px rgba(255, 45, 45, 0.95)) drop-shadow(0 0 10px rgba(255, 45, 45, 0.6));
+  animation: tc-danger-pulse 1.4s ease-in-out infinite;
+}
+.tc-poi-danger .tc-poi-label {
+  color: #ff5a5a;
+  font-weight: 800;
+}
+@keyframes tc-danger-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.22); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tc-poi-danger .tc-poi-glyph { animation: none; }
+}
+.leaflet-overlay-pane path.tc-zone-sniper {
+  filter: drop-shadow(0 0 6px rgba(255, 45, 45, 0.7));
+}

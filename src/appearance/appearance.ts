@@ -50,6 +50,10 @@ export interface Appearance {
   upcomingQuests: boolean;
   /** Exits that are not the player's this raid stay on the map, faded (else hidden). */
   otherExits: boolean;
+  /** Radius of the 360° ring around Scav snipers, metres. */
+  sniperRange: number;
+  /** Also draw an estimated aim cone (not game data; off by default). */
+  sniperCone: boolean;
 }
 
 export const ACCENTS: { id: string; hex: string }[] = [
@@ -87,6 +91,8 @@ export const DEFAULT_APPEARANCE: Appearance = {
   questNames: true,
   upcomingQuests: true,
   otherExits: true,
+  sniperRange: 150,
+  sniperCone: false,
 };
 
 export const APPEARANCE_KEY = 'tc_appearance_v1';
@@ -127,6 +133,11 @@ export function normalizeAppearance(raw: unknown): Appearance {
     questNames: typeof r.questNames === 'boolean' ? r.questNames : d.questNames,
     upcomingQuests: typeof r.upcomingQuests === 'boolean' ? r.upcomingQuests : d.upcomingQuests,
     otherExits: typeof r.otherExits === 'boolean' ? r.otherExits : d.otherExits,
+    sniperRange:
+      typeof r.sniperRange === 'number' && Number.isFinite(r.sniperRange)
+        ? Math.min(300, Math.max(50, Math.round(r.sniperRange)))
+        : d.sniperRange,
+    sniperCone: typeof r.sniperCone === 'boolean' ? r.sniperCone : d.sniperCone,
   };
 }
 

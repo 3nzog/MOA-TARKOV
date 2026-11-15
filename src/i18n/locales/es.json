@@ -136,7 +136,7 @@
       "title": "TarkovTracker",
       "desktopOnly": "Solo disponible en la app de escritorio.",
       "checking": "Buscando una clave guardada…",
-      "hint": "Sincroniza misiones, objetivos, nivel y escondite con tarkovtracker.org. La clave de la API se escribe en una ventana aparte y se guarda en el Administrador de credenciales de Windows; MoA nunca la muestra.",
+      "hint": "Sincroniza misiones, objetivos, nivel y refugio con tarkovtracker.org. La clave se guarda en el Administrador de credenciales de Windows; MoA nunca la muestra.",
       "noKey": "No hay clave guardada",
       "noKeyHint": "Abre una ventana: pega la clave allí y pulsa Enter.",
       "setKey": "Introducir clave",
@@ -182,8 +182,13 @@
         "bad_request": "TarkovTracker rechazó parte de los datos (una misión u objetivo que no existe en este modo). Se omitió.",
         "network": "No se pudo conectar con TarkovTracker. Revisa tu conexión.",
         "storage": "No se pudo leer el Administrador de credenciales de Windows.",
-        "unexpected": "Respuesta inesperada de TarkovTracker."
-      }
+        "unexpected": "Respuesta inesperada de TarkovTracker.",
+        "bad_format": "Eso no parece una clave de TarkovTracker: empieza por PVP_, PVE_ o SZN_."
+      },
+      "keyField": "Clave de API de TarkovTracker",
+      "saveKey": "Guardar clave",
+      "keyFieldHint": "Consíguela en tarkovtracker.org → Settings → API Tokens (marca \"leer progreso\" y, para enviar, \"escribir progreso\"). Se comprueba con TarkovTracker antes de guardarla; el campo se vacía al guardar.",
+      "orWindow": "Prefiero escribirla en una ventana aparte"
     },
     "squadServer": {
       "title": "Servidor del escuadrón (avanzado)",
@@ -305,7 +310,11 @@
       "upcomingQuests": "Misiones que puedo coger",
       "upcomingQuestsHint": "También marca, en un color más suave, las misiones que ya puedes empezar (requisitos y nivel cumplidos), no solo las aceptadas.",
       "otherExits": "Mostrar las otras extracciones",
-      "otherExitsHint": "En la incursión, las extracciones que no son tuyas (del otro bando o fuera de la lista de O+O) quedan atenuadas en el mapa y el minimapa. Apagado: se ocultan."
+      "otherExitsHint": "En la incursión, las extracciones que no son tuyas (del otro bando o fuera de la lista de O+O) quedan atenuadas en el mapa y el minimapa. Apagado: se ocultan.",
+      "sniperRange": "Alcance de los francotiradores Scav",
+      "sniperRangeHint": "Radio del anillo rojo de 360° alrededor de cada francotirador Scav. Es un promedio de cuánto aciertan; ajústalo si quieres.",
+      "sniperCone": "Cono de puntería probable",
+      "sniperConeHint": "Muestra también hacia dónde apunta probablemente, estimado por las extracciones, el botín y los spawns cercanos. Es una estimación: el juego no lo informa."
     }
   },
   "errors": {
@@ -363,7 +372,8 @@
       "netRadmin": "Radmin",
       "netLan": "red de casa",
       "netPublic": "Pública: sin grupo en ella"
-    }
+    },
+    "mirrored": "Este es el grupo del PC del juego, mostrado aquí porque este PC está vinculado a él. Para salir, sal en el PC del juego."
   },
   "feedback": {
     "title": "Comentarios",
@@ -408,7 +418,21 @@
     "cellClickToRemove": "Celda {{grid}} · haz clic para quitar",
     "unsupportedMap": "El mapa \"{{name}}\" aún no es compatible en la v0.1. Por ahora, solo Customs.",
     "followCurrentFloor": "Seguir mi piso actual automáticamente",
-    "allFloors": "Todos"
+    "allFloors": "Todos",
+    "poi": {
+      "sniper": "Francotirador Scav",
+      "minefield": "Campo de minas",
+      "stationary": "Arma fija",
+      "btr": "Parada del BTR",
+      "switch": "Interruptor",
+      "lockedDoor": "Puerta cerrada",
+      "lockedTrunk": "Baúl cerrado"
+    },
+    "sniper": {
+      "zone": "Zona de francotirador Scav. El anillo rojo muestra hasta dónde alcanza, en 360° (~{{m}} m): el juego no dice hacia dónde apunta.",
+      "ring": "Alcance del francotirador Scav (~{{m}} m, 360°)",
+      "cone": "Cono: puntería probable, estimada por lo que hay alrededor (no es dato del juego)."
+    }
   },
   "onboarding": {
     "setupTitle": "Configuración",

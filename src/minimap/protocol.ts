@@ -77,7 +77,7 @@ export function parseMinimapSettings(raw: string | null): MinimapSettings {
 export interface MinimapPoint {
   x: number;
   z: number;
-  kind: 'quest' | 'extract' | 'transit';
+  kind: 'quest' | 'extract' | 'transit' | 'sniper';
   /** The player's own exits carry a name; the overlay points to them from its edge. */
   label?: string;
   /** Not the player's (other side, or not in the O+O list): drawn faded, no name. */
@@ -260,6 +260,8 @@ export function minimapPoints(
   tierOf: ((p: Poi) => 'mine' | 'other' | null) | null = null,
   /** Also draw the others, faded. */
   showOthers = true,
+  /** Scav sniper posts (src/poi/sniper.ts), drawn red. */
+  snipers: { x: number; z: number }[] = [],
 ): MinimapPoint[] {
   const target = canonicalMapId(mapId);
   const out: MinimapPoint[] = [];
@@ -270,6 +272,10 @@ export function minimapPoints(
     );
     const p = zone?.position ?? loc?.positions?.[0];
     if (p) out.push({ x: p.x, z: p.z, kind: 'quest' });
+    if (out.length >= max) return out;
+  }
+  for (const s of snipers) {
+    out.push({ x: s.x, z: s.z, kind: 'sniper' });
     if (out.length >= max) return out;
   }
   if (!tierOf) return out;

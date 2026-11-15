@@ -136,7 +136,7 @@
       "title": "TarkovTracker",
       "desktopOnly": "デスクトップアプリでのみ利用できます。",
       "checking": "保存済みのキーを確認中…",
-      "hint": "タスク、目標、レベル、ハイドアウトを tarkovtracker.org と同期します。APIキーは別ウィンドウで入力し、Windows資格情報マネージャーに保存されます。MoAがキーを表示することはありません。",
+      "hint": "tarkovtracker.org とタスク・目標・レベル・ハイドアウトを同期します。キーは Windows 資格情報マネージャーに保存され、MoA が表示することはありません。",
       "noKey": "キーが保存されていません",
       "noKeyHint": "ウィンドウが開きます。キーを貼り付けて Enter を押してください。",
       "setKey": "キーを入力",
@@ -178,12 +178,17 @@
         "bad_request": "TarkovTrackerがデータの一部を拒否しました(このモードに存在しないタスクまたは目標)。スキップしました。",
         "network": "TarkovTrackerに接続できません。接続を確認してください。",
         "storage": "Windows資格情報マネージャーを読み取れません。",
-        "unexpected": "TarkovTrackerから想定外の応答がありました。"
+        "unexpected": "TarkovTrackerから想定外の応答がありました。",
+        "bad_format": "TarkovTracker のキーではないようです：PVP_、PVE_、SZN_ で始まります。"
       },
       "outbox_one": "送信待ちの変更 {{count}} 件",
       "diff_one": "MoAは把握しているがTarkovTrackerにないタスク {{count}} 件",
       "outbox_other": "送信待ちの変更 {{count}} 件",
-      "diff_other": "MoAは把握しているがTarkovTrackerにないタスク {{count}} 件"
+      "diff_other": "MoAは把握しているがTarkovTrackerにないタスク {{count}} 件",
+      "keyField": "TarkovTracker の API キー",
+      "saveKey": "キーを保存",
+      "keyFieldHint": "tarkovtracker.org → Settings → API Tokens で取得（「進捗の読み取り」、送信するなら「進捗の書き込み」にチェック）。保存前に TarkovTracker で確認し、保存すると欄は空になります。",
+      "orWindow": "別ウィンドウで入力する"
     },
     "squadServer": {
       "title": "スクワッドサーバー(上級)",
@@ -305,7 +310,11 @@
       "upcomingQuests": "受けられるタスク",
       "upcomingQuestsHint": "受注済みだけでなく、今すぐ開始できるタスク（前提とレベルを満たす）も淡い色で表示します。",
       "otherExits": "ほかの脱出地点も表示",
-      "otherExitsHint": "レイド中、自分のものではない脱出地点（反対側のものや O+O の一覧にないもの）はマップとミニマップで薄く表示されます。オフにすると非表示。"
+      "otherExitsHint": "レイド中、自分のものではない脱出地点（反対側のものや O+O の一覧にないもの）はマップとミニマップで薄く表示されます。オフにすると非表示。",
+      "sniperRange": "スカブスナイパーの射程",
+      "sniperRangeHint": "各スカブスナイパーの周りの 360° の赤い円の半径。命中する距離の目安です。必要なら調整してください。",
+      "sniperCone": "推定される狙いのコーン",
+      "sniperConeHint": "周囲の脱出地点・ルート・スポーンから、狙っていそうな方向も表示します。推定です：ゲームは狙いを示しません。"
     }
   },
   "errors": {
@@ -363,7 +372,8 @@
       "netRadmin": "Radmin",
       "netLan": "家庭のネットワーク",
       "netPublic": "パブリック：パーティーなし"
-    }
+    },
+    "mirrored": "これはゲーム用 PC のパーティーです。この PC が連携しているので表示されています。抜けるにはゲーム用 PC で抜けてください。"
   },
   "feedback": {
     "title": "フィードバック",
@@ -408,7 +418,21 @@
     "cellClickToRemove": "セル {{grid}} · クリックで削除",
     "unsupportedMap": "マップ「{{name}}」はv0.1ではまだ対応していません。今はCustomsのみです。",
     "followCurrentFloor": "現在のフロアに自動で追従",
-    "allFloors": "すべて"
+    "allFloors": "すべて",
+    "poi": {
+      "sniper": "スカブスナイパー",
+      "minefield": "地雷原",
+      "stationary": "据え置き銃",
+      "btr": "BTR 停留所",
+      "switch": "スイッチ",
+      "lockedDoor": "施錠ドア",
+      "lockedTrunk": "施錠トランク"
+    },
+    "sniper": {
+      "zone": "スカブスナイパーのゾーン。赤い円は 360° の射程（約 {{m}} m）：ゲームは狙っている方向を示しません。",
+      "ring": "スカブスナイパーの射程（約 {{m}} m、360°）",
+      "cone": "コーン：周囲の物から推定した狙いの方向（ゲームのデータではありません）。"
+    }
   },
   "onboarding": {
     "setupTitle": "セットアップ",

@@ -134,6 +134,11 @@ struct Reply {
 
 async fn call(method: reqwest::Method, path: &str, body: Option<Value>, etag: Option<&str>) -> Result<Reply, TrackerError> {
     let token = load_token()?;
+    call_with(token, method, path, body, etag).await
+}
+
+/// One request with this token (the stored one, or one being checked before it is stored).
+async fn call_with(token: String, method: reqwest::Method, path: &str, body: Option<Value>, etag: Option<&str>) -> Result<Reply, TrackerError> {
     let mut req = client()?
         .request(method, format!("{BASE}{path}"))
         .bearer_auth(&token)
@@ -178,6 +183,28 @@ fn reduce_token_info(v: &Value) -> TokenInfo {
         game_mode: s("gameMode"),
         note: s("note").chars().take(80).collect(),
     }
+}
+
+/// Normalizes a key pasted in the app's field: surrounding spaces and
+/// quotes go (a copy from a web page often brings them). Pure, for tests.
+fn clean_pasted_key(raw: &str) -> String {
+    raw.trim().trim_matches(|c| c == '"' || c == '\'' || c == '`').trim().to_owned()
+}
+
+/// Saves a key typed in the app's own field (Settings → Integrations): shape
+/// check, then TarkovTracker must accept it, then Windows Credential Manager —
+/// the same entry the separate key window writes. The key is never logged,
+/// returned or sent anywhere but tarkovtracker.org.
+#[tauri::command]
+pub async fn tracker_set_key(key: String) -> Result<TokenInfo, TrackerError> {
+    let key = clean_pasted_key(&key);
+    if !token_shape_ok(&key) {
+        return Err(TrackerError::new("bad_format", "unexpected key format"));
+    }
+    let r = call_with(key.clone(), reqwest::Method::GET, "/token", None, None).await?;
+    let info = reduce_token_info(&parse_json(&r.body)?);
+    entry()?.set_password(&key).map_err(|e| TrackerError::new("storage", e.to_string()))?;
+    Ok(info)
 }
 
 /// Is a key stored? Does not call the network.
@@ -286,6 +313,14 @@ pub fn tracker_open_key_window(remove: bool) -> Result<(), TrackerError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pasted_keys_are_cleaned_but_not_changed() {
+        assert_eq!(clean_pasted_key("  PVP_abcdef123456 \n"), "PVP_abcdef123456");
+        assert_eq!(clean_pasted_key("\"PVE_abcdef123456\""), "PVE_abcdef123456");
+        assert_eq!(clean_pasted_key("'SZN_abc_def-123'"), "SZN_abc_def-123");
+        assert!(!token_shape_ok(&clean_pasted_key("PVP_ab cd ef")), "inner spaces stay and fail the shape check");
+    }
 
     #[test]
     fn token_shape() {

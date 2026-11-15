@@ -136,7 +136,7 @@
       "title": "TarkovTracker",
       "desktopOnly": "Available in the desktop app only.",
       "checking": "Checking for a saved key…",
-      "hint": "Syncs quests, objectives, level and hideout with tarkovtracker.org. The API key is typed into a separate window and kept in Windows Credential Manager; MoA never shows it.",
+      "hint": "Syncs quests, objectives, level and hideout with tarkovtracker.org. The key is kept in Windows Credential Manager; MoA never shows it.",
       "noKey": "No key saved",
       "noKeyHint": "Opens a window: paste the key there and press Enter.",
       "setKey": "Enter key",
@@ -182,8 +182,13 @@
         "bad_request": "TarkovTracker refused part of the data (a quest or objective that does not exist in this mode). It was skipped.",
         "network": "Could not reach TarkovTracker. Check your connection.",
         "storage": "Could not read Windows Credential Manager.",
-        "unexpected": "Unexpected TarkovTracker response."
-      }
+        "unexpected": "Unexpected TarkovTracker response.",
+        "bad_format": "That does not look like a TarkovTracker key: it starts with PVP_, PVE_ or SZN_."
+      },
+      "keyField": "TarkovTracker API key",
+      "saveKey": "Save key",
+      "keyFieldHint": "Get it at tarkovtracker.org → Settings → API Tokens (tick \"read progress\" and, to send, \"write progress\"). It is checked with TarkovTracker before it is kept; the field empties when saved.",
+      "orWindow": "I'd rather type it in a separate window"
     },
     "squadServer": {
       "title": "Squad server (advanced)",
@@ -305,7 +310,11 @@
       "upcomingQuests": "Quests I can take",
       "upcomingQuestsHint": "Also pins quests you can start now (prerequisites and level met) in a softer colour, not only the ones the game logged as accepted.",
       "otherExits": "Show the other exits",
-      "otherExitsHint": "In a raid, exits that are not yours (the other side's, or not in the O+O list) stay faded on the map and the minimap. Off: they are hidden."
+      "otherExitsHint": "In a raid, exits that are not yours (the other side's, or not in the O+O list) stay faded on the map and the minimap. Off: they are hidden.",
+      "sniperRange": "Scav sniper reach",
+      "sniperRangeHint": "Radius of the 360° red ring around each Scav sniper. An average of how far they hit; adjust if you like.",
+      "sniperCone": "Likely aim cone",
+      "sniperConeHint": "Also shows where the sniper probably aims, estimated from the exits, loot and spawns around it. An estimate: the game does not tell where it aims."
     }
   },
   "errors": {
@@ -363,7 +372,8 @@
       "netRadmin": "Radmin",
       "netLan": "home network",
       "netPublic": "Public: no party on it"
-    }
+    },
+    "mirrored": "This is the game PC's party, shown here because this PC is linked to it. To leave, leave on the game PC."
   },
   "feedback": {
     "title": "Feedback",
@@ -408,7 +418,21 @@
     "cellClickToRemove": "Cell {{grid}} · click to remove",
     "unsupportedMap": "Map \"{{name}}\" not yet supported in v0.1. Customs only for now.",
     "followCurrentFloor": "Follow my current floor automatically",
-    "allFloors": "All"
+    "allFloors": "All",
+    "poi": {
+      "sniper": "Sniper Scav",
+      "minefield": "Minefield",
+      "stationary": "Mounted gun",
+      "btr": "BTR stop",
+      "switch": "Switch",
+      "lockedDoor": "Locked door",
+      "lockedTrunk": "Locked trunk"
+    },
+    "sniper": {
+      "zone": "Scav sniper zone. The red ring shows how far it reaches, 360° (~{{m}} m): the game does not say where it aims.",
+      "ring": "Scav sniper reach (~{{m}} m, 360°)",
+      "cone": "Cone: likely aim, estimated from what is around (not game data)."
+    }
   },
   "onboarding": {
     "setupTitle": "Setup",

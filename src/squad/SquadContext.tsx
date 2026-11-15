@@ -23,6 +23,9 @@ import {
   shouldYieldTo,
 } from "./partyApi";
 import { isLinkedViewer } from "../link/linkApi";
+import { useMirroredState, usePublishState } from "../link/linkState";
+import { useLink } from "../link/useLink";
+import { parseSquadSnapshot } from "./squadSnapshot";
 import { netLog } from "../net/netApi";
 import { SquadTransport, type ConnStatus } from "./transport";
 import { loadIdentity, saveIdentity, type SquadIdentity } from "./identity";
@@ -40,7 +43,7 @@ export interface MemberPosition {
   ts: number; // client receive time — drives staleness + the fresh-update flash
 }
 
-interface SquadState {
+export interface SquadState {
   status: ConnStatus;
   code: string | null;
   selfId: string | null;
@@ -68,6 +71,8 @@ const EMPTY: SquadState = {
 
 export interface SquadApi extends SquadState {
   inSquad: boolean;
+  /** This PC is a linked extra screen showing the game PC's party (it did not join it). */
+  mirrored: boolean;
   identity: SquadIdentity;
   createSquad: (name: string, colorId: string | null) => void;
   joinSquad: (code: string, name: string, colorId: string | null) => void;
@@ -520,10 +525,21 @@ export function SquadProvider({ children }: { children: ReactNode }) {
     transportRef.current?.send("draw-remove", { id });
   }, []);
 
+  // Linked extra screen: show the game PC's party as it is, without joining
+  // (friends see nobody extra). The game PC publishes it; one way only.
+  const link = useLink();
+  const linkedViewer = link.client?.state === "linked";
+  usePublishState("squad", state.code !== null ? state : null);
+  const [mirror, setMirror] = useState<SquadState | null>(null);
+  useMirroredState("squad", parseSquadSnapshot, (r) => setMirror(r.snap));
+  const mirrored = linkedViewer && state.code === null && mirror !== null;
+  const shown = mirrored ? mirror : state;
+
   const api = useMemo<SquadApi>(
     () => ({
-      ...state,
-      inSquad: state.code !== null,
+      ...shown,
+      inSquad: shown.code !== null,
+      mirrored,
       identity,
       createSquad,
       joinSquad,
@@ -544,7 +560,8 @@ export function SquadProvider({ children }: { children: ReactNode }) {
       toggleQuestVisibility,
     }),
     [
-      state,
+      shown,
+      mirrored,
       identity,
       joinPartyAt,
       createSquad,

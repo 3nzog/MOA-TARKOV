@@ -311,6 +311,9 @@ export default function SquadSection({
       <SectionLabel count={squad.members.length}>{t('squad.roster')}</SectionLabel>
       <SquadCard />
 
+      {squad.mirrored ? (
+        <p className="squad-shared-hint">{t('squad.mirrored')}</p>
+      ) : (
       <div className="squad-footer-row">
         <Button
           variant="danger"
@@ -321,6 +324,7 @@ export default function SquadSection({
           {t('squad.leaveSquad')}
         </Button>
       </div>
+      )}
     </div>
   );
 }

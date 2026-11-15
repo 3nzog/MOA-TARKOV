@@ -59,6 +59,8 @@ import { mapIdFromLogLocation } from './map/logLocationMap';
 import { currentRaid, learnSides, raidSide, setManualSide, setPanelSide, type RaidSide } from './state/raidHistory';
 import { exitTier, sideFromPanel } from './poi/exitTier';
 import { facetDefaultOn } from './poi/facets';
+import DangerZoneLayer from './map/DangerZoneLayer';
+import { sniperSpots } from './poi/sniper';
 import PlannerPanel, { type PlannerTab } from './planner/PlannerPanel';
 import { scannedItems } from './planner/scanned';
 import { useAppearance } from './appearance/useAppearance';
@@ -66,6 +68,11 @@ import GlassIntro from './intro/GlassIntro';
 import TitleBar from './shell/TitleBar';
 import { SUPPORTED_MAP_NAMES } from './map/mapDefs';
 import LinkRequestDialog from './link/LinkRequestDialog';
+import { useMirroredState, usePublishState } from './link/linkState';
+import { normalizeProgress } from './state/localProgress';
+import { parseHistory } from './state/raidHistory';
+import { parsePlanner } from './state/planner';
+import { normalizeCustomPois } from './poi/customPoi';
 import type { SettingsTab } from './components/SettingsModal';
 import PriceScanCard from './prices/PriceScan';
 import { usePriceScan } from './prices/usePriceScan';
@@ -77,7 +84,7 @@ import { effectiveStatus } from './state/localProgress';
 
 // The weapon bench and its ~2 MB of data load only when it is first opened.
 const GunsmithBench = lazy(() => import('./gunsmith/GunsmithBench'));
-import { knownSymbol, useSelfSymbol } from './squad/symbols';
+import { knownSymbol, setSelfSymbol, useSelfSymbol } from './squad/symbols';
 import { hexForColorId } from '../shared/squadProtocol';
 
 // Stable empty array for the `objectives` prop fallback. A fresh `[]` literal
@@ -163,6 +170,40 @@ function App() {
     mapId: string | null;
     raidStartedAt: number | null;
   } | null>(null);
+  // A linked extra screen gets this app's state (src/link/linkState.ts):
+  // published here on the game PC, applied there. One way only.
+  usePublishState('progress', quests.progress);
+  usePublishState('history', raidHistory.history);
+  usePublishState('planner', planner.planner);
+  usePublishState('profile', useMemo(() => ({ symbol: selfSymbol }), [selfSymbol]));
+  usePublishState('raid', useMemo(() => ({ extractPanel }), [extractPanel]));
+  useMirroredState('progress', normalizeProgress, quests.setProgress);
+  useMirroredState('history', (v) => parseHistory(JSON.stringify(v)), raidHistory.setHistory);
+  useMirroredState('planner', (v) => parsePlanner(JSON.stringify(v)), planner.update);
+  useMirroredState(
+    'profile',
+    (v) => knownSymbol((v as { symbol?: unknown } | null)?.symbol),
+    setSelfSymbol,
+  );
+  useMirroredState(
+    'raid',
+    (v) => {
+      const p = (v as { extractPanel?: unknown } | null)?.extractPanel as
+        | { lines?: unknown; mapId?: unknown; raidStartedAt?: unknown }
+        | null
+        | undefined;
+      if (p === null) return { panel: null };
+      if (!p || !Array.isArray(p.lines)) return null;
+      return {
+        panel: {
+          lines: p.lines.filter((l): l is string => typeof l === 'string'),
+          mapId: typeof p.mapId === 'string' ? p.mapId : null,
+          raidStartedAt: typeof p.raidStartedAt === 'number' ? p.raidStartedAt : null,
+        },
+      };
+    },
+    (r) => setExtractPanel(r.panel),
+  );
   const playerPos = useGameEvents({
     setProgress: quests.setProgress,
     setSelectedMapId,
@@ -178,6 +219,9 @@ function App() {
     setFloorLock: settings.setFloorLock,
   });
   const pois = usePois({ selectedMapId, squad, notify: setToast });
+  // The player's own markers go to a linked extra screen too (see above).
+  usePublishState('markers', pois.customPois);
+  useMirroredState('markers', normalizeCustomPois, pois.setCustomPois);
   const drawing = useDrawing({ selectedMapId, squad, notify: setToast });
   const squadSync = useSquadSync({
     squad,
@@ -314,6 +358,12 @@ function App() {
   );
   const isPoiDimmed = useCallback((p: Poi) => tierOf(p) === 'other', [tierOf]);
 
+  // Scav sniper posts for the minimap (when the Sniper Scav filter is on).
+  const minimapSnipers = useMemo(
+    () => sniperSpots(pois.currentPois.filter(isPoiVisible)).map((s) => s.center),
+    [pois.currentPois, isPoiVisible],
+  );
+
   // Minimap overlay window: fed the map, the last position fix, the floor and
   // a few points (active objectives, the extracts of your side) on this map.
   const minimapFeedPoints = useMemo(
@@ -326,9 +376,10 @@ function App() {
             60,
             tierOf,
             showOtherExits,
+            minimapSnipers,
           )
         : [],
-    [selectedMapId, questState, pois.currentPois, tierOf, showOtherExits],
+    [selectedMapId, questState, pois.currentPois, tierOf, showOtherExits, minimapSnipers],
   );
   const minimapSelf = useMemo(() => ({ symbol: selfSymbol, color: selfColor }), [selfSymbol, selfColor]);
   // Raid clock: time left for a PMC (map length from the raid's start), time in raid otherwise.
@@ -740,6 +791,13 @@ function App() {
                       enabled={settings.followCenter}
                     />
                     <SquadmateLayer mapId={selectedMapId} />
+                    <DangerZoneLayer
+                      mapId={selectedMapId}
+                      pois={pois.currentPois}
+                      isVisible={isPoiVisible}
+                      sniperRange={appearance.sniperRange}
+                      sniperCone={appearance.sniperCone}
+                    />
                     <PoiLayer
                       mapId={selectedMapId}
                       pois={pois.currentPois}

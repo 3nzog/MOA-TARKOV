@@ -129,6 +129,23 @@ export interface MapHazardRaw {
   hazardType?: string;
   name?: string;
   position?: MapPosition;
+  /** The zone's corners (minefields, Scav sniper zones). */
+  outline?: MapPosition[];
+}
+
+/** A locked door or trunk and the key that opens it. */
+export interface MapLockRaw {
+  lockType?: string; // "door" | "trunk"
+  keyId?: string;
+  keyName?: string;
+  needsPower?: boolean;
+  position?: MapPosition;
+}
+
+/** Something fixed on the map with a name: a mounted gun, a BTR stop, a switch. */
+export interface MapNamedPointRaw {
+  name?: string;
+  position?: MapPosition;
 }
 
 export interface LootContainerPositionRaw {
@@ -144,6 +161,10 @@ export interface MapPoiData {
   bosses?: BossSpawnRaw[];
   hazards?: MapHazardRaw[];
   lootContainers?: LootContainerPositionRaw[];
+  locks?: MapLockRaw[];
+  stationaryWeapons?: MapNamedPointRaw[];
+  btrStops?: MapNamedPointRaw[];
+  switches?: MapNamedPointRaw[];
 }
 
 export interface APICache<T> {

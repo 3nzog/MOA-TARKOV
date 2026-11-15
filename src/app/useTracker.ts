@@ -30,6 +30,7 @@ import {
   trackerGetProgress,
   trackerHasKey,
   trackerOpenKeyWindow,
+  trackerSetKey,
   trackerRemoveKey,
   trackerSetLevel,
   trackerTokenInfo,
@@ -364,6 +365,22 @@ export function useTracker(o: Options) {
     }
   }, []);
 
+  /** Saves a key typed in the settings field. Returns the error code on failure. */
+  const saveKey = useCallback(
+    async (key: string): Promise<string | null> => {
+      try {
+        setInfo(await trackerSetKey(key));
+        setHasKey(true);
+        setError(null);
+        await checkKey();
+        return null;
+      } catch (e) {
+        return asTrackerError(e).code;
+      }
+    },
+    [checkKey],
+  );
+
   const removeKey = useCallback(async () => {
     try {
       await trackerRemoveKey();
@@ -396,6 +413,7 @@ export function useTracker(o: Options) {
     syncNow,
     recheck: checkKey,
     openKeyWindow,
+    saveKey,
     removeKey,
     onLiveQuest,
   };

@@ -25,6 +25,11 @@ import swordSvg from "@phosphor-icons/core/assets/fill/sword-fill.svg?raw";
 import mapPinSvg from "@phosphor-icons/core/assets/fill/map-pin-fill.svg?raw";
 import scrollSvg from "@phosphor-icons/core/assets/fill/scroll-fill.svg?raw";
 import circleSvg from "@phosphor-icons/core/assets/fill/circle-fill.svg?raw";
+import bombSvg from "@phosphor-icons/core/assets/fill/bomb-fill.svg?raw";
+import targetSvg from "@phosphor-icons/core/assets/fill/target-fill.svg?raw";
+import truckSvg from "@phosphor-icons/core/assets/fill/truck-fill.svg?raw";
+import powerSvg from "@phosphor-icons/core/assets/fill/power-fill.svg?raw";
+import keySvg from "@phosphor-icons/core/assets/fill/key-fill.svg?raw";
 
 export interface PoiCategoryMeta {
   id: PoiCategory;
@@ -45,6 +50,12 @@ export const POI_CATEGORIES: PoiCategoryMeta[] = [
   { id: "spawn", label: "Spawns", defaultOn: false, color: "#D89A4A" },
   { id: "loot", label: "Loot containers", defaultOn: false, color: "#9BA08F" },
   { id: "custom", label: "My markers", defaultOn: true, color: "#4FB8D8" },
+  { id: "sniper", label: "Sniper Scav", defaultOn: true, color: "#FF2D2D" },
+  { id: "minefield", label: "Minefields", defaultOn: true, color: "#F08A24" },
+  { id: "stationary", label: "Mounted guns", defaultOn: true, color: "#E05252" },
+  { id: "btr", label: "BTR stops", defaultOn: true, color: "#4FB8D8" },
+  { id: "switch", label: "Switches", defaultOn: true, color: "#E8C254" },
+  { id: "lock", label: "Locked doors", defaultOn: false, color: "#C9CDB8" },
 ];
 
 export const POI_CATEGORY_MAP: Record<PoiCategory, PoiCategoryMeta> =
@@ -64,6 +75,10 @@ export const MARKER_COLORS = {
   B: "#4FB8D8", // ice blue   — transit / custom markers
   O: "#D89A4A", // amber      — scav / generic loot
   R: "#E05252", // signal red — danger: sniper / cultist / boss / hazard
+  /** Scav snipers: brighter than every other red on the map, on purpose. */
+  SNIPER: "#FF2D2D",
+  MINE: "#F08A24",
+  KEY: "#C9CDB8",
 } as const;
 
 // ---- Glyph resolution (keyed by facet) --------------------------------------
@@ -78,7 +93,12 @@ const FACET_ICON: Record<string, string> = {
   // Spawns
   "spawn:pmc": arrowSquareDownSvg,
   "spawn:scav": arrowSquareDownSvg,
-  "spawn:sniper": crosshairSvg,
+  sniper: crosshairSvg,
+  minefield: bombSvg,
+  stationary: targetSvg,
+  btr: truckSvg,
+  switch: powerSvg,
+  lock: keySvg,
   cultist: knifeSvg,
   boss: skullSvg,
   // Hazards
@@ -106,7 +126,12 @@ const FACET_COLOR: Record<string, string> = {
   transit: MARKER_COLORS.B,
   "spawn:pmc": MARKER_COLORS.G,
   "spawn:scav": MARKER_COLORS.O,
-  "spawn:sniper": MARKER_COLORS.R,
+  sniper: MARKER_COLORS.SNIPER,
+  minefield: MARKER_COLORS.MINE,
+  stationary: MARKER_COLORS.R,
+  btr: MARKER_COLORS.B,
+  switch: MARKER_COLORS.Y,
+  lock: MARKER_COLORS.KEY,
   cultist: MARKER_COLORS.R,
   boss: MARKER_COLORS.R,
   hazard: MARKER_COLORS.R,

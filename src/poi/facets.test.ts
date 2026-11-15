@@ -30,7 +30,7 @@ describe("facetKeyOf", () => {
   it("maps spawns by subtype (all/unknown fold into scav)", () => {
     expect(facetKeyOf(poi("spawn", { subtype: "pmc" }))).toBe("spawn:pmc");
     expect(facetKeyOf(poi("spawn", { subtype: "scav" }))).toBe("spawn:scav");
-    expect(facetKeyOf(poi("spawn", { subtype: "sniper" }))).toBe("spawn:sniper");
+    expect(facetKeyOf(poi("spawn", { subtype: "sniper" }))).toBe("sniper");
     expect(facetKeyOf(poi("spawn", { subtype: "all" }))).toBe("spawn:scav");
   });
 

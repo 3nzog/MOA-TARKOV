@@ -44,6 +44,13 @@ pub const FORWARDED: [&str; 7] = [
 ];
 /// Sent once on linking: which profile is PMC / Scav, learned from every log.
 pub const SIDE_SCAN_EVENT: &str = "link-side-scan";
+/// The main PC's app state (quest progress, raid history, party, markers…),
+/// published by its window (link_publish) and replayed on the linked PC.
+pub const STATE_EVENT: &str = "link-state";
+/// What the main PC's window may publish. The latest value of each is kept
+/// and sent to a PC as soon as it links, then again on every change.
+pub const STATE_KEYS: [&str; 7] = ["progress", "history", "squad", "markers", "planner", "profile", "raid"];
+const STATE_MAX: usize = 4 * 1024 * 1024;
 const TO_SERVER_MAX: usize = 4 * 1024;
 /// A whole-screen OCR result can be a few hundred kilobytes.
 const TO_CLIENT_MAX: usize = 8 * 1024 * 1024;
@@ -91,6 +98,8 @@ struct ServerState {
     pending: HashMap<String, oneshot::Sender<bool>>,
     devices: Vec<Device>,
     next: u64,
+    /// Latest published state frame per key.
+    states: HashMap<String, String>,
 }
 
 pub struct ServerCfg {
@@ -172,10 +181,30 @@ impl Server {
         // `event` is one of the constants above and `payload` came out of a
         // serializer, so this is valid JSON without re-parsing a large payload.
         let frame = format!(r#"{{"t":"event","event":"{event}","payload":{payload}}}"#);
-        let st = self.state.lock().unwrap();
+        let mut st = self.state.lock().unwrap();
         for c in st.conns.values() {
             let _ = c.tx.send(Message::text(frame.clone()));
         }
+        // The last position and O+O list are state too: a PC that links in
+        // the middle of a raid gets them at once.
+        if event == "player-position" || event == "extract-panel" {
+            st.states.insert(format!("@{event}"), frame);
+        }
+    }
+
+    /// Publishes one piece of the main PC's app state (`value` is JSON). It is
+    /// kept, so a PC that links later gets it at once. False if refused.
+    pub fn publish(&self, key: &str, value: &str) -> bool {
+        if !STATE_KEYS.contains(&key) || value.len() > STATE_MAX || serde_json::from_str::<serde::de::IgnoredAny>(value).is_err() {
+            return false;
+        }
+        let frame = format!(r#"{{"t":"event","event":"{STATE_EVENT}","payload":{{"key":"{key}","value":{value}}}}}"#);
+        let mut st = self.state.lock().unwrap();
+        for c in st.conns.values() {
+            let _ = c.tx.send(Message::text(frame.clone()));
+        }
+        st.states.insert(key.to_owned(), frame);
+        true
     }
 
     pub fn answer(&self, id: &str, accept: bool) -> bool {
@@ -372,6 +401,11 @@ async fn serve(stream: TcpStream, peer: SocketAddr, state: Arc<Mutex<ServerState
         st.next += 1;
         let id = st.next;
         st.conns.insert(id, Conn { device: hello.device.clone(), name: hello.name.clone(), tx: tx.clone() });
+        // Everything the main PC's window has published so far, under the
+        // same lock as publish(): no update can slip between the two.
+        for frame in st.states.values() {
+            let _ = tx.send(Message::text(frame.clone()));
+        }
         id
     };
     net::log(format!("anexar: {} ({}) anexado", hello.name, peer.ip()));
@@ -542,7 +576,7 @@ async fn session(
             }
             Some("event") if linked => {
                 let Some(event) = v.get("event").and_then(|e| e.as_str()) else { continue };
-                if FORWARDED.contains(&event) || event == SIDE_SCAN_EVENT {
+                if FORWARDED.contains(&event) || event == SIDE_SCAN_EVENT || event == STATE_EVENT {
                     (cfg.emit)(event, v.get("payload").cloned().unwrap_or(Value::Null));
                 }
             }
@@ -705,6 +739,16 @@ pub fn link_host_status(app: tauri::AppHandle) -> HostStatus {
             ..Default::default()
         },
     }
+}
+
+/// The main PC's window publishes a piece of its state for linked PCs.
+#[tauri::command]
+pub fn link_publish(key: String, value: Value) -> bool {
+    if CLIENT_ACTIVE.load(Ordering::Relaxed) {
+        return false;
+    }
+    let Some(s) = server_cell().lock().unwrap().as_ref().cloned() else { return false };
+    s.publish(&key, &value.to_string())
 }
 
 #[tauri::command]
@@ -872,6 +916,8 @@ mod tests {
             assert!(screen_rec.all("player-position").is_empty());
 
             assert!(server.answer(req["id"].as_str().unwrap(), true));
+            // Once allowed, the position read while it waited arrives (it is state).
+            screen_rec.wait_for("player-position", |v| v["x"] == 1).await;
             let linked = screen_rec.wait_for("link-client", |v| v["state"] == "linked").await;
             assert_eq!(linked["name"], "PC-DO-JOGO");
             // The side scan arrives on linking.
@@ -892,8 +938,7 @@ mod tests {
                 server.forward(e, &p.to_string());
             }
             for (e, p) in &samples {
-                let got = screen_rec.wait_for(e, |_| true).await;
-                assert_eq!(&got, p, "{e}");
+                screen_rec.wait_for(e, |v| v == p).await;
             }
             // Anything else is not passed on.
             server.forward("tracker-token", r#"{"secret":"x"}"#);
@@ -903,6 +948,35 @@ mod tests {
             client.stop();
             screen_rec.wait_for("link-client", |v| v["state"] == "off").await;
             main_rec.wait_for("link-changed", |v| v["connected"].as_array().map(|a| a.is_empty()) == Some(true)).await;
+            server.stop();
+        });
+    }
+
+    #[test]
+    fn app_state_reaches_a_pc_that_links_later_and_every_change_after() {
+        tauri::async_runtime::block_on(async {
+            let main_rec = Rec::new();
+            let screen_rec = Rec::new();
+            let server = main_pc(&main_rec, None).await;
+            // Published before anyone links: kept.
+            assert!(server.publish("progress", r#"{"completed":["q1"]}"#));
+            assert!(server.publish("progress", r#"{"completed":["q1","q2"]}"#), "the latest replaces the older");
+            assert!(!server.publish("tracker-token", r#"{"secret":1}"#), "unknown keys are refused");
+            assert!(!server.publish("squad", "not json"), "invalid JSON is refused");
+            server.forward("player-position", r#"{"x":5,"y":0,"z":6,"rotation":0}"#);
+            let _client = screen_pc(&screen_rec, server.tcp_port, DEV);
+            let req = main_rec.wait_for("link-request", |_| true).await;
+            server.answer(req["id"].as_str().unwrap(), true);
+            let got = screen_rec.wait_for(STATE_EVENT, |v| v["key"] == "progress").await;
+            assert_eq!(got["value"], json!({ "completed": ["q1", "q2"] }));
+            assert_eq!(screen_rec.all(STATE_EVENT).len(), 1, "only the latest value per key");
+            // The last position, read before linking, is replayed on linking.
+            screen_rec.wait_for("player-position", |v| v["x"] == 5).await;
+            // A change after linking arrives too.
+            server.publish("squad", r#"{"members":[{"id":"a","name":"Amigo"}]}"#);
+            let sq = screen_rec.wait_for(STATE_EVENT, |v| v["key"] == "squad").await;
+            assert_eq!(sq["value"]["members"][0]["name"], "Amigo");
+            assert!(screen_rec.all("tracker-token").is_empty());
             server.stop();
         });
     }

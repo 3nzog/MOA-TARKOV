@@ -5,7 +5,14 @@ export type PoiCategory =
   | "boss"
   | "hazard"
   | "loot"
-  | "custom";
+  | "custom"
+  // Scav sniper zones and spawns: shown in bright red with a 360° range ring.
+  | "sniper"
+  | "minefield"
+  | "stationary"
+  | "btr"
+  | "switch"
+  | "lock";
 
 export type PoiSource = "tarkov-dev" | "user";
 

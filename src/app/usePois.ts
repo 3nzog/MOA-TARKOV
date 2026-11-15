@@ -173,5 +173,8 @@ export function usePois({ selectedMapId, squad, notify }: Options) {
     clearPoiSelection,
     addCustom,
     removeCustom,
+    /** Every custom marker (all maps), and its setter: shared with a linked extra screen. */
+    customPois,
+    setCustomPois,
   };
 }

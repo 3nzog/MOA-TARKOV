@@ -11,11 +11,17 @@ import {
   type MapFloor,
 } from "./floorClassify";
 import { ALL_FLOORS } from "./FloorSwitcher";
+import { poiLabel } from "../poi/poiLabel";
 
 // Extraction-type facets render with an always-visible name label (extracts +
 // transits) so the player can read the exit without hovering.
 function isExtractionLike(facetKey: string): boolean {
   return facetKey === "transit" || facetKey.startsWith("extract:");
+}
+
+// Scav snipers: always named, and the marker pulses (see .tc-poi-danger).
+function isDanger(facetKey: string): boolean {
+  return facetKey === "sniper";
 }
 
 function escapeHtml(s: string): string {
@@ -47,8 +53,8 @@ export interface PoiLayerProps {
 // CSS class on the live marker DOM element inside a useEffect — never via
 // setIcon — so the DOM stays stable and clicks fire reliably.
 const iconCache = new Map<string, L.DivIcon>();
-function getPoiIcon(color: string, glyphSvg: string, label?: string): L.DivIcon {
-  const key = `${color}|${glyphSvg}|${label ?? ""}`;
+function getPoiIcon(color: string, glyphSvg: string, label?: string, danger = false): L.DivIcon {
+  const key = `${color}|${glyphSvg}|${label ?? ""}|${danger ? 1 : 0}`;
   const cached = iconCache.get(key);
   if (cached) return cached;
 
@@ -59,7 +65,7 @@ function getPoiIcon(color: string, glyphSvg: string, label?: string): L.DivIcon 
     ? `<span class="tc-poi-label">${escapeHtml(label)}</span>`
     : "";
   const icon = L.divIcon({
-    className: "tc-poi-marker",
+    className: danger ? "tc-poi-marker tc-poi-danger" : "tc-poi-marker",
     iconSize: [22, 22],
     iconAnchor: [11, 11],
     html: `<div class="tc-poi-glyph" style="color:${color}">${glyphSvg}${labelHtml}</div>`,
@@ -74,8 +80,9 @@ function resolvePoiIcon(poi: Poi): L.DivIcon {
   // honored only for user markers (kept for the future custom/P2P palette).
   const color =
     poi.source === "user" && poi.color ? poi.color : colorForFacet(facetKey);
-  const label = isExtractionLike(facetKey) ? poi.label : undefined;
-  return getPoiIcon(color, svgForFacet(facetKey), label);
+  const named = isExtractionLike(facetKey) || isDanger(facetKey);
+  const label = named ? poiLabel(poi) : undefined;
+  return getPoiIcon(color, svgForFacet(facetKey), label, isDanger(facetKey));
 }
 
 interface PoiMarkerProps {
@@ -121,7 +128,7 @@ function PoiMarker({
       }}
     >
       <Tooltip direction="top" className="tc-poi-tip" opacity={1}>
-        <span>{poi.label}</span>
+        <span>{poiLabel(poi)}</span>
         {poi.note && (
           <>
             <br />

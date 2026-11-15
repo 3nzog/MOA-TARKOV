@@ -136,7 +136,7 @@
       "title": "TarkovTracker",
       "desktopOnly": "Disponível só no app para desktop.",
       "checking": "Procurando chave salva…",
-      "hint": "Sincroniza quests, objetivos, nível e hideout com o tarkovtracker.org. A chave da API é digitada numa janela separada e fica no Gerenciador de Credenciais do Windows; o MoA nunca a mostra.",
+      "hint": "Sincroniza quests, objetivos, nível e hideout com o tarkovtracker.org. A chave fica guardada no Gerenciador de Credenciais do Windows; o MoA nunca a mostra.",
       "noKey": "Nenhuma chave salva",
       "noKeyHint": "Abre uma janela: cole a chave lá e aperte Enter.",
       "setKey": "Inserir chave",
@@ -182,8 +182,13 @@
         "bad_request": "O TarkovTracker recusou parte dos dados (quest ou objetivo que não existe neste modo). Foi ignorado.",
         "network": "Não deu para falar com o TarkovTracker. Confira sua conexão.",
         "storage": "Não deu para ler o Gerenciador de Credenciais do Windows.",
-        "unexpected": "Resposta inesperada do TarkovTracker."
-      }
+        "unexpected": "Resposta inesperada do TarkovTracker.",
+        "bad_format": "Isso não parece uma chave do TarkovTracker: ela começa com PVP_, PVE_ ou SZN_."
+      },
+      "keyField": "Chave da API do TarkovTracker",
+      "saveKey": "Salvar chave",
+      "keyFieldHint": "Pegue em tarkovtracker.org → Settings → API Tokens (marque \"ler progresso\" e, se quiser enviar, \"gravar progresso\"). Ela é conferida com o TarkovTracker antes de ser guardada; o campo se apaga ao salvar.",
+      "orWindow": "Prefiro digitar numa janela separada"
     },
     "squadServer": {
       "title": "Servidor do esquadrão (avançado)",
@@ -305,7 +310,11 @@
       "upcomingQuests": "Missões que posso pegar",
       "upcomingQuestsHint": "Marca também, numa cor mais suave, as missões que você já pode começar (requisitos e nível ok), não só as que o jogo registrou como aceitas.",
       "otherExits": "Mostrar as outras extrações",
-      "otherExitsHint": "Na raid, as extrações que não são suas (do outro lado ou fora da lista do O+O) ficam apagadas no mapa e no minimapa. Desligado, elas somem."
+      "otherExitsHint": "Na raid, as extrações que não são suas (do outro lado ou fora da lista do O+O) ficam apagadas no mapa e no minimapa. Desligado, elas somem.",
+      "sniperRange": "Alcance dos snipers Scav",
+      "sniperRangeHint": "Raio do círculo vermelho de 360° em volta de cada sniper Scav. É uma média de quanto eles acertam; ajuste se quiser.",
+      "sniperCone": "Cone de mira provável",
+      "sniperConeHint": "Mostra também para onde o sniper provavelmente mira, estimado pelas extrações, loot e spawns em volta. É uma estimativa: o jogo não informa a mira."
     }
   },
   "errors": {
@@ -363,7 +372,8 @@
       "netRadmin": "Radmin",
       "netLan": "rede de casa",
       "netPublic": "Pública: sem party nela"
-    }
+    },
+    "mirrored": "Esta é a party do PC do jogo, mostrada aqui porque este PC está anexado a ele. Para sair, saia no PC do jogo."
   },
   "feedback": {
     "title": "Feedback",
@@ -408,7 +418,21 @@
     "cellClickToRemove": "Célula {{grid}} · clique para remover",
     "unsupportedMap": "O mapa \"{{name}}\" ainda não é compatível na v0.1. Por enquanto, apenas Customs.",
     "followCurrentFloor": "Acompanhar meu andar atual automaticamente",
-    "allFloors": "Todos"
+    "allFloors": "Todos",
+    "poi": {
+      "sniper": "Sniper Scav",
+      "minefield": "Campo minado",
+      "stationary": "Metralhadora fixa",
+      "btr": "Parada do BTR",
+      "switch": "Interruptor",
+      "lockedDoor": "Porta trancada",
+      "lockedTrunk": "Baú trancado"
+    },
+    "sniper": {
+      "zone": "Zona de sniper Scav. O círculo vermelho mostra até onde ele alcança, em 360° (~{{m}} m): o jogo não diz para onde ele mira.",
+      "ring": "Alcance do sniper Scav (~{{m}} m, 360°)",
+      "cone": "Cone: mira provável, estimada pelo que há em volta (não é dado do jogo)."
+    }
   },
   "onboarding": {
     "setupTitle": "Configuração",

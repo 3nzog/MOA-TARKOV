@@ -60,4 +60,6 @@ export const trackerSetLevel = (level: number) => invoke<void>('tracker_set_leve
 export const trackerUpdateObjective = (id: string, state: 'completed' | 'uncompleted') =>
   invoke<void>('tracker_update_objective', { id, state });
 export const trackerOpenKeyWindow = (remove = false) => invoke<void>('tracker_open_key_window', { remove });
+/** Checks the key with TarkovTracker, then stores it in Windows Credential Manager. */
+export const trackerSetKey = (key: string) => invoke<TrackerTokenInfo>('tracker_set_key', { key });
 export const trackerRemoveKey = () => invoke<void>('tracker_remove_key');

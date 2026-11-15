@@ -236,7 +236,7 @@ export default function MinimapApp() {
   const shapeCls = settings.shape === 'circle' ? 'minimap--circle' : 'minimap--square';
   const toLatLng = mapId ? getGameToLatLng(mapId) : null;
   const colorOf = (p: MinimapPoint) =>
-    p.kind === 'quest' ? MARKER_COLORS.Y : p.kind === 'transit' ? MARKER_COLORS.O : MARKER_COLORS.G;
+    p.kind === 'quest' ? MARKER_COLORS.Y : p.kind === 'sniper' ? MARKER_COLORS.SNIPER : p.kind === 'transit' ? MARKER_COLORS.O : MARKER_COLORS.G;
 
   return (
     <div
@@ -289,7 +289,7 @@ export default function MinimapApp() {
                   <CircleMarker
                     key={i}
                     center={toLatLng(p.x, p.z)}
-                    radius={p.kind === 'quest' ? 5 : p.dim ? 3 : 4}
+                    radius={p.kind === 'quest' || p.kind === 'sniper' ? 5 : p.dim ? 3 : 4}
                     interactive={false}
                     pathOptions={{
                       color: TOKEN_HEX.bgSunken,

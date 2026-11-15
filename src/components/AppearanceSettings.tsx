@@ -109,6 +109,13 @@ export default function AppearanceSettings({ onReplayIntro }: { onReplayIntro?: 
       <Row label={t('settings.appearance.otherExits')} hint={t('settings.appearance.otherExitsHint')}>
         <Toggle checked={a.otherExits} onChange={(v) => setAppearance({ otherExits: v })} label={t('settings.appearance.otherExits')} />
       </Row>
+      <Row label={t('settings.appearance.sniperRange')} hint={t('settings.appearance.sniperRangeHint')}>
+        <Slider label={t('settings.appearance.sniperRange')} min={50} max={300} step={10} value={a.sniperRange}
+          onChange={(v) => setAppearance({ sniperRange: v })} valueText={`${Math.round(a.sniperRange)} m`} />
+      </Row>
+      <Row label={t('settings.appearance.sniperCone')} hint={t('settings.appearance.sniperConeHint')}>
+        <Toggle checked={a.sniperCone} onChange={(v) => setAppearance({ sniperCone: v })} label={t('settings.appearance.sniperCone')} />
+      </Row>
       <Row label={t('settings.appearance.mapBrightness')} hint={t('settings.appearance.mapBrightnessHint')}>
         <Slider label={t('settings.appearance.mapBrightness')} min={0.4} max={1.2} step={0.05} value={a.mapBrightness}
           onChange={(v) => setAppearance({ mapBrightness: v })} valueText={pct(a.mapBrightness)} />

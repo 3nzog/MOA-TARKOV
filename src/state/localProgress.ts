@@ -80,7 +80,17 @@ export function loadProgress(): LocalProgress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...EMPTY };
-    const parsed = JSON.parse(raw) as Partial<LocalProgress>;
+    return normalizeProgress(JSON.parse(raw));
+  } catch {
+    return { ...EMPTY };
+  }
+}
+
+/** Any value (saved, or sent by a linked game PC) as a well-formed progress. */
+export function normalizeProgress(raw: unknown): LocalProgress {
+  try {
+    if (!raw || typeof raw !== 'object') return { ...EMPTY };
+    const parsed = raw as Partial<LocalProgress>;
     return {
       acceptedQuestIds: Array.isArray(parsed.acceptedQuestIds) ? parsed.acceptedQuestIds : [],
       completedQuestIds: Array.isArray(parsed.completedQuestIds) ? parsed.completedQuestIds : [],

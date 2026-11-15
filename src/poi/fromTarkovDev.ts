@@ -24,6 +24,8 @@ import type {
   MapHazardRaw,
   LootContainerPositionRaw,
   MapPosition,
+  MapLockRaw,
+  MapNamedPointRaw,
 } from "../api/types";
 
 function hasPos(p?: MapPosition | null): p is MapPosition {
@@ -141,7 +143,9 @@ function spawnsToPois(
     if (!hasPos(s.position)) return;
     const p = pos(s.position);
     const isBoss = catMatch(s.categories, /boss/i);
-    const isSniper = catMatch(s.categories, /sniper/i);
+    // Scav snipers ("marksman") spawn in zones named ZoneSnipe… / …Sniper;
+    // only some maps also tag them with a "sniper" category.
+    const isSniper = catMatch(s.categories, /sniper/i) || /snipe/i.test(s.zoneName ?? "");
 
     if (isBoss) {
       // Coords are real; the specific boss is unknowable per-coordinate (see
@@ -160,6 +164,20 @@ function spawnsToPois(
       return;
     }
 
+    if (isSniper) {
+      out.push({
+        id: `sniper:spawn:${mapId}:${i}`,
+        category: "sniper",
+        subtype: "spawn",
+        mapId,
+        position: p,
+        label: "Sniper Scav",
+        note: s.zoneName || undefined,
+        source: "tarkov-dev",
+        meta: { labelKey: "map.poi.sniper", zoneName: s.zoneName },
+      });
+      return;
+    }
     const sides = (s.sides ?? []).map((x) => x.toLowerCase());
     const subtype = isSniper
       ? "sniper"
@@ -186,6 +204,33 @@ function spawnsToPois(
 // ---- Hazards --------------------------------------------------------------
 function hazardToPoi(mapId: string, h: MapHazardRaw, i: number): Poi | null {
   if (!hasPos(h.position)) return null;
+  const type = (h.hazardType ?? "hazard").toLowerCase();
+  const outline = (h.outline ?? []).filter(hasPos).map((o) => ({ x: o.x, z: o.z }));
+  // "ScavRole/Marksman": the zone a Scav sniper holds.
+  if (type === "sniper") {
+    return {
+      id: `sniper:zone:${mapId}:${i}`,
+      category: "sniper",
+      subtype: "zone",
+      mapId,
+      position: pos(h.position),
+      label: "Sniper Scav",
+      source: "tarkov-dev",
+      meta: { labelKey: "map.poi.sniper", outline },
+    };
+  }
+  if (type === "minefield") {
+    return {
+      id: `minefield:${mapId}:${i}`,
+      category: "minefield",
+      subtype: "minefield",
+      mapId,
+      position: pos(h.position),
+      label: "Minefield",
+      source: "tarkov-dev",
+      meta: { labelKey: "map.poi.minefield", outline },
+    };
+  }
   return {
     id: `hazard:${mapId}:${i}`,
     category: "hazard",
@@ -196,6 +241,44 @@ function hazardToPoi(mapId: string, h: MapHazardRaw, i: number): Poi | null {
     note: h.hazardType,
     source: "tarkov-dev",
     meta: { hazardType: h.hazardType },
+  };
+}
+
+// ---- Locks, mounted guns, BTR stops, switches -------------------------------
+function lockToPoi(mapId: string, l: MapLockRaw, i: number): Poi | null {
+  if (!hasPos(l.position)) return null;
+  const trunk = l.lockType === "trunk";
+  return {
+    id: `lock:${mapId}:${i}`,
+    category: "lock",
+    subtype: trunk ? "trunk" : "door",
+    mapId,
+    position: pos(l.position),
+    label: l.keyName || (trunk ? "Locked trunk" : "Locked door"),
+    source: "tarkov-dev",
+    meta: { labelKey: l.keyName ? undefined : trunk ? "map.poi.lockedTrunk" : "map.poi.lockedDoor", keyId: l.keyId, needsPower: l.needsPower, trunk },
+  };
+}
+
+function namedToPoi(
+  mapId: string,
+  category: "stationary" | "btr" | "switch",
+  n: MapNamedPointRaw,
+  i: number,
+): Poi | null {
+  if (!hasPos(n.position)) return null;
+  // Some names come through untranslated as internal keys; fall back to a generic label.
+  const raw = (n.name ?? "").trim();
+  const usable = raw && !/^[0-9a-f]{24}\b|\/|^switch_|_/i.test(raw) ? raw : "";
+  return {
+    id: `${category}:${mapId}:${i}`,
+    category,
+    subtype: category,
+    mapId,
+    position: pos(n.position),
+    label: usable || category,
+    source: "tarkov-dev",
+    meta: { labelKey: usable ? undefined : `map.poi.${category}` },
   };
 }
 
@@ -256,6 +339,20 @@ export function mapDataToPois(map: MapPoiData): Poi[] {
     const p = lootToPoi(id, lc, i);
     if (p) out.push(p);
   });
+  (map.locks ?? []).forEach((l, i) => {
+    const p = lockToPoi(id, l, i);
+    if (p) out.push(p);
+  });
+  for (const [category, list] of [
+    ["stationary", map.stationaryWeapons],
+    ["btr", map.btrStops],
+    ["switch", map.switches],
+  ] as const) {
+    (list ?? []).forEach((n, i) => {
+      const p = namedToPoi(id, category, n, i);
+      if (p) out.push(p);
+    });
+  }
   return out;
 }
 

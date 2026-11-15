@@ -13,6 +13,8 @@ import type {
   PossibleLocation,
   TaskObjective,
   TarkovTask,
+  MapLockRaw,
+  MapNamedPointRaw,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -58,6 +60,16 @@ interface RawMap {
   hazards?: RawHazard[];
   lootContainers?: RawLootContainerPosition[];
   switches?: RawSwitch[];
+  locks?: RawLock[];
+  stationaryWeapons?: { stationaryWeapon: string; position?: { x: number; y: number; z: number } }[];
+  btrStops?: { name: string; x: number; y: number; z: number }[];
+}
+
+interface RawLock {
+  lockType?: string;
+  key?: string;
+  needsPower?: boolean;
+  position?: { x: number; y: number; z: number };
 }
 
 interface RawExtract {
@@ -94,6 +106,7 @@ interface RawHazard {
   hazardType?: string;
   name?: string;
   position?: { x: number; y: number; z: number };
+  outline?: { x: number; y: number; z: number }[];
 }
 
 interface RawLootContainerPosition {
@@ -104,6 +117,7 @@ interface RawLootContainerPosition {
 interface RawSwitch {
   id: string;
   name: string;
+  position?: { x: number; y: number; z: number };
 }
 
 interface RawMob {
@@ -140,6 +154,7 @@ export interface MapsDoc {
     maps: Record<string, RawMap>;
     mobs?: Record<string, RawMob>;
     lootContainers?: Record<string, RawLootContainer>;
+    stationaryWeapons?: Record<string, { id: string; name: string; shortName?: string }>;
   };
 }
 
@@ -257,6 +272,7 @@ export function adaptMapPois(input: {
   const mapsData = maps.data.maps;
   const mobsData = maps.data.mobs ?? {};
   const lootContainersData = maps.data.lootContainers ?? {};
+  const stationaryData = maps.data.stationaryWeapons ?? {};
 
   return Object.entries(mapsData).map(([mapId, raw]) => {
     const mapSwitches = raw.switches ?? [];
@@ -329,11 +345,41 @@ export function adaptMapPois(input: {
       return boss;
     });
 
-    const hazards: MapHazardRaw[] = (raw.hazards ?? []).map((h) => ({
-      hazardType: h.hazardType,
-      name: tr(mapsLocale, h.name),
-      position: h.position,
+    const hazards: MapHazardRaw[] = (raw.hazards ?? []).map((h) => {
+      const hz: MapHazardRaw = {
+        hazardType: h.hazardType,
+        name: tr(mapsLocale, h.name),
+        position: h.position,
+      };
+      if (Array.isArray(h.outline) && h.outline.length >= 3) hz.outline = h.outline;
+      return hz;
+    });
+
+    const locks: MapLockRaw[] = (raw.locks ?? [])
+      .filter((l) => l.position)
+      .map((l) => ({
+        lockType: l.lockType,
+        keyId: l.key,
+        keyName: l.key ? itemNames[l.key] : undefined,
+        needsPower: l.needsPower === true,
+        position: l.position,
+      }));
+
+    const stationaryWeapons: MapNamedPointRaw[] = (raw.stationaryWeapons ?? [])
+      .filter((w) => w.position)
+      .map((w) => {
+        const def = stationaryData[w.stationaryWeapon];
+        return { name: def ? tr(mapsLocale, def.shortName) ?? tr(mapsLocale, def.name) : undefined, position: w.position };
+      });
+
+    const btrStops: MapNamedPointRaw[] = (raw.btrStops ?? []).map((b) => ({
+      name: tr(mapsLocale, b.name),
+      position: { x: b.x, y: b.y, z: b.z },
     }));
+
+    const switches: MapNamedPointRaw[] = mapSwitches
+      .filter((sw) => sw.position)
+      .map((sw) => ({ name: tr(mapsLocale, sw.name), position: sw.position }));
 
     const lootContainers: LootContainerPositionRaw[] = (
       raw.lootContainers ?? []
@@ -360,6 +406,10 @@ export function adaptMapPois(input: {
       bosses,
       hazards,
       lootContainers,
+      locks,
+      stationaryWeapons,
+      btrStops,
+      switches,
     };
   });
 }

@@ -26,13 +26,15 @@ export function facetKeyOf(poi: Poi): string {
     case "spawn": {
       const s = poi.subtype ?? "all";
       if (s === "pmc") return "spawn:pmc";
-      if (s === "sniper") return "spawn:sniper";
+      if (s === "sniper") return "sniper";
       return "spawn:scav"; // scav + "all" + anything else
     }
     case "loot":
       return `loot:${poi.subtype ?? "other"}`;
     case "custom":
       return "custom";
+    case "lock":
+      return "lock";
     default:
       return poi.category;
   }
@@ -54,11 +56,19 @@ const STATIC_FACETS: FacetMeta[] = [
   { key: "extract:scav", label: "Scav", defaultOn: false },
   { key: "spawn:pmc", label: "PMC", defaultOn: false },
   { key: "spawn:scav", label: "Scav", defaultOn: false },
-  { key: "spawn:sniper", label: "Sniper Scav", defaultOn: false },
+
   { key: "boss", label: "Boss", defaultOn: false },
   { key: "cultist", label: "Cultist", defaultOn: false },
   { key: "transit", label: "Transit", defaultOn: false },
   { key: "hazard", label: "Hazards", defaultOn: false },
+  // Added 2026-11: on by default (the player asked to see them). New keys, so
+  // a filter saved before still starts with them on.
+  { key: "sniper", label: "Sniper Scav", defaultOn: true },
+  { key: "minefield", label: "Minefields", defaultOn: true },
+  { key: "stationary", label: "Mounted guns", defaultOn: true },
+  { key: "btr", label: "BTR stops", defaultOn: true },
+  { key: "switch", label: "Switches", defaultOn: true },
+  { key: "lock", label: "Locked doors / keys", defaultOn: false },
   { key: "custom", label: "My markers", defaultOn: true },
 ];
 
@@ -95,8 +105,9 @@ function lootFacetMeta(bucket: string): FacetMeta {
 const GROUP_DEFS: { id: string; label: string; keys: string[] }[] = [
   // Transit is an extraction type — it lives in the Extractions group.
   { id: "extract", label: "Extractions", keys: ["extract:pmc", "extract:scav", "transit"] },
-  { id: "spawn", label: "Spawns", keys: ["spawn:pmc", "spawn:scav", "spawn:sniper", "boss", "cultist"] },
-  { id: "world", label: "Hazards", keys: ["hazard"] },
+  { id: "danger", label: "Danger", keys: ["sniper", "minefield", "stationary"] },
+  { id: "spawn", label: "Spawns", keys: ["spawn:pmc", "spawn:scav", "boss", "cultist"] },
+  { id: "world", label: "Map", keys: ["btr", "switch", "lock", "hazard"] },
 ];
 
 // ---- Defaults --------------------------------------------------------------

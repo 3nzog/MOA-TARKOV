@@ -28,9 +28,9 @@ const FETCH_TIMEOUT_MS = 120_000;
 // only checks that `data` exists — without a new key it would hand a v4-shaped
 // blob to a v5-shaped consumer and fail somewhere far away from here.
 const TASKS_CACHE_KEY = 'td_tasks_cache_v5';
-const MAP_POIS_CACHE_KEY = 'td_map_pois_cache_v2';
+const MAP_POIS_CACHE_KEY = 'td_map_pois_cache_v3';
 // Wiped on clearCache so an upgrade doesn't strand dead blobs in localStorage.
-const LEGACY_CACHE_KEYS = ['td_tasks_cache_v4', 'td_maps_cache_v3', 'td_map_pois_cache_v1'];
+const LEGACY_CACHE_KEYS = ['td_tasks_cache_v4', 'td_maps_cache_v3', 'td_map_pois_cache_v1', 'td_map_pois_cache_v2'];
 
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24h — data is largely static between patches.
 
@@ -87,6 +87,24 @@ function expectContainer<T>(doc: unknown, path: string[], what: string): T {
 // reload should re-check the network. Conditional revalidation is left to the
 // webview's own HTTP cache, which already sends If-None-Match for these URLs.
 const mapsDocMemo = new Map<string, Promise<MapsDoc>>();
+
+// Key and item names for the map (locked doors, extract fees): the bundled
+// snapshot (data/snapshot/progression-<lang>.json) already has them.
+const itemLocales = import.meta.glob<{ default: { items?: Record<string, [string, string?]> } }>(
+  '../../data/snapshot/progression-*.json',
+);
+async function bundledItemNames(lang: string): Promise<Record<string, string>> {
+  const key =
+    Object.keys(itemLocales).find((k) => k.endsWith(`progression-${lang}.json`)) ??
+    Object.keys(itemLocales).find((k) => k.endsWith('progression-en.json'));
+  if (!key) return {};
+  try {
+    const items = (await itemLocales[key]()).default.items ?? {};
+    return Object.fromEntries(Object.entries(items).map(([id, v]) => [id, Array.isArray(v) ? v[0] : String(v)]));
+  } catch {
+    return {};
+  }
+}
 const mapsLocaleMemo = new Map<ApiLang, Promise<LocaleDoc>>();
 
 function mapsDoc(): Promise<MapsDoc> {
@@ -277,9 +295,9 @@ export class TarkovDevClient {
     return this.load<MapPoiData[]>(
       MAP_POIS_CACHE_KEY,
       async () => {
-        const [maps, mapsLoc] = await Promise.all([mapsDoc(), mapsLocale(this.lang)]);
+        const [maps, mapsLoc, itemNames] = await Promise.all([mapsDoc(), mapsLocale(this.lang), bundledItemNames(this.lang)]);
         expectContainer(maps, ['data', 'maps'], 'maps');
-        return adaptMapPois({ maps, mapsLocale: mapsLoc });
+        return adaptMapPois({ maps, mapsLocale: mapsLoc, itemNames });
       },
       force,
     );
