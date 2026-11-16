@@ -47,6 +47,15 @@ export const TILE_STYLES: Record<string, TileStyle> = {
   '5704e3c2d2720bac5b8b4567': { url: "https://assets.tarkov.dev/maps/woods/main_0.16/{z}/{x}/{y}.png", minZoom: 2, maxZoom: 6, tileSize: 256, author: "Shebuka", authorLink: "https://github.com/the-hideout/tarkov-dev-svg-maps/" },
 };
 
+/**
+ * SVG floor plans tarkov.dev draws over the relief tiles by default (its
+ * maps.json layers with show: true and no tiles of their own).
+ */
+export const RELIEF_DEFAULT_LAYERS: Record<string, string[]> = {
+  // Interchange: the mall's 2nd floor plan (its interior is black on the tiles).
+  '5714dbc024597771384a510d': ['First_Floor'],
+};
+
 export const ART_MAPS: Record<string, ArtMap[]> = {
   '5714dc692459777137212e12': [
     { key: "streets-2d", kind: '2D', author: "Jindouz", authorLink: "https://www.reddit.com/user/Jindouz" },

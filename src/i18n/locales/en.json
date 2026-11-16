@@ -998,5 +998,8 @@
         "help": "Close and reopen MoA and try again."
       }
     }
+  },
+  "level": {
+    "fromScreen": "Level {{level}} read from the screenshot — updated in MoA (and TarkovTracker, if sending is on)."
   }
 }

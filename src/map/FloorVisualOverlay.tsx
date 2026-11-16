@@ -122,8 +122,30 @@ function applyFloorOpacity(
   }
 }
 
+/**
+ * Relief map: keep only these groups of the SVG (a floor's plan drawn over the
+ * textured tiles, as tarkov.dev does — Interchange's mall is black on the
+ * tiles without it). Everything else in the SVG is hidden.
+ */
+function keepOnlyGroups(svg: SVGSVGElement, ids: string[]): void {
+  const keep = new Set(ids);
+  const visit = (el: Element): boolean => {
+    if (el.id && keep.has(el.id)) return true;
+    let any = false;
+    for (const child of Array.from(el.children)) {
+      if (child.tagName.toLowerCase() === 'style' || child.tagName.toLowerCase() === 'defs') continue;
+      if (visit(child)) any = true;
+      else (child as SVGElement).style.display = 'none';
+    }
+    return any;
+  };
+  visit(svg);
+}
+
 interface FloorVisualOverlayProps {
   svgUrl: string;
+  /** Relief map: draw only these SVG groups (floor plans) over the tiles. */
+  onlyGroups?: string[];
   bounds: L.LatLngBoundsLiteral;
   floors?: MapFloor[];
   activeFloorId: string;
@@ -138,6 +160,7 @@ interface FloorVisualOverlayProps {
 // top. Used for every .svg map; MapView keeps <ImageOverlay> only for non-SVG.
 export default function FloorVisualOverlay({
   svgUrl,
+  onlyGroups,
   bounds,
   floors = [],
   activeFloorId,
@@ -157,6 +180,7 @@ export default function FloorVisualOverlay({
       if (!svg) return;
       applyColorOverrides(svg, COLOR_OVERRIDES);
       applyStaticTreatments(svg, floors);
+      if (onlyGroups) keepOnlyGroups(svg, onlyGroups);
       const base = L.svgOverlay(svg, bounds, { interactive: false });
       base.addTo(map);
       overlays.push(base);
@@ -188,8 +212,8 @@ export default function FloorVisualOverlay({
 
   // Re-apply floor opacity whenever the active floor changes (or once loaded).
   useEffect(() => {
-    if (svgEl) applyFloorOpacity(svgEl, floors, activeFloorId);
-  }, [svgEl, floors, activeFloorId]);
+    if (svgEl && !onlyGroups) applyFloorOpacity(svgEl, floors, activeFloorId);
+  }, [svgEl, floors, activeFloorId, onlyGroups]);
 
   return null;
 }

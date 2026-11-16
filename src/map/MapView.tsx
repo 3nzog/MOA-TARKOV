@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { MapContainer, ImageOverlay, TileLayer, useMap } from "react-leaflet";
-import { TILE_STYLES, artMapUrl } from "./mapStyles";
+import { TILE_STYLES, RELIEF_DEFAULT_LAYERS, artMapUrl } from "./mapStyles";
 import { activeArt, useArtStore } from "./artCalibration";
 import ArtOverlay from "./ArtOverlay";
 import { artBounds, makeArtCRS } from "./artCrs";
@@ -124,6 +124,14 @@ export default function MapView({
   const vectorBounds = leafletBounds(def);
   const bounds: L.LatLngBoundsExpression = art ? artBounds(art) : vectorBounds;
   const tiles = mapStyle === 'relief' ? TILE_STYLES[canonicalMapId(mapId)] : undefined;
+  // Floor plans drawn over the relief tiles: the chosen floor's, else the one
+  // tarkov.dev shows by default (Interchange's mall is black without it).
+  const activeFloorLayer = def?.floors?.find((f) => f.id === activeFloorId)?.svgLayerId;
+  const reliefGroups = tiles
+    ? activeFloorLayer
+      ? [activeFloorLayer]
+      : RELIEF_DEFAULT_LAYERS[canonicalMapId(mapId)] ?? []
+    : [];
 
   return (
     <MapContainer
@@ -169,15 +177,26 @@ export default function MapView({
       ) : tiles ? (
         // Same CRS as tarkov.dev's own map, so its tile pyramid lines up with
         // every marker (tileSize is per map: the Lab's is 175).
-        <TileLayer
-          key={tiles.url}
-          url={tiles.url}
-          tileSize={tiles.tileSize}
-          minNativeZoom={tiles.minZoom}
-          maxNativeZoom={tiles.maxZoom}
-          bounds={bounds}
-          noWrap
-        />
+        <>
+          <TileLayer
+            key={tiles.url}
+            url={tiles.url}
+            tileSize={tiles.tileSize}
+            minNativeZoom={tiles.minZoom}
+            maxNativeZoom={tiles.maxZoom}
+            bounds={bounds}
+            noWrap
+          />
+          {reliefGroups.length > 0 && def.svgUrl.endsWith(".svg") && (
+            <FloorVisualOverlay
+              key={reliefGroups.join(",")}
+              svgUrl={def.svgUrl}
+              onlyGroups={reliefGroups}
+              bounds={vectorBounds}
+              activeFloorId={activeFloorId}
+            />
+          )}
+        </>
       ) : def.svgUrl.endsWith(".svg") ? (
         <FloorVisualOverlay
           svgUrl={def.svgUrl}

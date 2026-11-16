@@ -73,7 +73,9 @@ import LinkRequestDialog from './link/LinkRequestDialog';
 import { useMirroredState, usePublishState } from './link/linkState';
 import { normalizeTraderLevels, setTraderLevels, useTraderLevels } from './gunsmith/availability';
 import { replacePresets, usePresets } from './gunsmith/presets';
-import { normalizeProgress } from './state/localProgress';
+import { normalizeProgress, setPlayerLevel } from './state/localProgress';
+import { levelFromScreen } from './prices/levelFromScreen';
+import { subscribeScreenText } from './services/tauriEvents';
 import { parseHistory } from './state/raidHistory';
 import { parsePlanner } from './state/planner';
 import { normalizeCustomPois } from './poi/customPoi';
@@ -175,6 +177,34 @@ function App() {
     mapId: string | null;
     raidStartedAt: number | null;
   } | null>(null);
+  // The player's level from a screenshot (main menu profile card, or the flea
+  // market's "current level"): the game writes it nowhere else. A change is
+  // kept here and, with TarkovTracker sending on, goes there too.
+  const levelRef = useRef(quests.progress.playerLevel);
+  useEffect(() => {
+    levelRef.current = quests.progress.playerLevel;
+  }, [quests.progress.playerLevel]);
+  useEffect(() => {
+    let un: (() => void) | undefined;
+    let alive = true;
+    subscribeScreenText((text) => {
+      const level = levelFromScreen(text);
+      if (level === null || level === levelRef.current) return;
+      quests.setProgress((p) => setPlayerLevel(p, level));
+      setToast(t('level.fromScreen', { level }));
+    })
+      .then((u) => {
+        if (alive) un = u;
+        else u();
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+      un?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // A linked extra screen gets this app's state (src/link/linkState.ts):
   // published here on the game PC, applied there. One way only.
   usePublishState('progress', quests.progress);

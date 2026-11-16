@@ -998,5 +998,8 @@
         "help": "Cierra y abre MoA y vuelve a intentarlo."
       }
     }
+  },
+  "level": {
+    "fromScreen": "Nivel {{level}} leído de la captura — actualizado en MoA (y en TarkovTracker si el envío está activo)."
   }
 }

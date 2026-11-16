@@ -93,7 +93,21 @@ fn process_screenshot(app: &AppHandle, path: &Path, re: &Regex) {
     // Price check: every word on the screen with its position (the hovered
     // item's tooltip, or the short names on the inventory cells).
     match crate::extract_panel::read_screen(path, game_lang.as_deref()) {
-        Ok(t) if !t.lines.is_empty() => {
+        Ok(mut t) if !t.lines.is_empty() => {
+            // The flea market (its top bar says OFFER in some language): also
+            // read the small "current level" line from an enlarged crop.
+            let market = t.lines.iter().any(|l| {
+                let s = l.text.to_lowercase();
+                s.contains("ofert") || s.contains("offer") || s.contains("предлож") || s.contains("出品") || s.contains("报价")
+            });
+            #[cfg(windows)]
+            if market {
+                if let Ok(lines) = crate::extract_panel::read_level_lines(path, game_lang.as_deref()) {
+                    t.level_lines = lines;
+                }
+            }
+            #[cfg(not(windows))]
+            let _ = market;
             if let Err(e) = app.emit("screen-text", t) {
                 eprintln!("[screenshots] emit screen-text failed: {}", e);
             }

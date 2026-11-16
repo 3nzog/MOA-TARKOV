@@ -998,5 +998,8 @@
         "help": "Feche e abra o MoA e tente de novo."
       }
     }
+  },
+  "level": {
+    "fromScreen": "Nível {{level}} lido da print — atualizado no MoA (e no TarkovTracker, se o envio estiver ligado)."
   }
 }
