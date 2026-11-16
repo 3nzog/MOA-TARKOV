@@ -51,8 +51,9 @@ export const linkHostStatus = () => invoke<LinkHostStatus>('link_host_status');
 export const linkAnswer = (id: string, accept: boolean) => invoke<boolean>('link_answer', { id, accept });
 export const linkForget = (device: string) => invoke<void>('link_forget', { device });
 export const linkFind = (timeoutMs?: number) => invoke<FoundLink[]>('link_find', { timeoutMs: timeoutMs ?? null });
-export const linkConnect = (host: string, port?: number) =>
-  invoke<{ code: string }>('link_connect', { host, port: port ?? null });
+/** `manual`: asked by hand in Settings (a PC that refused this one is asked again only then). */
+export const linkConnect = (host: string, port?: number, manual = false) =>
+  invoke<{ code: string }>('link_connect', { host, port: port ?? null, manual });
 export const linkDisconnect = () => invoke<void>('link_disconnect');
 export const linkSetAutoAccept = (on: boolean) => invoke<void>('link_set_auto_accept', { on });
 export const onLinkAuto = (cb: (r: { name: string; ip: string }) => void): Promise<UnlistenFn> =>
@@ -89,9 +90,11 @@ export interface LinkPrefs {
   autoAcceptLan: boolean;
   /** The game PC this one last showed (relinks to it, even if its IP changed). */
   target: FoundLink | null;
+  /** Game PCs that said no: the automatic search never asks them again. */
+  refused: string[];
 }
 
-export const DEFAULT_PREFS: LinkPrefs = { mode: 'auto', autoAcceptLan: true, target: null };
+export const DEFAULT_PREFS: LinkPrefs = { mode: 'auto', autoAcceptLan: true, target: null, refused: [] };
 
 const IPV4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 
@@ -102,6 +105,27 @@ export function isNetworkIp(ip: string): boolean {
   const o = m.slice(1).map(Number);
   if (o.some((n) => n > 255)) return false;
   return o[0] === 26 || o[0] === 10 || (o[0] === 172 && o[1] >= 16 && o[1] <= 31) || (o[0] === 192 && o[1] === 168);
+}
+
+/** A home-network address (10.x, 172.16-31.x, 192.168.x): the same house, not Radmin. */
+export function isLanIp(ip: string): boolean {
+  return isNetworkIp(ip) && !ip.trim().startsWith('26.');
+}
+
+/**
+ * Which found game PC the automatic search may link to: the one it showed
+ * before (by name; its IP may have changed), else one in the same house. A PC
+ * only reachable over Radmin (other players' PCs too) is linked by hand, and
+ * one that refused is never asked again on its own.
+ */
+export function pickAutoTarget(found: FoundLink[], prefs: Pick<LinkPrefs, 'target' | 'refused'>): FoundLink | null {
+  const ok = found.filter((f) => !prefs.refused.includes(f.name));
+  const want = prefs.target;
+  if (want) {
+    const same = ok.find((f) => f.name === want.name);
+    if (same) return same;
+  }
+  return ok.find((f) => isLanIp(f.host)) ?? null;
 }
 
 export function normalizePrefs(raw: unknown): LinkPrefs {
@@ -119,7 +143,10 @@ export function normalizePrefs(raw: unknown): LinkPrefs {
     t && typeof t.host === 'string' && isNetworkIp(t.host) && typeof t.port === 'number' && t.port > 0 && t.port < 65536
       ? { host: t.host, port: t.port, name: typeof t.name === 'string' ? t.name.slice(0, 24) : t.host }
       : null;
-  return { mode, autoAcceptLan: r.autoAcceptLan !== false, target };
+  const refused = Array.isArray(r.refused)
+    ? r.refused.filter((n): n is string => typeof n === 'string' && n.length > 0).map((n) => n.slice(0, 24)).slice(-20)
+    : [];
+  return { mode, autoAcceptLan: r.autoAcceptLan !== false, target, refused };
 }
 
 export function loadPrefs(): LinkPrefs {

@@ -22,6 +22,7 @@ import {
   onLinkClient,
   onLinkRequest,
   onLinkRequestDone,
+  pickAutoTarget,
   savePrefs,
   setLinkedViewer,
   type FoundLink,
@@ -93,8 +94,15 @@ export function LinkProvider({ children }: { children: ReactNode }) {
           setLinkedViewer(s.state === 'linked');
           if (s.state === 'linked') lostSince.current = null;
           else if (s.state === 'lost' && lostSince.current === null) lostSince.current = Date.now();
-          // The game PC said no (or forgot this PC): forget it here too.
-          if (s.state === 'refused' && prefsRef.current.target) update({ ...prefsRef.current, target: null });
+          // The game PC said no (or forgot this PC): forget it here too, and
+          // never ask it again on its own (only by hand in Settings).
+          if (s.state === 'refused') {
+            const p = prefsRef.current;
+            const name = s.name ?? p.target?.name;
+            if (p.target || (name && !p.refused.includes(name))) {
+              update({ ...p, target: null, refused: name && !p.refused.includes(name) ? [...p.refused, name].slice(-20) : p.refused });
+            }
+          }
           if (s.state === 'linked' && s.name && prefsRef.current.target && prefsRef.current.target.name !== s.name) {
             update({ ...prefsRef.current, target: { ...prefsRef.current.target, name: s.name } });
           }
@@ -114,12 +122,13 @@ export function LinkProvider({ children }: { children: ReactNode }) {
     if (available) void linkSetAutoAccept(prefs.autoAcceptLan).catch(() => undefined);
   }, [available, prefs.autoAcceptLan]);
 
-  const connect = useCallback(
-    async (to: FoundLink) => {
+  const connectTo = useCallback(
+    async (to: FoundLink, manual: boolean) => {
       setError(null);
       try {
-        const { code } = await linkConnect(to.host, to.port);
-        update({ ...prefsRef.current, target: to });
+        const { code } = await linkConnect(to.host, to.port, manual);
+        const p = prefsRef.current;
+        update({ ...p, target: to, refused: manual ? p.refused.filter((n) => n !== to.name) : p.refused });
         const s: LinkClientStatus = { state: 'connecting', host: to.host, port: to.port, code };
         clientRef.current = s;
         setClient(s);
@@ -159,7 +168,7 @@ export function LinkProvider({ children }: { children: ReactNode }) {
       return;
     }
     const t0 = prefsRef.current.target;
-    if (t0 && !clientRef.current) void connect(t0);
+    if (t0 && !clientRef.current) void connectTo(t0, false);
     let busy = false;
     const tick = async () => {
       if (busy) return;
@@ -170,14 +179,13 @@ export function LinkProvider({ children }: { children: ReactNode }) {
       busy = true;
       try {
         const found = await linkFind(1500);
-        if (found.length === 0) return;
-        const want = prefsRef.current.target;
-        const pick = (want && found.find((f) => f.name === want.name)) || found[0];
+        const pick = pickAutoTarget(found, prefsRef.current);
+        if (!pick) return;
         // Lost but the same address still answers: the link retries on its own.
         if (lostLong && c && pick.host === c.host) return;
         netLog(`anexar: achou ${pick.name} (${pick.host}), anexando sozinho`);
         lostSince.current = null;
-        await connect(pick);
+        await connectTo(pick, false);
       } catch {
         /* nothing found this time */
       } finally {
@@ -187,7 +195,10 @@ export function LinkProvider({ children }: { children: ReactNode }) {
     void tick();
     const id = window.setInterval(() => void tick(), SEARCH_EVERY_MS);
     return () => window.clearInterval(id);
-  }, [available, role, connect]);
+  }, [available, role, connectTo]);
+
+  // By hand (Settings): asks even a PC that refused before.
+  const connect = useCallback((to: FoundLink) => connectTo(to, true), [connectTo]);
 
   const setMode = useCallback(
     (mode: LinkMode) => {

@@ -110,6 +110,9 @@ struct ServerState {
     conns: HashMap<u64, Conn>,
     pending: HashMap<String, oneshot::Sender<bool>>,
     devices: Vec<Device>,
+    /// PCs whose request was not allowed: their automatic requests are refused
+    /// without asking again (only a request made by hand on that PC asks).
+    blocked: Vec<String>,
     next: u64,
     /// Latest published state frame per key.
     states: HashMap<String, String>,
@@ -158,6 +161,30 @@ fn load_devices(path: &Option<PathBuf>) -> Vec<Device> {
         .collect()
 }
 
+fn blocked_path(path: &Option<PathBuf>) -> Option<PathBuf> {
+    path.as_ref().map(|p| p.with_file_name("link-blocked.json"))
+}
+
+fn load_blocked(path: &Option<PathBuf>) -> Vec<String> {
+    let Some(p) = blocked_path(path) else { return Vec::new() };
+    std::fs::read_to_string(p)
+        .ok()
+        .and_then(|s| serde_json::from_str::<Vec<String>>(&s).ok())
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|d| valid_device(d))
+        .collect()
+}
+
+fn save_blocked(path: &Option<PathBuf>, blocked: &[String]) {
+    if let Some(p) = blocked_path(path) {
+        if let Some(dir) = p.parent() {
+            let _ = std::fs::create_dir_all(dir);
+        }
+        let _ = std::fs::write(p, serde_json::to_string(blocked).unwrap_or_else(|_| "[]".into()));
+    }
+}
+
 fn save_devices(path: &Option<PathBuf>, devices: &[Device]) {
     if let Some(p) = path {
         if let Some(dir) = p.parent() {
@@ -174,7 +201,7 @@ impl Server {
         let tcp_port = listener.local_addr().map(|a| a.port()).unwrap_or(tcp_port);
         let udp = UdpSocket::bind(SocketAddr::from((bind, udp_port))).await.map_err(busy)?;
         let udp_port = udp.local_addr().map(|a| a.port()).unwrap_or(udp_port);
-        let state = Arc::new(Mutex::new(ServerState { devices: load_devices(&cfg.store), ..Default::default() }));
+        let state = Arc::new(Mutex::new(ServerState { devices: load_devices(&cfg.store), blocked: load_blocked(&cfg.store), ..Default::default() }));
         let (stop, stop_rx) = watch::channel(false);
         let cfg = Arc::new(cfg);
         tauri::async_runtime::spawn(accept_loop(listener, state.clone(), cfg.clone(), stop_rx.clone()));
@@ -295,6 +322,8 @@ struct Hello {
     device: String,
     name: String,
     code: String,
+    /// Asked by hand on that PC (Settings → Anexar), not by its automatic search.
+    manual: bool,
 }
 
 fn parse_hello(v: &Value) -> Option<Hello> {
@@ -304,7 +333,8 @@ fn parse_hello(v: &Value) -> Option<Hello> {
     let device = v.get("device")?.as_str()?.to_owned();
     let name = crate::party::sanitize_name(v.get("name")?.as_str()?);
     let code = v.get("code")?.as_str()?.to_owned();
-    (valid_device(&device) && !name.is_empty() && valid_code(&code)).then_some(Hello { device, name, code })
+    let manual = v.get("manual").and_then(|m| m.as_bool()).unwrap_or(false);
+    (valid_device(&device) && !name.is_empty() && valid_code(&code)).then_some(Hello { device, name, code, manual })
 }
 
 fn is_ping(v: &Value) -> Option<Value> {
@@ -356,6 +386,12 @@ async fn serve(stream: TcpStream, peer: SocketAddr, state: Arc<Mutex<ServerState
         st.devices.retain(|d| d.device != hello.device);
         st.devices.push(Device { device: hello.device.clone(), name: hello.name.clone() });
         save_devices(&cfg.store, &st.devices);
+    } else if !known && !hello.manual && state.lock().unwrap().blocked.iter().any(|d| d == &hello.device) {
+        net::log(format!("anexar: {} ({}) já foi recusado; pedido automático ignorado", hello.name, peer.ip()));
+        let _ = tx.send(text(json!({ "t": "refused" })));
+        let _ = tx.send(Message::Close(None));
+        let _ = writer.await;
+        return;
     } else if !known {
         let id = uuid::Uuid::new_v4().simple().to_string();
         let (otx, mut orx) = oneshot::channel::<bool>();
@@ -397,6 +433,13 @@ async fn serve(stream: TcpStream, peer: SocketAddr, state: Arc<Mutex<ServerState
         (cfg.notify)("link-request-done", json!({ "id": id }));
         if !accepted {
             net::log(format!("anexar: {} não foi permitido", hello.name));
+            {
+                let mut st = state.lock().unwrap();
+                if !st.blocked.contains(&hello.device) {
+                    st.blocked.push(hello.device.clone());
+                    save_blocked(&cfg.store, &st.blocked);
+                }
+            }
             let _ = tx.send(text(json!({ "t": "refused" })));
             let _ = tx.send(Message::Close(None));
             let _ = writer.await;
@@ -406,6 +449,10 @@ async fn serve(stream: TcpStream, peer: SocketAddr, state: Arc<Mutex<ServerState
         st.devices.retain(|d| d.device != hello.device);
         st.devices.push(Device { device: hello.device.clone(), name: hello.name.clone() });
         save_devices(&cfg.store, &st.devices);
+        if st.blocked.contains(&hello.device) {
+            st.blocked.retain(|d| d != &hello.device);
+            save_blocked(&cfg.store, &st.blocked);
+        }
     }
 
     // 3. linked: say so, send what the logs say about PMC / Scav, then stream.
@@ -462,6 +509,8 @@ pub struct ClientCfg {
     pub device: String,
     pub name: String,
     pub emit: Notify,
+    /// Asked by hand (not the automatic search).
+    pub manual: bool,
 }
 
 pub struct ClientHandle {
@@ -553,7 +602,7 @@ async fn session(
         return lost("handshake", false);
     };
     let (mut sink, mut source) = ws.split();
-    let hello = json!({ "t": "hello", "v": VERSION, "device": cfg.device, "name": cfg.name, "code": code });
+    let hello = json!({ "t": "hello", "v": VERSION, "device": cfg.device, "name": cfg.name, "code": code, "manual": cfg.manual });
     if sink.send(text(hello)).await.is_err() {
         return lost("send", false);
     }
@@ -836,7 +885,7 @@ pub struct Connecting {
 
 /// Link this PC to the main PC at host:port (and keep reconnecting).
 #[tauri::command]
-pub fn link_connect(app: tauri::AppHandle, host: String, port: Option<u16>) -> Result<Connecting, String> {
+pub fn link_connect(app: tauri::AppHandle, host: String, port: Option<u16>, manual: Option<bool>) -> Result<Connecting, String> {
     let ip: Ipv4Addr = host.trim().parse().map_err(|_| "bad_ip".to_string())?;
     if net::kind_of(ip).is_none() && !ip.is_loopback() {
         return Err("bad_ip".into());
@@ -848,6 +897,7 @@ pub fn link_connect(app: tauri::AppHandle, host: String, port: Option<u16>) -> R
     let cfg = ClientCfg {
         device: device_id(&app),
         name: net::computer_name(),
+        manual: manual.unwrap_or(false),
         emit: Arc::new(move |event: &str, payload: Value| {
             // Linked: this PC's own link server stays quiet about replayed events.
             if event == "link-client" {
@@ -919,7 +969,7 @@ mod tests {
     }
 
     fn screen_pc(rec: &Arc<Rec>, port: u16, device: &str) -> ClientHandle {
-        start_client("127.0.0.1".into(), port, ClientCfg { device: device.into(), name: "PC-DO-MAPA".into(), emit: rec.notify() })
+        start_client("127.0.0.1".into(), port, ClientCfg { device: device.into(), name: "PC-DO-MAPA".into(), emit: rec.notify(), manual: false })
     }
 
     const DEV: &str = "0b5c3c7e-6f0e-4c55-9a43-7b2a1d5e9f10";
@@ -1023,6 +1073,43 @@ mod tests {
             assert!(server.status().devices.is_empty());
             assert_eq!(main_rec.all("link-request").len(), 1, "no retry after a refusal");
             server.stop();
+        });
+    }
+
+    #[test]
+    fn a_refused_pc_is_not_asked_about_again_unless_it_asks_by_hand() {
+        tauri::async_runtime::block_on(async {
+            let dir = std::env::temp_dir().join(format!("moa-link-test-{}", uuid::Uuid::new_v4().simple()));
+            let store = Some(dir.join("link-devices.json"));
+            let main_rec = Rec::new();
+            let server = main_pc(&main_rec, store.clone()).await;
+            // First automatic request: asked, refused.
+            let rec1 = Rec::new();
+            let c1 = screen_pc(&rec1, server.tcp_port, DEV);
+            let req = main_rec.wait_for("link-request", |_| true).await;
+            server.answer(req["id"].as_str().unwrap(), false);
+            rec1.wait_for("link-client", |v| v["state"] == "refused").await;
+            c1.stop();
+            // Its automatic search tries again: refused at once, nobody is asked.
+            let rec2 = Rec::new();
+            let c2 = screen_pc(&rec2, server.tcp_port, DEV);
+            rec2.wait_for("link-client", |v| v["state"] == "refused").await;
+            c2.stop();
+            assert_eq!(main_rec.all("link-request").len(), 1, "a refused PC does not pop up again");
+            assert!(dir.join("link-blocked.json").exists(), "the refusal is remembered");
+            // Asked by hand on that PC: the question comes back, and allowing it unblocks it.
+            let rec3 = Rec::new();
+            let _c3 = start_client(
+                "127.0.0.1".into(),
+                server.tcp_port,
+                ClientCfg { device: DEV.into(), name: "PC-DO-MAPA".into(), emit: rec3.notify(), manual: true },
+            );
+            let req3 = main_rec.wait_for("link-request", |v| v["id"] != req["id"]).await;
+            server.answer(req3["id"].as_str().unwrap(), true);
+            rec3.wait_for("link-client", |v| v["state"] == "linked").await;
+            assert!(load_blocked(&store).is_empty());
+            server.stop();
+            let _ = std::fs::remove_dir_all(dir);
         });
     }
 
@@ -1184,7 +1271,7 @@ mod tests {
                 let found = ask(vec![(n.ip, vec![SocketAddr::from((n.broadcast(), server.udp_port)), SocketAddr::from((n.ip, server.udp_port))])], Duration::from_millis(800), nets.clone(), true).await;
                 println!("{}: found {:?}", n.ip, found);
                 assert!(found.iter().any(|f| f.host == n.ip.to_string()), "found on {}", n.ip);
-                let client = start_client(n.ip.to_string(), server.tcp_port, ClientCfg { device: DEV.into(), name: "PC-DO-MAPA".into(), emit: screen_rec.notify() });
+                let client = start_client(n.ip.to_string(), server.tcp_port, ClientCfg { device: DEV.into(), name: "PC-DO-MAPA".into(), emit: screen_rec.notify(), manual: false });
                 if n.kind == net::NetKind::Lan {
                     // Same router: links on its own, no question.
                     main_rec.wait_for("link-auto", |_| true).await;

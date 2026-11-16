@@ -922,7 +922,7 @@
       "off": "Apagado",
       "detecting": "Viendo si este PC tiene Tarkov…",
       "isGame": "Ahora: PC del juego — tus otros PC se vinculan solos.",
-      "isScreen": "Ahora: pantalla extra — busca el PC del juego en la red y se vincula solo.",
+      "isScreen": "Ahora: pantalla extra — se vincula sola al PC del juego de tu casa (misma red). Por Radmin, vincúlalo aquí a mano una vez; después vuelve solo. Nunca vuelve a pedir a quien ya rechazó.",
       "isOff": "Apagado: este PC no se vincula con ningún otro.",
       "whyGame": "(Tarkov está instalado aquí)",
       "whyScreen": "(Tarkov no está instalado aquí)"

@@ -922,7 +922,7 @@
       "off": "Desligado",
       "detecting": "Vendo se este PC tem o Tarkov…",
       "isGame": "Agora: PC do jogo — seus outros PCs se anexam a este sozinhos.",
-      "isScreen": "Agora: tela extra — procura o PC do jogo na rede e se anexa sozinho.",
+      "isScreen": "Agora: tela extra — se anexa sozinho ao PC do jogo da sua casa (mesma rede). Pelo Radmin, anexe à mão aqui uma vez; depois ele volta sozinho. Nunca pede a quem já recusou.",
       "isOff": "Desligado: este PC não se anexa a nenhum outro.",
       "whyGame": "(o Tarkov está instalado aqui)",
       "whyScreen": "(o Tarkov não está instalado aqui)"
