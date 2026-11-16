@@ -54,7 +54,8 @@
     "plannerTitle": "Planner",
     "compactMode": "Compact mode (map only, on top)",
     "exitCompact": "Exit compact mode",
-    "gunsmith": "Weapon bench"
+    "gunsmith": "Weapon bench",
+    "ballistics": "Ballistics"
   },
   "settings": {
     "title": "Settings",
@@ -1001,5 +1002,47 @@
   },
   "level": {
     "fromScreen": "Level {{level}} read from the screenshot — updated in MoA (and TarkovTracker, if sending is on)."
+  },
+  "ballistics": {
+    "title": "Ballistics",
+    "subtitle": "Every cartridge for every gun",
+    "search": "Search a gun, caliber or cartridge…",
+    "allOfCaliber": "All cartridges of the caliber",
+    "noHits": "Nothing found",
+    "empty": "Search the gun you want to use to see every cartridge it fires.",
+    "screenHint": "Or take a screenshot of the flea market's ammo screen: it opens here by itself.",
+    "hideTracers": "Hide tracers",
+    "tracer": "tracer",
+    "classHint": "Against class {{n}} armor (fresh)",
+    "classShort": "C{{n}}",
+    "chart": "Penetration × damage",
+    "legend": "Armor classes (estimate from penetration):",
+    "source": "Data from tarkov.dev, updated {{date}}.",
+    "count_one": "{{count}} cartridge",
+    "count_other": "{{count}} cartridges",
+    "fromScreen_one": "{{count}} seen on your screenshot",
+    "fromScreen_other": "{{count}} seen on your screenshot",
+    "kind": {
+      "weapon": "Gun",
+      "caliber": "Caliber",
+      "ammo": "Cartridge"
+    },
+    "col": {
+      "name": "Cartridge",
+      "damage": "Damage",
+      "pen": "Penetration",
+      "armor": "Armor damage",
+      "armorHint": "How much the round wears armor down",
+      "frag": "Fragmentation",
+      "speed": "Speed m/s",
+      "price": "Flea price"
+    },
+    "effect": {
+      "0": "won't go through",
+      "1": "poor",
+      "2": "sometimes",
+      "3": "goes through",
+      "4": "easily"
+    }
   }
 }

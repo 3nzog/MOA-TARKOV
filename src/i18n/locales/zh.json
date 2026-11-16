@@ -54,7 +54,8 @@
     "plannerTitle": "规划器",
     "compactMode": "紧凑模式(仅地图,置顶)",
     "exitCompact": "退出紧凑模式",
-    "gunsmith": "改枪台"
+    "gunsmith": "改枪台",
+    "ballistics": "弹道"
   },
   "settings": {
     "title": "设置",
@@ -1001,5 +1002,47 @@
   },
   "level": {
     "fromScreen": "从截图读取到等级 {{level}} — 已更新 MoA（如开启发送，也会更新 TarkovTracker）。"
+  },
+  "ballistics": {
+    "title": "弹道",
+    "subtitle": "每把枪的全部子弹",
+    "search": "搜索武器、口径或子弹…",
+    "allOfCaliber": "该口径的全部子弹",
+    "noHits": "未找到",
+    "empty": "搜索你想用的武器,查看所有可用子弹。",
+    "screenHint": "或者截图跳蚤市场的弹药界面:会自动在这里打开。",
+    "hideTracers": "隐藏曳光弹",
+    "tracer": "曳光",
+    "classHint": "对抗 {{n}} 级护甲(全新)",
+    "classShort": "{{n}}级",
+    "chart": "穿透 × 伤害",
+    "legend": "护甲等级(按穿透估算):",
+    "source": "数据来自 tarkov.dev,更新于 {{date}}。",
+    "count_other": "{{count}} 种子弹",
+    "fromScreen_other": "截图中看到 {{count}} 种",
+    "kind": {
+      "weapon": "武器",
+      "caliber": "口径",
+      "ammo": "子弹"
+    },
+    "col": {
+      "name": "子弹",
+      "damage": "伤害",
+      "pen": "穿透",
+      "armor": "护甲伤害",
+      "armorHint": "对护甲的磨损程度",
+      "frag": "碎裂",
+      "speed": "初速 m/s",
+      "price": "跳蚤价格"
+    },
+    "effect": {
+      "0": "打不穿",
+      "1": "很难",
+      "2": "有时",
+      "3": "能打穿",
+      "4": "轻松"
+    },
+    "count_one": "{{count}} 种子弹",
+    "fromScreen_one": "截图中看到 {{count}} 种"
   }
 }

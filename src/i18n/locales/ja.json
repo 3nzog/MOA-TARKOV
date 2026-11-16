@@ -54,7 +54,8 @@
     "plannerTitle": "プランナー",
     "compactMode": "コンパクトモード(マップのみ、最前面)",
     "exitCompact": "コンパクトモードを終了",
-    "gunsmith": "武器ベンチ"
+    "gunsmith": "武器ベンチ",
+    "ballistics": "弾薬性能"
   },
   "settings": {
     "title": "設定",
@@ -1001,5 +1002,47 @@
   },
   "level": {
     "fromScreen": "スクリーンショットからレベル {{level}} を読み取りました — MoA を更新しました（送信がオンなら TarkovTracker も）。"
+  },
+  "ballistics": {
+    "title": "弾薬性能",
+    "subtitle": "武器ごとの全弾薬",
+    "search": "武器・口径・弾薬を検索…",
+    "allOfCaliber": "この口径の全弾薬",
+    "noHits": "見つかりません",
+    "empty": "使いたい武器を検索すると、使える弾薬がすべて表示されます。",
+    "screenHint": "フリーマーケットの弾薬画面のスクリーンショットでも自動で開きます。",
+    "hideTracers": "曳光弾を隠す",
+    "tracer": "曳光弾",
+    "classHint": "クラス {{n}} アーマー(新品)に対して",
+    "classShort": "C{{n}}",
+    "chart": "貫通力 × ダメージ",
+    "legend": "アーマークラス(貫通力からの目安):",
+    "source": "データ: tarkov.dev({{date}} 更新)",
+    "count_other": "{{count}} 種類",
+    "fromScreen_other": "スクリーンショットで {{count}} 種類",
+    "kind": {
+      "weapon": "武器",
+      "caliber": "口径",
+      "ammo": "弾薬"
+    },
+    "col": {
+      "name": "弾薬",
+      "damage": "ダメージ",
+      "pen": "貫通力",
+      "armor": "アーマーダメージ",
+      "armorHint": "アーマーをどれだけ削るか",
+      "frag": "破片化",
+      "speed": "弾速 m/s",
+      "price": "フリマ価格"
+    },
+    "effect": {
+      "0": "貫通しない",
+      "1": "ほぼ無理",
+      "2": "ときどき",
+      "3": "貫通する",
+      "4": "容易"
+    },
+    "count_one": "{{count}} 種類",
+    "fromScreen_one": "スクリーンショットで {{count}} 種類"
   }
 }

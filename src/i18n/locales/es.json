@@ -54,7 +54,8 @@
     "plannerTitle": "Planificador",
     "compactMode": "Modo compacto (solo el mapa, siempre encima)",
     "exitCompact": "Salir del modo compacto",
-    "gunsmith": "Banco de armas"
+    "gunsmith": "Banco de armas",
+    "ballistics": "Balística"
   },
   "settings": {
     "title": "Ajustes",
@@ -1001,5 +1002,47 @@
   },
   "level": {
     "fromScreen": "Nivel {{level}} leído de la captura — actualizado en MoA (y en TarkovTracker si el envío está activo)."
+  },
+  "ballistics": {
+    "title": "Balística",
+    "subtitle": "Todas las balas de cada arma",
+    "search": "Buscar arma, calibre o bala…",
+    "allOfCaliber": "Todas las balas del calibre",
+    "noHits": "Nada encontrado",
+    "empty": "Busca el arma que quieres usar para ver todas las balas compatibles.",
+    "screenHint": "O haz una captura de la pantalla de munición del mercadillo: se abre aquí sola.",
+    "hideTracers": "Ocultar trazadoras",
+    "tracer": "trazadora",
+    "classHint": "Contra blindaje clase {{n}} (nuevo)",
+    "classShort": "C{{n}}",
+    "chart": "Penetración × daño",
+    "legend": "Clases de blindaje (estimación por penetración):",
+    "source": "Datos de tarkov.dev, actualizados el {{date}}.",
+    "count_one": "{{count}} bala",
+    "count_other": "{{count}} balas",
+    "fromScreen_one": "{{count}} vista en tu captura",
+    "fromScreen_other": "{{count}} vistas en tu captura",
+    "kind": {
+      "weapon": "Arma",
+      "caliber": "Calibre",
+      "ammo": "Bala"
+    },
+    "col": {
+      "name": "Bala",
+      "damage": "Daño",
+      "pen": "Penetración",
+      "armor": "Daño al blindaje",
+      "armorHint": "Cuánto desgasta el blindaje",
+      "frag": "Fragmentación",
+      "speed": "Velocidad m/s",
+      "price": "Precio mercadillo"
+    },
+    "effect": {
+      "0": "no pasa",
+      "1": "pasa mal",
+      "2": "a veces",
+      "3": "pasa",
+      "4": "pasa fácil"
+    }
   }
 }

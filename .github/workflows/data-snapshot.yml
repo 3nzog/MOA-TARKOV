@@ -44,6 +44,9 @@ jobs:
       - name: Fetch map place names from tarkov.dev
         run: node scripts/fetch-map-labels.mjs
         continue-on-error: true
+      - name: Fetch ballistics data from tarkov.dev
+        run: node scripts/fetch-ammo.mjs
+        continue-on-error: true
 
       # generatedAt changes on every run, so a naive `git diff` is always dirty.
       # Compare everything EXCEPT that field to decide whether the data moved.

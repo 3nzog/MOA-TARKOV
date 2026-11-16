@@ -90,6 +90,7 @@ import { effectiveStatus } from './state/localProgress';
 
 // The weapon bench and its ~2 MB of data load only when it is first opened.
 const GunsmithBench = lazy(() => import('./gunsmith/GunsmithBench'));
+const BallisticsPanel = lazy(() => import('./ballistics/BallisticsPanel'));
 import { knownSymbol, setSelfSymbol, useSelfSymbol } from './squad/symbols';
 import { hexForColorId } from '../shared/squadProtocol';
 
@@ -117,6 +118,9 @@ function App() {
   const [patchNotesOpen, setPatchNotesOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [gunsmithOpen, setGunsmithOpen] = useState(false);
+  const [ballisticsOpen, setBallisticsOpen] = useState(false);
+  // Cartridges read from the last flea-market screenshot; opening on them.
+  const [screenAmmo, setScreenAmmo] = useState<string[] | null>(null);
   const [plannerTab, setPlannerTab] = useState<PlannerTab>('summary');
   const appearance = useAppearance();
   // The glass logo reveal plays once per launch (Settings → Appearance turns it off).
@@ -184,6 +188,32 @@ function App() {
   useEffect(() => {
     levelRef.current = quests.progress.playerLevel;
   }, [quests.progress.playerLevel]);
+  // A screenshot of the flea market's ammo list (3+ cartridges named) opens
+  // the ballistics table on them.
+  useEffect(() => {
+    let un: (() => void) | undefined;
+    let alive = true;
+    subscribeScreenText((text) => {
+      void import('./ballistics/screenAmmo')
+        .then((m) => m.ammoOnScreen(text))
+        .then((ids) => {
+          if (!alive || ids.length < 3) return;
+          setScreenAmmo(ids);
+          setBallisticsOpen(true);
+        })
+        .catch(() => undefined);
+    })
+      .then((u) => {
+        if (alive) un = u;
+        else u();
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+      un?.();
+    };
+  }, []);
+
   useEffect(() => {
     let un: (() => void) | undefined;
     let alive = true;
@@ -633,6 +663,7 @@ function App() {
             setSettingsOpen(true);
           }}
           onGunsmith={() => setGunsmithOpen(true)}
+          onBallistics={() => setBallisticsOpen(true)}
           onCompact={toggleCompact}
           hints={{
             quests: hotkeys.map.quests,
@@ -974,6 +1005,17 @@ function App() {
             onClose={() => setGunsmithOpen(false)}
             playerLevel={quests.progress.levelSet ? quests.progress.playerLevel : null}
             taskDone={taskDone}
+          />
+        </Suspense>
+      )}
+      {ballisticsOpen && (
+        <Suspense fallback={null}>
+          <BallisticsPanel
+            onClose={() => {
+              setBallisticsOpen(false);
+              setScreenAmmo(null);
+            }}
+            fromScreen={screenAmmo}
           />
         </Suspense>
       )}
