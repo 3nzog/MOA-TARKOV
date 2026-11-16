@@ -4,7 +4,10 @@ rem  Tarkov MoA - instalador.
 rem
 rem  Pode ficar em qualquer lugar (Downloads, Area de Trabalho...): instala
 rem  sempre em "Documentos\Tarkov MoA". Se ja estiver instalado, atualiza para
-rem  a versao mais nova do repositorio.
+rem  a versao mais nova do repositorio, mesmo quando o "Abrir Tarkov MoA.bat"
+rem  antigo nao consegue: guarda arquivos mudados (git stash), segue o GitHub
+rem  se o historico divergiu (copia num branch moa-backup) e, se o login do
+rem  GitHub salvo no PC venceu, pede para entrar de novo.
 rem
 rem  O repositorio e privado. Este arquivo NAO guarda senha nem token: na
 rem  primeira vez o Git abre o login do GitHub no navegador, e cada pessoa entra
@@ -22,6 +25,7 @@ setlocal EnableExtensions
 chcp 65001 >nul
 title Tarkov MoA - instalador
 set "REPO=https://github.com/3nzog/MOA-TARKOV.git"
+if defined MOA_REPO set "REPO=%MOA_REPO%"
 set "LOG=%TEMP%\TarkovMoA-instalador.log"
 > "%LOG%" echo Tarkov MoA - instalador - %DATE% %TIME%
 >>"%LOG%" echo Windows: & ver >>"%LOG%" 2>&1
@@ -37,6 +41,7 @@ set "DOCS="
 for /f "usebackq delims=" %%D in (`powershell -NoProfile -Command "[Environment]::GetFolderPath('MyDocuments')"`) do set "DOCS=%%D"
 if not defined DOCS set "DOCS=%USERPROFILE%\Documents"
 set "DEST=%DOCS%\Tarkov MoA"
+if defined MOA_DEST set "DEST=%MOA_DEST%"
 call :ok "Pasta de instalação" "%DEST%"
 
 where git >nul 2>&1
@@ -62,9 +67,13 @@ set "GITAUTH=-c credential.helper= -c credential.helper=manager"
 
 rem ---- 2. Baixar ou atualizar -------------------------------------------------------
 if exist "%DEST%\.git" goto :update
+rem  Uma pasta "Tarkov MoA" que nao veio do GitHub (instalador antigo, copia
+rem  manual) nunca se atualiza: ela e guardada com outro nome, nada se apaga,
+rem  e uma instalacao nova que se atualiza sozinha e baixada no lugar.
 if exist "%DEST%\" (
-  dir /b /a "%DEST%" 2>nul | findstr "^" >nul && goto :dest_busy
+  dir /b /a "%DEST%" 2>nul | findstr "^" >nul && goto :old_copy
 )
+:fresh_clone
 
 call :section "2/4" "Baixando o Tarkov MoA"
 call :run "Baixando do GitHub"
@@ -77,15 +86,85 @@ goto :shortcut
 
 :update
 call :section "2/4" "Atualizando o Tarkov MoA"
+rem  O MoA aberto segura os arquivos: fecha (o que foi marcado ja esta salvo).
 tasklist /fi "imagename eq tarkov-companion.exe" 2>nul | find /i "tarkov-companion.exe" >nul
-if not errorlevel 1 goto :close_app_first
+if not errorlevel 1 (
+  call :run "Fechando o Tarkov MoA aberto"
+  taskkill /im tarkov-companion.exe >>"%LOG%" 2>&1
+  timeout /t 4 >nul
+  taskkill /f /im tarkov-companion.exe >>"%LOG%" 2>&1
+)
 call :run "Já instalado: buscando a versão mais nova"
-git -C "%DEST%" %GITAUTH% pull --ff-only >>"%LOG%" 2>&1
+set "LOGINRETRY="
+:update_fetch
+git -C "%DEST%" %GITAUTH% fetch --prune origin >>"%LOG%" 2>&1
+if errorlevel 1 goto :update_fetch_failed
+set "UPSTREAM="
+for /f "delims=" %%U in ('git -C "%DEST%" rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2^>nul') do set "UPSTREAM=%%U"
+if not defined UPSTREAM set "UPSTREAM=origin/main"
+set "OLDHEAD="
+for /f %%H in ('git -C "%DEST%" rev-parse HEAD 2^>nul') do set "OLDHEAD=%%H"
+set "NEWHEAD="
+for /f %%H in ('git -C "%DEST%" rev-parse "%UPSTREAM%" 2^>nul') do set "NEWHEAD=%%H"
+if not defined NEWHEAD goto :update_failed
+if /i "%NEWHEAD%"=="%OLDHEAD%" (
+  call :ok "Já está na versão mais nova"
+  goto :shortcut
+)
+rem  Arquivos mudados na pasta (o npm costuma mexer no package-lock.json) ficam
+rem  guardados num "git stash"; historico divergente fica num branch de copia.
+rem  Nada se perde, e a pasta passa a seguir o GitHub.
+set "DIRTY="
+for /f "delims=" %%L in ('git -C "%DEST%" status --porcelain --untracked-files^=no 2^>nul') do set "DIRTY=1"
+if defined DIRTY (
+  git -C "%DEST%" stash push -m "Tarkov MoA: mudancas locais guardadas antes de atualizar" >>"%LOG%" 2>&1
+  call :note "Arquivos mudados na pasta foram guardados (git stash)."
+)
+git -C "%DEST%" merge --ff-only "%UPSTREAM%" >>"%LOG%" 2>&1
+if errorlevel 1 (
+  set "STAMP=%DATE:/=-%_%TIME::=-%"
+  call set "STAMP=%%STAMP: =0%%"
+  call set "STAMP=%%STAMP:,=-%%"
+  call set "STAMP=%%STAMP:.=-%%"
+  call git -C "%DEST%" branch "moa-backup-%%STAMP%%" >>"%LOG%" 2>&1
+  git -C "%DEST%" reset --hard "%UPSTREAM%" >>"%LOG%" 2>&1
+  call :note "O histórico da pasta tinha divergido: uma cópia ficou num branch moa-backup."
+)
+set "NOWHEAD="
+for /f %%H in ('git -C "%DEST%" rev-parse HEAD 2^>nul') do set "NOWHEAD=%%H"
+if /i not "%NOWHEAD%"=="%NEWHEAD%" goto :update_failed
+call :ok "Atualizado para a versão mais nova"
+goto :shortcut
+
+rem  O fetch falhou: login vencido/de outra conta, sem acesso, ou sem internet.
+:update_fetch_failed
+findstr /i /c:"Could not resolve host" /c:"timed out" /c:"Failed to connect" "%LOG%" >nul 2>&1
+if not errorlevel 1 goto :no_network
+findstr /i /c:"Authentication failed" /c:"Repository not found" /c:"could not read Username" /c:"403" /c:"denied" /c:"terminal prompts disabled" "%LOG%" >nul 2>&1
 if errorlevel 1 goto :update_failed
-call :ok "Atualizado"
+if defined LOGINRETRY goto :no_access
+set "LOGINRETRY=1"
+call :warn "O GitHub não aceitou o login salvo neste PC"
+call :note "Vamos entrar de novo: vai abrir a janela de login do GitHub. Entre com a"
+call :note "SUA conta, a que foi convidada para o repositório do Tarkov MoA."
+(echo protocol=https& echo host=github.com) | git %GITAUTH% credential reject >>"%LOG%" 2>&1
+goto :update_fetch
+
+:no_network
+call :err_head "Sem conexão com o GitHub"
+call :err "Confira a internet e rode o instalador de novo."
+goto :stop
+
+:no_access
+call :err_head "Esta conta do GitHub não tem acesso ao Tarkov MoA"
+call :err "O repositório é privado. Peça ao dono para convidar a sua conta"
+call :err "(GitHub > Settings > Collaborators), aceite o convite que chega no"
+call :err "e-mail e rode este instalador de novo."
+goto :stop
 
 rem ---- 3. Atalho na Area de Trabalho -----------------------------------------------
 :shortcut
+if defined MOA_SO_ATUALIZAR exit /b 0
 call :section "3/4" "Atalho"
 if not exist "%DEST%\Abrir Tarkov MoA.bat" goto :broken_copy
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$d = [Environment]::GetFolderPath('Desktop'); $s = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $d 'Tarkov MoA.lnk')); $s.TargetPath = Join-Path $env:DEST 'Abrir Tarkov MoA.bat'; $s.WorkingDirectory = $env:DEST; $s.IconLocation = (Join-Path $env:DEST 'src-tauri\icons\icon.ico') + ',0'; $s.Description = 'Tarkov MoA'; $s.Save()" >>"%LOG%" 2>&1
@@ -221,11 +300,27 @@ call :err "instalador de novo. Se continuar, instale o Git pelo site git-scm.com
 call :err "e rode o instalador outra vez."
 goto :stop
 
+:old_copy
+set "OLDDEST=%DEST% (antiga)"
+if exist "%OLDDEST%" set "OLDDEST=%DEST% (antiga %RANDOM%)"
+tasklist /fi "imagename eq tarkov-companion.exe" 2>nul | find /i "tarkov-companion.exe" >nul
+if not errorlevel 1 (
+  taskkill /im tarkov-companion.exe >>"%LOG%" 2>&1
+  timeout /t 4 >nul
+  taskkill /f /im tarkov-companion.exe >>"%LOG%" 2>&1
+)
+move "%DEST%" "%OLDDEST%" >>"%LOG%" 2>&1
+if errorlevel 1 goto :dest_busy
+call :warn "A pasta antiga não se atualizava sozinha"
+call :note "Ela foi guardada como: %OLDDEST%"
+call :note "(pode apagar depois que a nova estiver funcionando)"
+goto :fresh_clone
+
 :dest_busy
 call :err_head "Já existe uma pasta com outros arquivos"
 call :err "%DEST%"
-call :err "não é uma instalação do Tarkov MoA. Para não apagar nada seu, parei."
-call :err "Renomeie ou mova essa pasta e rode o instalador de novo."
+call :err "não é do GitHub e não deu para renomear (algum arquivo dela está aberto)."
+call :err "Feche o que estiver usando essa pasta, ou renomeie ela, e rode de novo."
 goto :stop
 
 :clone_failed

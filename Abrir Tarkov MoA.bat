@@ -38,17 +38,24 @@ rem  uma copia fica num branch "moa-backup-..." e esta pasta segue o GitHub.
 rem  Nada se perde. Se a atualizacao trouxer um .bat novo, este arquivo
 rem  reinicia com ele (--atualizado evita repetir a busca).
 call :section "1/4" "Atualização"
+call :note "Pasta: %CD%"
+set "NOUPDATE="
+set "NOUPDATE2="
 if /i "%~1"=="--atualizado" (
   call :ok "Atualizado para a versão mais nova"
   goto :updated
 )
 if not exist ".git" (
-  call :note "Esta pasta não veio do GitHub: abrindo a versão que está aqui."
+  set "NOUPDATE=Esta pasta não veio do GitHub, então ela não se atualiza sozinha."
+  set "NOUPDATE2=Rode o Instalar Tarkov MoA.bat: ele troca por uma instalação que se atualiza."
+  call :warn "Esta pasta não veio do GitHub"
   goto :updated
 )
 where git >nul 2>&1
 if errorlevel 1 (
-  call :note "Git não instalado: abrindo a versão que está aqui."
+  set "NOUPDATE=O Git não está instalado neste PC, e é ele que baixa a versão nova."
+  set "NOUPDATE2=Rode o Instalar Tarkov MoA.bat: ele instala o Git e atualiza."
+  call :warn "Git não instalado"
   goto :updated
 )
 set "GITLOG=%TEMP%\TarkovMoA-atualizacao.log"
@@ -56,6 +63,8 @@ set "GITLOG=%TEMP%\TarkovMoA-atualizacao.log"
 set "OLDHEAD="
 for /f %%H in ('git rev-parse HEAD 2^>nul') do set "OLDHEAD=%%H"
 call :run "Procurando novidades no GitHub"
+set "LOGINRETRY="
+:update_fetch
 git -c credential.helper= -c credential.helper=manager fetch --prune origin >>"%GITLOG%" 2>&1
 if errorlevel 1 goto :update_fetch_failed
 set "UPSTREAM="
@@ -94,31 +103,45 @@ rem  este arquivo no meio da atualizacao nao atrapalha o que vem depois.
       exit /b
     )
   )
+  set "NOUPDATE=A versão nova foi baixada, mas não deu para aplicar nesta pasta."
+  set "NOUPDATE2=Rode o Instalar Tarkov MoA.bat, ou mande o arquivo %GITLOG% para quem te ajuda."
   call :warn "Não deu para aplicar a versão nova"
-  call :note "Detalhes em %GITLOG%. Abrindo a versão que já está instalada."
 )
 goto :updated
 
 :update_fetch_failed
 rem  Diz o motivo pelo que o Git respondeu (o registro completo fica no log).
-findstr /i /c:"Authentication failed" /c:"Repository not found" /c:"could not read Username" /c:"403" /c:"denied" "%GITLOG%" >nul 2>&1
+findstr /i /c:"Could not resolve host" /c:"timed out" /c:"Failed to connect" "%GITLOG%" >nul 2>&1
 if not errorlevel 1 (
-  call :warn "O GitHub não aceitou a conta deste PC para baixar o Tarkov MoA"
-  call :note "O repositório é privado: entre com a conta do GitHub que tem acesso"
-  call :note "quando a janela de login abrir, ou peça acesso ao dono do repositório."
-  goto :update_fallback
+  set "NOUPDATE=Sem conexão com o GitHub agora."
+  set "NOUPDATE2=Confira a internet e abra de novo."
+  call :warn "Sem conexão com o GitHub"
+  goto :updated
 )
-findstr /i /c:"Could not resolve host" /c:"unable to access" /c:"timed out" /c:"Failed to connect" "%GITLOG%" >nul 2>&1
-if not errorlevel 1 (
-  call :warn "Sem conexão com o GitHub agora"
-  goto :update_fallback
+findstr /i /c:"Authentication failed" /c:"Repository not found" /c:"could not read Username" /c:"403" /c:"denied" /c:"terminal prompts disabled" "%GITLOG%" >nul 2>&1
+if errorlevel 1 (
+  set "NOUPDATE=O GitHub respondeu com um erro ao procurar a versão nova."
+  set "NOUPDATE2=Mande o arquivo %GITLOG% para quem te ajuda."
+  call :warn "Não deu para procurar a versão nova"
+  goto :updated
 )
-call :warn "Não deu para procurar a versão nova"
-:update_fallback
-call :note "Detalhes em %GITLOG%."
-call :note "Abrindo a versão que já está instalada."
+rem  Login salvo vencido ou de outra conta: apaga e pede para entrar de novo, uma vez.
+if not defined LOGINRETRY (
+  set "LOGINRETRY=1"
+  call :warn "O GitHub não aceitou o login salvo neste PC"
+  call :note "Vai abrir a janela de login do GitHub: entre com a SUA conta,"
+  call :note "a que foi convidada para o repositório do Tarkov MoA."
+  (echo protocol=https& echo host=github.com) | git -c credential.helper= -c credential.helper=manager credential reject >>"%GITLOG%" 2>&1
+  goto :update_fetch
+)
+set "NOUPDATE=O GitHub não deixou esta conta baixar o Tarkov MoA (o repositório é privado)."
+set "NOUPDATE2=Peça ao dono para convidar a sua conta do GitHub e aceite o convite no e-mail."
+call :warn "Esta conta do GitHub não tem acesso ao Tarkov MoA"
 :updated
-if defined MOA_SO_ATUALIZAR exit /b 0
+if defined MOA_SO_ATUALIZAR (
+  echo MOA-TESTE NOUPDATE=[%NOUPDATE%]
+  exit /b 0
+)
 
 rem ---- 2. Requisitos -----------------------------------------------------------------
 call :section "2/4" "Requisitos do computador"
@@ -246,6 +269,17 @@ call :ok "Compilado"
 
 rem ---- 4. Abrir (sem terminal) ----------------------------------------------------
 :launch
+rem  A atualizacao nao aconteceu: a janela fica aberta com o motivo (antes ela
+rem  fechava em 2 s e ninguem via o aviso).
+if defined NOUPDATE (
+  call :err_head "O Tarkov MoA NÃO foi atualizado"
+  call :err "%NOUPDATE%"
+  call :err "%NOUPDATE2%"
+  call :err "Pasta: %CD%"
+  echo   %ERRC%┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%R%
+  echo.
+  if not defined MOA_NO_WAIT set /p "ANS=  %ACC%›%R%  Aperte Enter para abrir a versão que está instalada: "
+)
 call :section "4/4" "Abrindo"
 call :ok "Tudo pronto"
 call :start_menu
