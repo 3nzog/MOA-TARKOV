@@ -35,6 +35,9 @@ export function facetKeyOf(poi: Poi): string {
       return "custom";
     case "lock":
       return "lock";
+    case "sniper":
+      // Edge-of-map marksmen (shoot whoever crosses the boundary) apart.
+      return (poi.meta as { inner?: boolean } | undefined)?.inner === false ? "sniper:edge" : "sniper";
     default:
       return poi.category;
   }
@@ -64,6 +67,7 @@ const STATIC_FACETS: FacetMeta[] = [
   // Added 2026-11: on by default (the player asked to see them). New keys, so
   // a filter saved before still starts with them on.
   { key: "sniper", label: "Sniper Scav", defaultOn: true },
+  { key: "sniper:edge", label: "Sniper Scav (map edge)", defaultOn: false },
   { key: "minefield", label: "Minefields", defaultOn: true },
   { key: "stationary", label: "Mounted guns", defaultOn: true },
   { key: "btr", label: "BTR stops", defaultOn: true },
@@ -105,7 +109,7 @@ function lootFacetMeta(bucket: string): FacetMeta {
 const GROUP_DEFS: { id: string; label: string; keys: string[] }[] = [
   // Transit is an extraction type — it lives in the Extractions group.
   { id: "extract", label: "Extractions", keys: ["extract:pmc", "extract:scav", "transit"] },
-  { id: "danger", label: "Danger", keys: ["sniper", "minefield", "stationary"] },
+  { id: "danger", label: "Danger", keys: ["sniper", "sniper:edge", "minefield", "stationary"] },
   { id: "spawn", label: "Spawns", keys: ["spawn:pmc", "spawn:scav", "boss", "cultist"] },
   { id: "world", label: "Map", keys: ["btr", "switch", "lock", "hazard"] },
 ];

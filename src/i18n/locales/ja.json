@@ -426,7 +426,8 @@
       "btr": "BTR 停留所",
       "switch": "スイッチ",
       "lockedDoor": "施錠ドア",
-      "lockedTrunk": "施錠トランク"
+      "lockedTrunk": "施錠トランク",
+      "sniperEdge": "スカブスナイパー（マップ端）"
     },
     "sniper": {
       "zone": "スカブスナイパーのゾーン。赤い円は 360° の射程（約 {{m}} m）：ゲームは狙っている方向を示しません。",

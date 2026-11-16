@@ -426,7 +426,8 @@
       "btr": "Parada do BTR",
       "switch": "Interruptor",
       "lockedDoor": "Porta trancada",
-      "lockedTrunk": "Baú trancado"
+      "lockedTrunk": "Baú trancado",
+      "sniperEdge": "Sniper Scav (borda do mapa)"
     },
     "sniper": {
       "zone": "Zona de sniper Scav. O círculo vermelho mostra até onde ele alcança, em 360° (~{{m}} m): o jogo não diz para onde ele mira.",

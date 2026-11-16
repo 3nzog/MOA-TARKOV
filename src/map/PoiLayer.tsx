@@ -21,7 +21,7 @@ function isExtractionLike(facetKey: string): boolean {
 
 // Scav snipers: always named, and the marker pulses (see .tc-poi-danger).
 function isDanger(facetKey: string): boolean {
-  return facetKey === "sniper";
+  return facetKey === "sniper" || facetKey === "sniper:edge";
 }
 
 function escapeHtml(s: string): string {

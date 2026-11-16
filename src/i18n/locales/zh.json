@@ -426,7 +426,8 @@
       "btr": "BTR 停靠点",
       "switch": "开关",
       "lockedDoor": "上锁的门",
-      "lockedTrunk": "上锁的后备箱"
+      "lockedTrunk": "上锁的后备箱",
+      "sniperEdge": "Scav 狙击手（地图边缘）"
     },
     "sniper": {
       "zone": "Scav 狙击手区域。红圈表示 360° 射程（约 {{m}} 米）：游戏不会告诉你它瞄向哪里。",

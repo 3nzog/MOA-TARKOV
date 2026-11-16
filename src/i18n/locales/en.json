@@ -426,7 +426,8 @@
       "btr": "BTR stop",
       "switch": "Switch",
       "lockedDoor": "Locked door",
-      "lockedTrunk": "Locked trunk"
+      "lockedTrunk": "Locked trunk",
+      "sniperEdge": "Scav sniper (map edge)"
     },
     "sniper": {
       "zone": "Scav sniper zone. The red ring shows how far it reaches, 360° (~{{m}} m): the game does not say where it aims.",

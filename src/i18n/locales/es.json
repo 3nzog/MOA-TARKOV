@@ -426,7 +426,8 @@
       "btr": "Parada del BTR",
       "switch": "Interruptor",
       "lockedDoor": "Puerta cerrada",
-      "lockedTrunk": "Baúl cerrado"
+      "lockedTrunk": "Baúl cerrado",
+      "sniperEdge": "Francotirador Scav (borde del mapa)"
     },
     "sniper": {
       "zone": "Zona de francotirador Scav. El anillo rojo muestra hasta dónde alcanza, en 360° (~{{m}} m): el juego no dice hacia dónde apunta.",

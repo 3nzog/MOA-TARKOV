@@ -318,6 +318,34 @@ function lootToPoi(mapId: string, lc: LootContainerPositionRaw, i: number): Poi 
   };
 }
 
+// ---- Scav snipers: inside the map or on its edge ---------------------------
+// tarkov.dev's marksman zones include the ones past the map's edge (they shoot
+// whoever crosses the boundary). Players care about the ones inside: there is
+// loot and spawns all around them. Sniper spawn points are always inside.
+const NEAR_50 = 12;
+const NEAR_100 = 80;
+
+export function markInnerSnipers(pois: Poi[]): void {
+  const around = pois.filter(
+    (p) => p.category === "loot" || (p.category === "spawn" && (p.subtype === "pmc" || p.subtype === "scav")),
+  );
+  for (const s of pois) {
+    if (s.category !== "sniper") continue;
+    let inner = s.subtype !== "zone";
+    if (!inner) {
+      let n50 = 0;
+      let n100 = 0;
+      for (const p of around) {
+        const d = Math.hypot(p.position.x - s.position.x, p.position.z - s.position.z);
+        if (d <= 50) n50 += 1;
+        if (d <= 100) n100 += 1;
+      }
+      inner = n50 >= NEAR_50 || n100 >= NEAR_100;
+    }
+    s.meta = { ...(s.meta ?? {}), inner };
+  }
+}
+
 // ---- Public API -----------------------------------------------------------
 export function mapDataToPois(map: MapPoiData): Poi[] {
   const id = map.id;
@@ -353,6 +381,7 @@ export function mapDataToPois(map: MapPoiData): Poi[] {
       if (p) out.push(p);
     });
   }
+  markInnerSnipers(out);
   return out;
 }
 
