@@ -862,7 +862,9 @@
       "none": "Nenhum PC anexado ainda. No outro PC, abra esta aba e clique em Procurar meus PCs.",
       "connected": "conectado agora",
       "away": "desligado",
-      "forget": "Remover"
+      "forget": "Remover",
+      "autoAccept": "Aceitar meus PCs da rede de casa sozinho",
+      "autoAcceptHint": "Um PC no mesmo roteador se anexa sem perguntar. Pelo Radmin (rede com outras pessoas) continua pedindo confirmação na primeira vez."
     },
     "screen": {
       "title": "Este PC é a tela extra",
@@ -900,6 +902,19 @@
       "port_busy": "Outro programa está usando a porta 8789. Feche-o e tente de novo.",
       "bad_ip": "IP inválido: use o do Radmin (26.x) ou o da rede de casa (192.168.x).",
       "other": "Não deu certo. Use Testar conexão abaixo para ver o motivo."
+    },
+    "mode": {
+      "title": "Este PC",
+      "auto": "Automático",
+      "game": "PC do jogo",
+      "screen": "Tela extra",
+      "off": "Desligado",
+      "detecting": "Vendo se este PC tem o Tarkov…",
+      "isGame": "Agora: PC do jogo — seus outros PCs se anexam a este sozinhos.",
+      "isScreen": "Agora: tela extra — procura o PC do jogo na rede e se anexa sozinho.",
+      "isOff": "Desligado: este PC não se anexa a nenhum outro.",
+      "whyGame": "(o Tarkov está instalado aqui)",
+      "whyScreen": "(o Tarkov não está instalado aqui)"
     }
   },
   "net": {

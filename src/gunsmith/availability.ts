@@ -112,7 +112,17 @@ function load(): TraderLevels {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return EMPTY;
-    const p = JSON.parse(raw) as Partial<TraderLevels>;
+    return normalizeTraderLevels(JSON.parse(raw));
+  } catch {
+    return EMPTY;
+  }
+}
+
+/** Any value (saved, or sent by a linked game PC) as well-formed trader levels. */
+export function normalizeTraderLevels(raw: unknown): TraderLevels {
+  try {
+    if (!raw || typeof raw !== 'object') return EMPTY;
+    const p = raw as Partial<TraderLevels>;
     const levels: Record<string, number> = {};
     for (const [k, v] of Object.entries(p.levels ?? {})) {
       if (typeof v === 'number' && v >= 0 && v <= 4) levels[k] = Math.round(v);

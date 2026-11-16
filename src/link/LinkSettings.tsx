@@ -2,7 +2,7 @@
 // the extra screen: find the game PC and link to it.
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Input, SectionLabel, Toggle } from '../ui';
+import { Button, Input, SectionLabel, Segmented, Toggle } from '../ui';
 import { useLink } from './useLink';
 import './link.css';
 import { isNetworkIp, type FoundLink } from './linkApi';
@@ -24,18 +24,45 @@ export default function LinkSettings() {
 
   const c = link.client;
   const linkedOrTrying = c && c.state !== 'off' && c.state !== 'refused';
-  const hostOn = link.prefs.allowLinks && link.host?.hosting;
+  const hostOn = link.role === 'game' && link.host?.hosting;
+  const roleText =
+    link.role === null
+      ? t('link.mode.detecting')
+      : link.role === 'off'
+        ? t('link.mode.isOff')
+        : t(link.role === 'game' ? 'link.mode.isGame' : 'link.mode.isScreen');
 
   return (
     <div className="link-settings">
-      <SectionLabel>{t('link.main.title')}</SectionLabel>
-      <div className="settings-row">
-        <div className="settings-row__text">
-          <span>{t('link.main.allow')}</span>
-          <span className="settings-row__hint">{t('link.main.allowHint')}</span>
-        </div>
-        <Toggle checked={link.prefs.allowLinks} onChange={(on) => void link.setAllowLinks(on)} label={t('link.main.allow')} />
-      </div>
+      <SectionLabel>{t('link.mode.title')}</SectionLabel>
+      <Segmented
+        fullWidth
+        value={link.prefs.mode}
+        onChange={(v) => link.setMode(v as 'auto' | 'game' | 'screen' | 'off')}
+        options={[
+          { id: 'auto', label: t('link.mode.auto') },
+          { id: 'game', label: t('link.mode.game') },
+          { id: 'screen', label: t('link.mode.screen') },
+          { id: 'off', label: t('link.mode.off') },
+        ]}
+      />
+      <p className="settings-row__hint">
+        {roleText}
+        {link.prefs.mode === 'auto' && link.hasGame !== null && ` ${t(link.hasGame ? 'link.mode.whyGame' : 'link.mode.whyScreen')}`}
+      </p>
+
+      {link.role === 'game' && (
+        <>
+          <SectionLabel>{t('link.main.title')}</SectionLabel>
+          <div className="settings-row">
+            <div className="settings-row__text">
+              <span>{t('link.main.autoAccept')}</span>
+              <span className="settings-row__hint">{t('link.main.autoAcceptHint')}</span>
+            </div>
+            <Toggle checked={link.prefs.autoAcceptLan} onChange={(on) => link.setAutoAcceptLan(on)} label={t('link.main.autoAccept')} />
+          </div>
+        </>
+      )}
       {hostOn && link.host && (
         <>
           <p className="settings-row__hint">{t('link.main.thisPc', { name: link.host.name })}</p>
@@ -62,6 +89,8 @@ export default function LinkSettings() {
         </>
       )}
 
+      {link.role === 'screen' && (
+        <>
       <SectionLabel>{t('link.screen.title')}</SectionLabel>
       <p className="settings-row__hint">{t('link.screen.hint')}</p>
       {linkedOrTrying ? (
@@ -117,6 +146,8 @@ export default function LinkSettings() {
               {t('link.screen.link')}
             </Button>
           </div>
+        </>
+      )}
         </>
       )}
       {link.error && <p className="settings-err">{t(`link.error.${link.error}`, { defaultValue: t('link.error.other') })}</p>}

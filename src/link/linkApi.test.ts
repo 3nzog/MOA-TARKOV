@@ -18,19 +18,23 @@ describe('linked PC helpers', () => {
   });
 
   it('keeps only sane saved choices', () => {
-    expect(normalizePrefs(null)).toEqual({ allowLinks: false, target: null });
-    expect(normalizePrefs({ allowLinks: 'yes' })).toEqual({ allowLinks: false, target: null });
-    expect(normalizePrefs({ allowLinks: true, target: { host: '8.8.8.8', port: 8789, name: 'x' } })).toEqual({ allowLinks: true, target: null });
+    expect(normalizePrefs(null)).toEqual({ mode: 'auto', autoAcceptLan: true, target: null });
+    expect(normalizePrefs({ allowLinks: 'yes' })).toEqual({ mode: 'auto', autoAcceptLan: true, target: null });
+    // Saved by the version before modes: "allow links" was the game PC.
+    expect(normalizePrefs({ allowLinks: true, target: { host: '8.8.8.8', port: 8789, name: 'x' } })).toEqual({ mode: 'game', autoAcceptLan: true, target: null });
+    expect(normalizePrefs({ mode: 'screen', autoAcceptLan: false }).mode).toBe('screen');
+    expect(normalizePrefs({ mode: 'screen', autoAcceptLan: false }).autoAcceptLan).toBe(false);
+    expect(normalizePrefs({ mode: 'weird' }).mode).toBe('auto');
     expect(normalizePrefs({ target: { host: '192.168.1.9', port: 0, name: 'x' } }).target).toBeNull();
     expect(normalizePrefs({ target: { host: '192.168.1.9', port: 8789 } }).target).toEqual({ host: '192.168.1.9', port: 8789, name: '192.168.1.9' });
   });
 
   it('round-trips through storage', () => {
-    expect(loadPrefs()).toEqual({ allowLinks: false, target: null });
-    savePrefs({ allowLinks: true, target: { host: '26.1.2.3', port: 8789, name: 'PC-JOGO' } });
-    expect(loadPrefs()).toEqual({ allowLinks: true, target: { host: '26.1.2.3', port: 8789, name: 'PC-JOGO' } });
+    expect(loadPrefs()).toEqual({ mode: 'auto', autoAcceptLan: true, target: null });
+    savePrefs({ mode: 'screen', autoAcceptLan: true, target: { host: '26.1.2.3', port: 8789, name: 'PC-JOGO' } });
+    expect(loadPrefs()).toEqual({ mode: 'screen', autoAcceptLan: true, target: { host: '26.1.2.3', port: 8789, name: 'PC-JOGO' } });
     localStorage.setItem('tc_link_v1', '{not json');
-    expect(loadPrefs()).toEqual({ allowLinks: false, target: null });
+    expect(loadPrefs()).toEqual({ mode: 'auto', autoAcceptLan: true, target: null });
   });
 
   it('tells the squad when this PC is only an extra screen', () => {

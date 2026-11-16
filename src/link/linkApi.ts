@@ -54,6 +54,15 @@ export const linkFind = (timeoutMs?: number) => invoke<FoundLink[]>('link_find',
 export const linkConnect = (host: string, port?: number) =>
   invoke<{ code: string }>('link_connect', { host, port: port ?? null });
 export const linkDisconnect = () => invoke<void>('link_disconnect');
+export const linkSetAutoAccept = (on: boolean) => invoke<void>('link_set_auto_accept', { on });
+export const onLinkAuto = (cb: (r: { name: string; ip: string }) => void): Promise<UnlistenFn> =>
+  listen<{ name: string; ip: string }>('link-auto', (e) => cb(e.payload));
+/** Whether this PC has the game (its logs folder resolves): then it is the game PC. */
+export const hasGameLogs = () =>
+  invoke<string>('get_resolved_logs_dir').then(
+    () => true,
+    () => false,
+  );
 
 export const onLinkRequest = (cb: (r: LinkRequest) => void): Promise<UnlistenFn> =>
   listen<LinkRequest>('link-request', (e) => cb(e.payload));
@@ -68,14 +77,21 @@ export const onLinkClient = (cb: (s: LinkClientStatus) => void): Promise<Unliste
 
 const KEY = 'tc_link_v1';
 
+/**
+ * auto: the PC with the game (its logs) is the game PC and accepts links; a PC
+ * without it looks for the game PC on the network and links on its own.
+ */
+export type LinkMode = 'auto' | 'game' | 'screen' | 'off';
+
 export interface LinkPrefs {
-  /** This PC (the game PC) lets the player's other PCs link to it. */
-  allowLinks: boolean;
-  /** This PC shows the game PC at this address. */
+  mode: LinkMode;
+  /** PCs on the same home network link without a question (Radmin still asks). */
+  autoAcceptLan: boolean;
+  /** The game PC this one last showed (relinks to it, even if its IP changed). */
   target: FoundLink | null;
 }
 
-export const DEFAULT_PREFS: LinkPrefs = { allowLinks: false, target: null };
+export const DEFAULT_PREFS: LinkPrefs = { mode: 'auto', autoAcceptLan: true, target: null };
 
 const IPV4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 
@@ -91,12 +107,19 @@ export function isNetworkIp(ip: string): boolean {
 export function normalizePrefs(raw: unknown): LinkPrefs {
   if (!raw || typeof raw !== 'object') return { ...DEFAULT_PREFS };
   const r = raw as Record<string, unknown>;
+  const mode: LinkMode =
+    r.mode === 'auto' || r.mode === 'game' || r.mode === 'screen' || r.mode === 'off'
+      ? r.mode
+      : // Saved by the version before modes: "allow links" meant the game PC.
+        r.allowLinks === true
+        ? 'game'
+        : 'auto';
   const t = r.target as Record<string, unknown> | null | undefined;
   const target =
     t && typeof t.host === 'string' && isNetworkIp(t.host) && typeof t.port === 'number' && t.port > 0 && t.port < 65536
       ? { host: t.host, port: t.port, name: typeof t.name === 'string' ? t.name.slice(0, 24) : t.host }
       : null;
-  return { allowLinks: r.allowLinks === true, target };
+  return { mode, autoAcceptLan: r.autoAcceptLan !== false, target };
 }
 
 export function loadPrefs(): LinkPrefs {

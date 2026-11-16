@@ -49,7 +49,7 @@ pub const SIDE_SCAN_EVENT: &str = "link-side-scan";
 pub const STATE_EVENT: &str = "link-state";
 /// What the main PC's window may publish. The latest value of each is kept
 /// and sent to a PC as soon as it links, then again on every change.
-pub const STATE_KEYS: [&str; 7] = ["progress", "history", "squad", "markers", "planner", "profile", "raid"];
+pub const STATE_KEYS: [&str; 9] = ["progress", "history", "squad", "markers", "planner", "profile", "raid", "traders", "presets"];
 const STATE_MAX: usize = 4 * 1024 * 1024;
 const TO_SERVER_MAX: usize = 4 * 1024;
 /// A whole-screen OCR result can be a few hundred kilobytes.
@@ -71,6 +71,19 @@ pub struct Device {
     pub device: String,
     pub name: String,
 }
+
+/// A PC on this PC's own home network (same router) links without a question:
+/// it is the player's other PC. Radmin (other people's PCs too) still asks.
+pub fn auto_accepts(peer: &std::net::IpAddr, nets: &[LocalNet], enabled: bool) -> bool {
+    if !enabled {
+        return false;
+    }
+    let std::net::IpAddr::V4(v4) = peer else { return false };
+    nets.iter().any(|n| n.kind == net::NetKind::Lan && n.contains(*v4))
+}
+
+/// "Accept my PCs on the home network on their own" (Settings; on by default).
+static AUTO_ACCEPT_LAN: AtomicBool = AtomicBool::new(true);
 
 fn valid_device(s: &str) -> bool {
     (16..=64).contains(&s.len()) && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
@@ -332,9 +345,18 @@ async fn serve(stream: TcpStream, peer: SocketAddr, state: Arc<Mutex<ServerState
         return;
     };
 
-    // 2. allowed already, or ask the player on this PC.
+    // 2. allowed already, on the home network (accepted on its own), or ask
+    //    the player on this PC.
     let known = state.lock().unwrap().devices.iter().any(|d| d.device == hello.device);
-    if !known {
+    let auto = !known && auto_accepts(&peer.ip(), &(cfg.nets)(), AUTO_ACCEPT_LAN.load(Ordering::Relaxed));
+    if auto {
+        net::log(format!("anexar: {} ({}) anexado sozinho (rede de casa)", hello.name, peer.ip()));
+        (cfg.notify)("link-auto", json!({ "name": hello.name, "ip": peer.ip().to_string() }));
+        let mut st = state.lock().unwrap();
+        st.devices.retain(|d| d.device != hello.device);
+        st.devices.push(Device { device: hello.device.clone(), name: hello.name.clone() });
+        save_devices(&cfg.store, &st.devices);
+    } else if !known {
         let id = uuid::Uuid::new_v4().simple().to_string();
         let (otx, mut orx) = oneshot::channel::<bool>();
         let full = {
@@ -739,6 +761,12 @@ pub fn link_host_status(app: tauri::AppHandle) -> HostStatus {
             ..Default::default()
         },
     }
+}
+
+/// Turns "accept my PCs on the home network on their own" on or off.
+#[tauri::command]
+pub fn link_set_auto_accept(on: bool) {
+    AUTO_ACCEPT_LAN.store(on, Ordering::Relaxed);
 }
 
 /// The main PC's window publishes a piece of its state for linked PCs.
@@ -1157,8 +1185,14 @@ mod tests {
                 println!("{}: found {:?}", n.ip, found);
                 assert!(found.iter().any(|f| f.host == n.ip.to_string()), "found on {}", n.ip);
                 let client = start_client(n.ip.to_string(), server.tcp_port, ClientCfg { device: DEV.into(), name: "PC-DO-MAPA".into(), emit: screen_rec.notify() });
-                let req = main_rec.wait_for("link-request", |_| true).await;
-                server.answer(req["id"].as_str().unwrap(), true);
+                if n.kind == net::NetKind::Lan {
+                    // Same router: links on its own, no question.
+                    main_rec.wait_for("link-auto", |_| true).await;
+                    println!("{}: linked on its own (home network)", n.ip);
+                } else {
+                    let req = main_rec.wait_for("link-request", |_| true).await;
+                    server.answer(req["id"].as_str().unwrap(), true);
+                }
                 screen_rec.wait_for("link-client", |v| v["state"] == "linked").await;
                 let t = Instant::now();
                 server.forward("player-position", r#"{"x":1,"y":2,"z":3,"rotation":4}"#);
@@ -1169,6 +1203,17 @@ mod tests {
             }
             println!("LINK OK on {} network(s)", nets.len());
         });
+    }
+
+    #[test]
+    fn home_network_pcs_link_on_their_own_radmin_ones_ask() {
+        let nets = net::parse_nets("192.168.1.5/24/Public\n26.1.1.1/8/Public\n");
+        let ip = |s: &str| s.parse::<std::net::IpAddr>().unwrap();
+        assert!(auto_accepts(&ip("192.168.1.20"), &nets, true), "same router");
+        assert!(!auto_accepts(&ip("26.5.5.5"), &nets, true), "Radmin asks");
+        assert!(!auto_accepts(&ip("192.168.7.20"), &nets, true), "another network");
+        assert!(!auto_accepts(&ip("127.0.0.1"), &nets, true));
+        assert!(!auto_accepts(&ip("192.168.1.20"), &nets, false), "turned off");
     }
 
     #[test]

@@ -8,7 +8,7 @@ import { listen } from '@tauri-apps/api/event';
 import { useLink } from './useLink';
 
 /** Must match STATE_KEYS in src-tauri/src/link.rs. */
-export type LinkStateKey = 'progress' | 'history' | 'squad' | 'markers' | 'planner' | 'profile' | 'raid';
+export type LinkStateKey = 'progress' | 'history' | 'squad' | 'markers' | 'planner' | 'profile' | 'raid' | 'traders' | 'presets';
 
 export const linkPublish = (key: LinkStateKey, value: unknown) => invoke<boolean>('link_publish', { key, value });
 

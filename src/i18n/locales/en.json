@@ -862,7 +862,9 @@
       "none": "No PC linked yet. On the other PC, open this tab and click Find my PCs.",
       "connected": "connected now",
       "away": "off",
-      "forget": "Remove"
+      "forget": "Remove",
+      "autoAccept": "Accept my home-network PCs on their own",
+      "autoAcceptHint": "A PC on the same router links without a question. Over Radmin (a network with other people) it still asks the first time."
     },
     "screen": {
       "title": "This PC is the extra screen",
@@ -900,6 +902,19 @@
       "port_busy": "Another program is using port 8789. Close it and try again.",
       "bad_ip": "Invalid IP: use the Radmin one (26.x) or the home network one (192.168.x).",
       "other": "That did not work. Use Test connection below to see why."
+    },
+    "mode": {
+      "title": "This PC",
+      "auto": "Automatic",
+      "game": "Game PC",
+      "screen": "Extra screen",
+      "off": "Off",
+      "detecting": "Checking whether this PC has Tarkov…",
+      "isGame": "Now: game PC — your other PCs link to it on their own.",
+      "isScreen": "Now: extra screen — looks for the game PC on the network and links on its own.",
+      "isOff": "Off: this PC does not link to any other.",
+      "whyGame": "(Tarkov is installed here)",
+      "whyScreen": "(Tarkov is not installed here)"
     }
   },
   "net": {

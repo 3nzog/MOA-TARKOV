@@ -96,6 +96,7 @@ fn main() {
             link::link_host_status,
             link::link_answer,
             link::link_publish,
+            link::link_set_auto_accept,
             link::link_forget,
             link::link_find,
             link::link_connect,

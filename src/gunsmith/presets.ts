@@ -73,6 +73,11 @@ if (typeof window !== 'undefined') {
   });
 }
 
+/** Replaces every preset (a linked game PC's list); junk is dropped. */
+export function replacePresets(raw: unknown): void {
+  commit(Array.isArray(raw) ? raw.map(clean).filter((p): p is WeaponPreset => p !== null) : []);
+}
+
 export function usePresets(): WeaponPreset[] {
   return useSyncExternalStore(
     (l) => {
