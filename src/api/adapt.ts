@@ -24,6 +24,7 @@ import type {
 interface RawTask {
   id: string;
   name: string;
+  wikiLink?: string;
   trader?: string;
   map?: string | null;
   objectives?: RawObjective[];
@@ -205,6 +206,10 @@ export function adaptTasks(input: {
       id: raw.id,
       name: tr(tasksLocale, raw.name) ?? raw.id,
     };
+    // Only the Escape from Tarkov Wiki: its "Guide" pictures show where the objectives are.
+    if (typeof raw.wikiLink === 'string' && raw.wikiLink.startsWith('https://escapefromtarkov.fandom.com/wiki/')) {
+      task.wikiLink = raw.wikiLink;
+    }
 
     if (raw.map) {
       task.map = resolveMapRef(raw.map, mapsData, mapsLocale);

@@ -22,6 +22,7 @@
       "identifier": "http:default",
       "allow": [
         { "url": "https://json.tarkov.dev/*" },
+        { "url": "https://escapefromtarkov.fandom.com/api.php*" },
         { "url": "https://raw.githubusercontent.com/mopocop/Tarkov-moa/*" }
       ]
     }

@@ -393,7 +393,17 @@
     "questsWithCount_one": "{{count}} missão",
     "questsWithCount_other": "{{count}} missões",
     "squadQuestsByMap": "Missões do esquadrão por mapa",
-    "showMap": "Mostrar {{name}}"
+    "showMap": "Mostrar {{name}}",
+    "guide": {
+      "button": "Prints",
+      "hint": "Prints dos locais dos objetivos (do wiki do Tarkov)",
+      "loading": "Buscando as prints no wiki…",
+      "none": "O wiki ainda não tem prints dos locais desta missão.",
+      "failed": "Não deu para buscar as prints agora (sem internet ou wiki fora do ar).",
+      "credit": "Imagens: Escape from Tarkov Wiki —",
+      "prev": "Anterior",
+      "next": "Próxima"
+    }
   },
   "mapEmpty": {
     "selectDeployment": "Selecionar operação",
@@ -433,6 +443,24 @@
       "zone": "Zona de sniper Scav. O círculo vermelho mostra até onde ele alcança, em 360° (~{{m}} m): o jogo não diz para onde ele mira.",
       "ring": "Alcance do sniper Scav (~{{m}} m, 360°)",
       "cone": "Cone: mira provável, estimada pelo que há em volta (não é dado do jogo)."
+    },
+    "style": {
+      "relief": "Mapa com relevo",
+      "toRelief": "Ver o mapa com relevo e textura (as marcações continuam)",
+      "toVector": "Voltar ao mapa simples",
+      "noRelief": "Este mapa não tem a versão com relevo"
+    },
+    "art": {
+      "button": "Mapas 3D e 2D",
+      "open_one": "Abrir o mapa desenhado ({{count}} versão)",
+      "open_other": "Abrir os mapas 3D e 2D ({{count}} versões)",
+      "none": "Este mapa não tem versões 3D ou 2D desenhadas",
+      "title": "{{map}} — mapas desenhados",
+      "loading": "Carregando o mapa (é uma imagem grande)…",
+      "failed": "Não deu para carregar este mapa agora.",
+      "credit": "Mapa {{kind}} feito por",
+      "via": "mostrado pelo",
+      "noMarkers": "É uma imagem: as marcações do MoA aparecem só no mapa principal."
     }
   },
   "onboarding": {

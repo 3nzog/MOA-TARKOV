@@ -393,7 +393,17 @@
     "questsWithCount_one": "{{count}} misión",
     "questsWithCount_other": "{{count}} misiones",
     "squadQuestsByMap": "Misiones de la escuadra por mapa",
-    "showMap": "Mostrar {{name}}"
+    "showMap": "Mostrar {{name}}",
+    "guide": {
+      "button": "Capturas",
+      "hint": "Capturas de dónde están los objetivos (del wiki de Tarkov)",
+      "loading": "Buscando las capturas en el wiki…",
+      "none": "El wiki aún no tiene capturas de esta misión.",
+      "failed": "No se pudieron obtener las capturas ahora (sin internet o wiki caído).",
+      "credit": "Imágenes: Escape from Tarkov Wiki —",
+      "prev": "Anterior",
+      "next": "Siguiente"
+    }
   },
   "mapEmpty": {
     "selectDeployment": "Seleccionar despliegue",
@@ -433,6 +443,24 @@
       "zone": "Zona de francotirador Scav. El anillo rojo muestra hasta dónde alcanza, en 360° (~{{m}} m): el juego no dice hacia dónde apunta.",
       "ring": "Alcance del francotirador Scav (~{{m}} m, 360°)",
       "cone": "Cono: puntería probable, estimada por lo que hay alrededor (no es dato del juego)."
+    },
+    "style": {
+      "relief": "Mapa con relieve",
+      "toRelief": "Ver el mapa con relieve y textura (los marcadores siguen)",
+      "toVector": "Volver al mapa simple",
+      "noRelief": "Este mapa no tiene versión con relieve"
+    },
+    "art": {
+      "button": "Mapas 3D y 2D",
+      "open_one": "Abrir el mapa dibujado ({{count}} versión)",
+      "open_other": "Abrir los mapas 3D y 2D ({{count}} versiones)",
+      "none": "Este mapa no tiene versiones 3D o 2D dibujadas",
+      "title": "{{map}} — mapas dibujados",
+      "loading": "Cargando el mapa (es una imagen grande)…",
+      "failed": "No se pudo cargar este mapa ahora.",
+      "credit": "Mapa {{kind}} hecho por",
+      "via": "mostrado por",
+      "noMarkers": "Es una imagen: los marcadores de MoA solo están en el mapa principal."
     }
   },
   "onboarding": {

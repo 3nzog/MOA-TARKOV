@@ -27,10 +27,10 @@ const FETCH_TIMEOUT_MS = 120_000;
 // Bumped from v4/v1: the payload shape changed with the upstream, and loadCache
 // only checks that `data` exists — without a new key it would hand a v4-shaped
 // blob to a v5-shaped consumer and fail somewhere far away from here.
-const TASKS_CACHE_KEY = 'td_tasks_cache_v5';
+const TASKS_CACHE_KEY = 'td_tasks_cache_v6';
 const MAP_POIS_CACHE_KEY = 'td_map_pois_cache_v3';
 // Wiped on clearCache so an upgrade doesn't strand dead blobs in localStorage.
-const LEGACY_CACHE_KEYS = ['td_tasks_cache_v4', 'td_maps_cache_v3', 'td_map_pois_cache_v1', 'td_map_pois_cache_v2'];
+const LEGACY_CACHE_KEYS = ['td_tasks_cache_v4', 'td_tasks_cache_v5', 'td_maps_cache_v3', 'td_map_pois_cache_v1', 'td_map_pois_cache_v2'];
 
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24h — data is largely static between patches.
 

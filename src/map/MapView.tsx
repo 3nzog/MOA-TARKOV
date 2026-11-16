@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { MapContainer, ImageOverlay, useMap } from "react-leaflet";
+import { MapContainer, ImageOverlay, TileLayer, useMap } from "react-leaflet";
+import { TILE_STYLES } from "./mapStyles";
 import { useTranslation } from "react-i18next";
 import L from "leaflet";
 import { Plus, Minus } from "@phosphor-icons/react";
@@ -85,6 +86,8 @@ function ResizeWatcher(): null {
 }
 
 interface MapViewProps {
+  /** "relief": tarkov.dev's textured picture (same coordinates), where there is one. */
+  mapStyle?: 'vector' | 'relief';
   mapId: string;
   mapName: string;
   // Current floor (from FloorSwitcher / player auto-follow). Drives which SVG
@@ -97,6 +100,7 @@ export default function MapView({
   mapId,
   mapName,
   activeFloorId = ALL_FLOORS,
+  mapStyle = 'vector',
   children,
 }: MapViewProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -112,6 +116,7 @@ export default function MapView({
   }
 
   const bounds = leafletBounds(def);
+  const tiles = mapStyle === 'relief' ? TILE_STYLES[canonicalMapId(mapId)] : undefined;
 
   return (
     <MapContainer
@@ -152,7 +157,19 @@ export default function MapView({
       // of floating over the map (BSD-2 license carried in the repo).
       attributionControl={false}
     >
-      {def.svgUrl.endsWith(".svg") ? (
+      {tiles ? (
+        // Same CRS as tarkov.dev's own map, so its tile pyramid lines up with
+        // every marker (tileSize is per map: the Lab's is 175).
+        <TileLayer
+          key={tiles.url}
+          url={tiles.url}
+          tileSize={tiles.tileSize}
+          minNativeZoom={tiles.minZoom}
+          maxNativeZoom={tiles.maxZoom}
+          bounds={bounds}
+          noWrap
+        />
+      ) : def.svgUrl.endsWith(".svg") ? (
         <FloorVisualOverlay
           svgUrl={def.svgUrl}
           bounds={bounds}

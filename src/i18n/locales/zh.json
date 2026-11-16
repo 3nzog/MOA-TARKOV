@@ -393,7 +393,17 @@
     "questsWithCount_one": "{{count}} 个任务",
     "questsWithCount_other": "{{count}} 个任务",
     "squadQuestsByMap": "按地图分类的小队任务",
-    "showMap": "显示 {{name}}"
+    "showMap": "显示 {{name}}",
+    "guide": {
+      "button": "截图",
+      "hint": "目标位置的截图（来自塔科夫 wiki）",
+      "loading": "正在从 wiki 获取截图…",
+      "none": "wiki 上还没有这个任务的位置截图。",
+      "failed": "暂时无法获取截图（没有网络或 wiki 无法访问）。",
+      "credit": "图片：Escape from Tarkov Wiki —",
+      "prev": "上一张",
+      "next": "下一张"
+    }
   },
   "mapEmpty": {
     "selectDeployment": "选择部署地点",
@@ -433,6 +443,24 @@
       "zone": "Scav 狙击手区域。红圈表示 360° 射程（约 {{m}} 米）：游戏不会告诉你它瞄向哪里。",
       "ring": "Scav 狙击手射程（约 {{m}} 米，360°）",
       "cone": "锥形：根据周围情况估计的可能瞄准方向（不是游戏数据）。"
+    },
+    "style": {
+      "relief": "地形地图",
+      "toRelief": "显示带地形和纹理的地图（标记保留）",
+      "toVector": "返回普通地图",
+      "noRelief": "这张地图没有地形版本"
+    },
+    "art": {
+      "button": "3D 和 2D 地图",
+      "open_one": "打开手绘地图（{{count}} 个版本）",
+      "open_other": "打开 3D 和 2D 地图（{{count}} 个版本）",
+      "none": "这张地图没有手绘的 3D 或 2D 版本",
+      "title": "{{map}} — 手绘地图",
+      "loading": "正在加载地图（图片较大）…",
+      "failed": "暂时无法加载这张地图。",
+      "credit": "{{kind}} 地图作者",
+      "via": "来源",
+      "noMarkers": "这是图片：MoA 的标记只显示在主地图上。"
     }
   },
   "onboarding": {

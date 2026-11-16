@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import type { TarkovTask } from "../api/types";
 import type { DerivedQuestState } from "../quests/derive";
+import QuestGuide from "../quests/QuestGuide";
+import { Camera } from "@phosphor-icons/react";
+import { useWikiLinks } from "../quests/wikiLinks";
 
 interface QuestSidebarProps {
   selectedMapId: string | null;
@@ -32,6 +35,9 @@ export default function QuestSidebar({
 }: QuestSidebarProps): React.JSX.Element {
   const { t } = useTranslation();
   const [lockedOpen, setLockedOpen] = useState(false);
+  // Quests whose location screenshots (wiki Guide) are open.
+  const [guideOpen, setGuideOpen] = useState<Record<string, boolean>>({});
+  const wikiLinks = useWikiLinks();
   // "Any Location" quests are broadly useful (kill/collect tasks not tied to one
   // map), so the group opens expanded by default — locked stays collapsed.
   const [anyOpen, setAnyOpen] = useState(true);
@@ -102,6 +108,7 @@ export default function QuestSidebar({
     const taskPinned = pinned?.kind === 'task' && pinned.id === task.id;
     const noPoi = !tasksWithPoiIds.has(task.id);
     const canPinTask = !noPoi;
+    const wikiLink = task.wikiLink ?? wikiLinks[task.id];
     return (
       <li
         key={task.id}
@@ -122,7 +129,21 @@ export default function QuestSidebar({
           {task.trader && <span className="trader"> — {task.trader.name}</span>}
           {noPoi && <span className="no-poi"> {t('quests.noSpecificPoi')}</span>}
           {taskPinned && <span className="pin-tag">{t('quests.pinned')}</span>}
+          {wikiLink && (
+            <button
+              type="button"
+              className={`quest-guide-btn${guideOpen[task.id] ? " is-on" : ""}`}
+              title={t('quests.guide.hint')}
+              onClick={(e) => {
+                e.stopPropagation();
+                setGuideOpen((g) => ({ ...g, [task.id]: !g[task.id] }));
+              }}
+            >
+              <Camera weight="bold" /> {t('quests.guide.button')}
+            </button>
+          )}
         </div>
+        {wikiLink && guideOpen[task.id] && <QuestGuide wikiLink={wikiLink} questName={task.name} />}
         {task.objectives && task.objectives.length > 0 && (
           <ul className="objectives">
             {task.objectives.map((obj) => {

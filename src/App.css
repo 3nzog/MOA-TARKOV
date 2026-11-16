@@ -1091,3 +1091,31 @@ button:disabled {
 .leaflet-overlay-pane path.tc-zone-sniper {
   filter: drop-shadow(0 0 6px rgba(255, 45, 45, 0.7));
 }
+
+/* Hand-made 2D / 3D map viewer (ArtMapViewer.tsx). */
+.art-map {
+  position: relative;
+  height: min(68vh, 720px);
+  margin-top: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0b0c0a;
+}
+.art-map__msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-dim);
+}
+.art-map__credit {
+  margin: 8px 0 0;
+  font-size: var(--fs-micro);
+  color: var(--text-faint);
+}
+.art-map__credit a {
+  color: var(--text-dim);
+}

@@ -3,8 +3,8 @@ import { TarkovDevClient } from './tarkov-dev';
 import { bundledSnapshot } from './snapshot';
 import type { TarkovTask } from './types';
 
-const TASKS_KEY = 'td_tasks_cache_v5_en';
-const POIS_KEY = 'td_map_pois_cache_v2_en';
+const TASKS_KEY = 'td_tasks_cache_v6_en';
+const POIS_KEY = 'td_map_pois_cache_v3_en';
 const DAY = 24 * 60 * 60 * 1000;
 const SNAPSHOT_HOST = 'raw.githubusercontent.com';
 const GENERATED_AT = '2026-08-26T00:00:00.000Z';

@@ -54,6 +54,8 @@ export interface Appearance {
   sniperRange: number;
   /** Also draw an estimated aim cone (not game data; off by default). */
   sniperCone: boolean;
+  /** Main map look: the vector map, or tarkov.dev's textured relief picture. */
+  mapStyle: 'vector' | 'relief';
 }
 
 export const ACCENTS: { id: string; hex: string }[] = [
@@ -93,6 +95,7 @@ export const DEFAULT_APPEARANCE: Appearance = {
   otherExits: true,
   sniperRange: 150,
   sniperCone: false,
+  mapStyle: 'vector',
 };
 
 export const APPEARANCE_KEY = 'tc_appearance_v1';
@@ -138,6 +141,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
         ? Math.min(300, Math.max(50, Math.round(r.sniperRange)))
         : d.sniperRange,
     sniperCone: typeof r.sniperCone === 'boolean' ? r.sniperCone : d.sniperCone,
+    mapStyle: r.mapStyle === 'relief' ? 'relief' : 'vector',
   };
 }
 

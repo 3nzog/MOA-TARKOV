@@ -393,7 +393,17 @@
     "questsWithCount_one": "{{count}} quest",
     "questsWithCount_other": "{{count}} quests",
     "squadQuestsByMap": "Squad quests by map",
-    "showMap": "Show {{name}}"
+    "showMap": "Show {{name}}",
+    "guide": {
+      "button": "Shots",
+      "hint": "Screenshots of where the objectives are (from the Tarkov wiki)",
+      "loading": "Getting the screenshots from the wiki…",
+      "none": "The wiki has no location screenshots for this quest yet.",
+      "failed": "Could not get the screenshots now (no internet or the wiki is down).",
+      "credit": "Pictures: Escape from Tarkov Wiki —",
+      "prev": "Previous",
+      "next": "Next"
+    }
   },
   "mapEmpty": {
     "selectDeployment": "Select deployment",
@@ -433,6 +443,24 @@
       "zone": "Scav sniper zone. The red ring shows how far it reaches, 360° (~{{m}} m): the game does not say where it aims.",
       "ring": "Scav sniper reach (~{{m}} m, 360°)",
       "cone": "Cone: likely aim, estimated from what is around (not game data)."
+    },
+    "style": {
+      "relief": "Relief map",
+      "toRelief": "Show the textured relief map (markers stay)",
+      "toVector": "Back to the plain map",
+      "noRelief": "This map has no relief version"
+    },
+    "art": {
+      "button": "3D and 2D maps",
+      "open_one": "Open the hand-made map ({{count}} version)",
+      "open_other": "Open the 3D and 2D maps ({{count}} versions)",
+      "none": "This map has no hand-made 3D or 2D versions",
+      "title": "{{map}} — hand-made maps",
+      "loading": "Loading the map (a big picture)…",
+      "failed": "Could not load this map now.",
+      "credit": "{{kind}} map by",
+      "via": "shown by",
+      "noMarkers": "It is a picture: MoA markers are on the main map only."
     }
   },
   "onboarding": {

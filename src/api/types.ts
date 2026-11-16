@@ -69,6 +69,8 @@ export interface TaskObjective {
 export interface TarkovTask {
   id: string;
   name: string;
+  /** The quest's Escape from Tarkov Wiki page (its Guide has location screenshots). */
+  wikiLink?: string;
   map?: MapRef;
   trader?: { name: string };
   objectives?: TaskObjective[];

@@ -87,7 +87,7 @@ const copyPresent = (raw, keys) => {
 };
 
 const TASK_KEYS = [
-  'id', 'name', 'normalizedName', 'map', 'trader', 'kappaRequired', 'factionName',
+  'id', 'name', 'normalizedName', 'map', 'trader', 'kappaRequired', 'factionName', 'wikiLink',
   'objectives',
 ];
 const OBJECTIVE_KEYS = [
@@ -197,6 +197,18 @@ if (!baseFailed) {
 }
 
 if (base) {
+  // Task id -> Escape from Tarkov Wiki page, bundled with the app: the quest
+  // panel shows the location screenshots from each page's Guide. (Tasks
+  // themselves come from the upstream snapshot, which has no wiki links.)
+  const WIKI = 'https://escapefromtarkov.fandom.com/wiki/';
+  const wikiLinks = Object.fromEntries(
+    Object.values(base.tasks)
+      .filter((t) => typeof t.wikiLink === 'string' && t.wikiLink.startsWith(WIKI))
+      .map((t) => [t.id, t.wikiLink.slice(WIKI.length)]),
+  );
+  await writeFile(resolve(OUT_DIR, 'wiki-links.json'), JSON.stringify(wikiLinks) + '\n', 'utf8');
+  console.log(`wiki-links.json: ${Object.keys(wikiLinks).length} quests`);
+
   const baseJson = JSON.stringify(base);
   await writeFile(resolve(OUT_DIR, 'base.json'), baseJson + '\n', 'utf8');
   baseWritten = true;

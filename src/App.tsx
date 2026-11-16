@@ -60,10 +60,12 @@ import { currentRaid, learnSides, raidSide, setManualSide, setPanelSide, type Ra
 import { exitTier, sideFromPanel } from './poi/exitTier';
 import { facetDefaultOn } from './poi/facets';
 import DangerZoneLayer from './map/DangerZoneLayer';
+import ArtMapViewer from './map/ArtMapViewer';
+import { ART_MAPS, TILE_STYLES } from './map/mapStyles';
 import { sniperSpots } from './poi/sniper';
 import PlannerPanel, { type PlannerTab } from './planner/PlannerPanel';
 import { scannedItems } from './planner/scanned';
-import { useAppearance } from './appearance/useAppearance';
+import { setAppearance, useAppearance } from './appearance/useAppearance';
 import GlassIntro from './intro/GlassIntro';
 import TitleBar from './shell/TitleBar';
 import { SUPPORTED_MAP_NAMES } from './map/mapDefs';
@@ -101,6 +103,7 @@ function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [railSection, setRailSection] = useState<RailSection | null>('quests');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [artOpen, setArtOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   // Onboarding wizard: auto-opens on first run only (tc_onboarded_v1); the
   // spine's Help button reopens it as the how-to guide.
@@ -755,7 +758,12 @@ function App() {
               )}
               {selectedMapId && questState ? (
                 <>
-                  <MapView mapId={selectedMapId} mapName={selectedMapName} activeFloorId={floors.activeFloorId}>
+                  <MapView
+                    mapId={selectedMapId}
+                    mapName={selectedMapName}
+                    activeFloorId={floors.activeFloorId}
+                    mapStyle={appearance.mapStyle}
+                  >
                     {squadSync.showOwnOnMap && (
                       <MarkerLayer
                         mapId={selectedMapId}
@@ -844,7 +852,19 @@ function App() {
                     color={drawing.myDrawHex}
                     canClear={drawing.canClear}
                     onClear={drawing.clearOwnDraws}
+                    reliefAvailable={!!TILE_STYLES[canonicalMapId(selectedMapId)]}
+                    relief={appearance.mapStyle === 'relief'}
+                    onRelief={(on) => setAppearance({ mapStyle: on ? 'relief' : 'vector' })}
+                    artCount={ART_MAPS[canonicalMapId(selectedMapId)]?.length ?? 0}
+                    onArt={() => setArtOpen(true)}
                   />
+                  {artOpen && ART_MAPS[canonicalMapId(selectedMapId)] && (
+                    <ArtMapViewer
+                      maps={ART_MAPS[canonicalMapId(selectedMapId)]}
+                      mapName={selectedMapName}
+                      onClose={() => setArtOpen(false)}
+                    />
+                  )}
                 </>
               ) : !questState ? (
                 <div className="map-placeholder">
