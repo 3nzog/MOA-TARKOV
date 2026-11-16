@@ -96,17 +96,32 @@ if not errorlevel 1 (
 )
 call :run "Já instalado: buscando a versão mais nova"
 set "LOGINRETRY="
+rem  A folder whose Git is half set up (seen: no branch ever fetched, no
+rem  version checked out) is repaired first: the GitHub address and the
+rem  standard "fetch every branch" rule.
+git -C "%DEST%" remote get-url origin >nul 2>&1 || git -C "%DEST%" remote add origin "%REPO%" >>"%LOG%" 2>&1
+git -C "%DEST%" config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" >>"%LOG%" 2>&1
 :update_fetch
 git -C "%DEST%" %GITAUTH% fetch --prune origin >>"%LOG%" 2>&1
 if errorlevel 1 goto :update_fetch_failed
 set "UPSTREAM="
 for /f "delims=" %%U in ('git -C "%DEST%" rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2^>nul') do set "UPSTREAM=%%U"
-if not defined UPSTREAM set "UPSTREAM=origin/main"
+if not defined UPSTREAM git -C "%DEST%" rev-parse --verify --quiet origin/main >nul 2>&1 && set "UPSTREAM=origin/main"
+if not defined UPSTREAM git -C "%DEST%" rev-parse --verify --quiet origin/master >nul 2>&1 && set "UPSTREAM=origin/master"
+if not defined UPSTREAM goto :update_failed
 set "OLDHEAD="
-for /f %%H in ('git -C "%DEST%" rev-parse HEAD 2^>nul') do set "OLDHEAD=%%H"
+for /f %%H in ('git -C "%DEST%" rev-parse --verify --quiet HEAD 2^>nul') do set "OLDHEAD=%%H"
 set "NEWHEAD="
 for /f %%H in ('git -C "%DEST%" rev-parse "%UPSTREAM%" 2^>nul') do set "NEWHEAD=%%H"
 if not defined NEWHEAD goto :update_failed
+rem  No version in the folder at all: take GitHub's whole, over what is there.
+if not defined OLDHEAD (
+  call :note "A pasta não tinha uma versão do GitHub registrada: baixando a completa."
+  git -C "%DEST%" symbolic-ref HEAD refs/heads/main >>"%LOG%" 2>&1
+  git -C "%DEST%" reset --hard "%UPSTREAM%" >>"%LOG%" 2>&1
+  git -C "%DEST%" branch --set-upstream-to="%UPSTREAM%" >>"%LOG%" 2>&1
+  goto :update_check
+)
 if /i "%NEWHEAD%"=="%OLDHEAD%" (
   call :ok "Já está na versão mais nova"
   goto :shortcut
@@ -130,6 +145,8 @@ if errorlevel 1 (
   git -C "%DEST%" reset --hard "%UPSTREAM%" >>"%LOG%" 2>&1
   call :note "O histórico da pasta tinha divergido: uma cópia ficou num branch moa-backup."
 )
+git -C "%DEST%" branch --set-upstream-to="%UPSTREAM%" >>"%LOG%" 2>&1
+:update_check
 set "NOWHEAD="
 for /f %%H in ('git -C "%DEST%" rev-parse HEAD 2^>nul') do set "NOWHEAD=%%H"
 if /i not "%NOWHEAD%"=="%NEWHEAD%" goto :update_failed

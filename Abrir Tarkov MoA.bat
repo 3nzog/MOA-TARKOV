@@ -61,14 +61,18 @@ if errorlevel 1 (
 set "GITLOG=%TEMP%\TarkovMoA-atualizacao.log"
 > "%GITLOG%" echo Tarkov MoA - atualizacao - %DATE% %TIME%
 set "OLDHEAD="
-for /f %%H in ('git rev-parse HEAD 2^>nul') do set "OLDHEAD=%%H"
+for /f %%H in ('git rev-parse --verify --quiet HEAD 2^>nul') do set "OLDHEAD=%%H"
 call :run "Procurando novidades no GitHub"
 set "LOGINRETRY="
+rem  A half set-up Git (no branch ever fetched) is repaired first.
+git remote get-url origin >nul 2>&1 && git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" >>"%GITLOG%" 2>&1
 :update_fetch
 git -c credential.helper= -c credential.helper=manager fetch --prune origin >>"%GITLOG%" 2>&1
 if errorlevel 1 goto :update_fetch_failed
 set "UPSTREAM="
 for /f "delims=" %%U in ('git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2^>nul') do set "UPSTREAM=%%U"
+if not defined UPSTREAM git rev-parse --verify --quiet origin/main >nul 2>&1 && set "UPSTREAM=origin/main"
+if not defined UPSTREAM git rev-parse --verify --quiet origin/master >nul 2>&1 && set "UPSTREAM=origin/master"
 if not defined UPSTREAM set "UPSTREAM=origin/main"
 set "NEWHEAD="
 for /f %%H in ('git rev-parse "%UPSTREAM%" 2^>nul') do set "NEWHEAD=%%H"
@@ -86,16 +90,22 @@ set "STAMP=%STAMP:.=-%"
 rem  Tudo num bloco so: o cmd le o bloco inteiro antes de rodar, entao trocar
 rem  este arquivo no meio da atualizacao nao atrapalha o que vem depois.
 (
-  if defined DIRTY (
+  if not defined OLDHEAD (
+    rem No version in this folder at all: take GitHub's whole.
+    git symbolic-ref HEAD refs/heads/main >>"%GITLOG%" 2>&1
+    git reset --hard "%UPSTREAM%" >>"%GITLOG%" 2>&1
+    call :note "A pasta não tinha uma versão do GitHub registrada: baixei a completa."
+  ) else if defined DIRTY (
     git stash push -m "Tarkov MoA: mudancas locais guardadas antes de atualizar" >>"%GITLOG%" 2>&1
     call :note "Arquivos mudados nesta pasta foram guardados (git stash)."
   )
-  git merge --ff-only "%UPSTREAM%" >>"%GITLOG%" 2>&1
-  if errorlevel 1 (
+  if defined OLDHEAD git merge --ff-only "%UPSTREAM%" >>"%GITLOG%" 2>&1
+  if errorlevel 1 if defined OLDHEAD (
     git branch "moa-backup-%STAMP%" >>"%GITLOG%" 2>&1
     git reset --hard "%UPSTREAM%" >>"%GITLOG%" 2>&1
     call :note "O histórico desta pasta tinha divergido: uma cópia ficou em moa-backup-%STAMP%."
   )
+  git branch --set-upstream-to="%UPSTREAM%" >>"%GITLOG%" 2>&1
   for /f %%H in ('git rev-parse HEAD 2^>nul') do (
     if /i "%%H"=="%NEWHEAD%" (
       call :ok "Versão nova baixada" "reiniciando com ela"
