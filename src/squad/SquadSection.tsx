@@ -13,7 +13,7 @@ import { partyAvailable } from "./partyApi";
 import { netLocalIps, type LocalIp } from "../net/netApi";
 import { isNetworkIp } from "../link/linkApi";
 import { getRelayOverride } from "./config";
-import { Button, Field, Input, IconButton, SectionLabel } from "../ui";
+import { Button, Field, HelpTip, Input, IconButton, SectionLabel } from "../ui";
 
 
 export default function SquadSection({
@@ -157,10 +157,9 @@ export default function SquadSection({
               >
                 {t('squad.party.join')}
               </Button>
-              <p className="squad-shared-hint">{t('squad.party.hint')}</p>
               {localIps && localIps.length > 0 && (
                 <p className="squad-shared-hint">
-                  {t('squad.party.yourIp')}{' '}
+                  <HelpTip>{t('squad.party.hint')}</HelpTip> {t('squad.party.yourIp')}{' '}
                   {localIps.map((n, i) => (
                     <span key={n.ip}>
                       {i > 0 && ' · '}
@@ -171,7 +170,7 @@ export default function SquadSection({
                   ))}
                 </p>
               )}
-              <SectionLabel>{t('squad.party.byIp')}</SectionLabel>
+              <SectionLabel help={t('squad.party.byIpHint')}>{t('squad.party.byIp')}</SectionLabel>
               <div className="squad-join-row">
                 <Input
                   mono
@@ -187,7 +186,6 @@ export default function SquadSection({
                   {t('squad.join')}
                 </Button>
               </div>
-              <p className="squad-shared-hint">{t('squad.party.byIpHint')}</p>
             </>
           )}
           {radmin === false && partyAvailable() && <p className="squad-shared-hint">{t('squad.party.radminOff')}</p>}
@@ -296,15 +294,13 @@ export default function SquadSection({
           <div className="squad-shared-head">
             <Handshake weight="fill" />
             {t('squad.sharedObjective', { count: sharedQuestNames.length })}
+            <HelpTip>{t('squad.sharedHint')}</HelpTip>
           </div>
           <ul className="squad-shared-list">
             {sharedQuestNames.map((n) => (
               <li key={n}>{n}</li>
             ))}
           </ul>
-          <p className="squad-shared-hint">
-            {t('squad.sharedHint')}
-          </p>
         </div>
       )}
 

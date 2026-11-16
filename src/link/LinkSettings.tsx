@@ -2,7 +2,7 @@
 // the extra screen: find the game PC and link to it.
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Input, SectionLabel, Segmented, Toggle } from '../ui';
+import { Button, HelpTip, Input, SectionLabel, Segmented, Toggle } from '../ui';
 import { useLink } from './useLink';
 import './link.css';
 import { isNetworkIp, type FoundLink } from './linkApi';
@@ -34,7 +34,11 @@ export default function LinkSettings() {
 
   return (
     <div className="link-settings">
-      <SectionLabel>{t('link.mode.title')}</SectionLabel>
+      <SectionLabel
+        help={`${roleText}${link.prefs.mode === 'auto' && link.hasGame !== null ? ` ${t(link.hasGame ? 'link.mode.whyGame' : 'link.mode.whyScreen')}` : ''}`}
+      >
+        {t('link.mode.title')}
+      </SectionLabel>
       <Segmented
         fullWidth
         value={link.prefs.mode}
@@ -46,10 +50,6 @@ export default function LinkSettings() {
           { id: 'off', label: t('link.mode.off') },
         ]}
       />
-      <p className="settings-row__hint">
-        {roleText}
-        {link.prefs.mode === 'auto' && link.hasGame !== null && ` ${t(link.hasGame ? 'link.mode.whyGame' : 'link.mode.whyScreen')}`}
-      </p>
 
       {link.role === 'game' && (
         <>
@@ -57,7 +57,7 @@ export default function LinkSettings() {
           <div className="settings-row">
             <div className="settings-row__text">
               <span>{t('link.main.autoAccept')}</span>
-              <span className="settings-row__hint">{t('link.main.autoAcceptHint')}</span>
+              <HelpTip>{t('link.main.autoAcceptHint')}</HelpTip>
             </div>
             <Toggle checked={link.prefs.autoAcceptLan} onChange={(on) => link.setAutoAcceptLan(on)} label={t('link.main.autoAccept')} />
           </div>
@@ -91,8 +91,7 @@ export default function LinkSettings() {
 
       {link.role === 'screen' && (
         <>
-      <SectionLabel>{t('link.screen.title')}</SectionLabel>
-      <p className="settings-row__hint">{t('link.screen.hint')}</p>
+      <SectionLabel help={`${t('link.screen.hint')} ${t('link.screen.partyNote')}`}>{t('link.screen.title')}</SectionLabel>
       {linkedOrTrying ? (
         <div className={`link-status link-status--${c.state}`}>
           {c.state === 'pending' ? (
@@ -151,7 +150,6 @@ export default function LinkSettings() {
         </>
       )}
       {link.error && <p className="settings-err">{t(`link.error.${link.error}`, { defaultValue: t('link.error.other') })}</p>}
-      <p className="settings-row__hint">{t('link.screen.partyNote')}</p>
     </div>
   );
 }

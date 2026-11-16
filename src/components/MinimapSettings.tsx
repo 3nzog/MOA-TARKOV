@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import type { MinimapApi } from '../app/useMinimapWindow';
 import { MINIMAP_SIZES } from '../minimap/protocol';
-import { Button, Segmented, Slider, Toggle } from '../ui';
+import { Button, HelpTip, Segmented, Slider, Toggle } from '../ui';
 
 // Settings → Minimap overlay.
 export default function MinimapSettings({ minimap }: { minimap: MinimapApi }) {
@@ -10,7 +10,6 @@ export default function MinimapSettings({ minimap }: { minimap: MinimapApi }) {
 
   return (
     <>
-      <p className="settings-row__hint">{t('settings.minimapHint')}</p>
       {!minimap.available && <p className="muted">{t('settings.minimapDesktopOnly')}</p>}
       {minimap.error && <p className="settings-err">{t('settings.minimapOpenFailed', { error: minimap.error })}</p>}
 
@@ -23,7 +22,7 @@ export default function MinimapSettings({ minimap }: { minimap: MinimapApi }) {
       <div className="settings-row">
         <div className="settings-row__text">
           <span>{t('settings.minimapOnlyInRaid')}</span>
-          <span className="settings-row__hint">{t('settings.minimapOnlyInRaidHint')}</span>
+          <HelpTip>{t('settings.minimapOnlyInRaidHint')}</HelpTip>
         </div>
         <Toggle checked={settings.onlyInRaid} onChange={(v) => update({ onlyInRaid: v })} label={t('settings.minimapOnlyInRaid')} />
       </div>
@@ -31,14 +30,14 @@ export default function MinimapSettings({ minimap }: { minimap: MinimapApi }) {
       <div className="settings-row">
         <div className="settings-row__text">
           <span>{t('settings.minimapLocked')}</span>
-          <span className="settings-row__hint">{t('settings.minimapLockedHint')}</span>
+          <HelpTip>{t('settings.minimapLockedHint')}</HelpTip>
         </div>
         <Toggle checked={settings.locked} onChange={(v) => update({ locked: v })} label={t('settings.minimapLocked')} />
       </div>
       <div className="settings-row">
         <div className="settings-row__text">
           <span>{t('settings.minimapHeadingUp')}</span>
-          <span className="settings-row__hint">{t('settings.minimapHeadingUpHint')}</span>
+          <HelpTip>{t('settings.minimapHeadingUpHint')}</HelpTip>
         </div>
         <Toggle checked={settings.headingUp} onChange={(v) => update({ headingUp: v })} label={t('settings.minimapHeadingUp')} />
       </div>
@@ -94,7 +93,6 @@ export default function MinimapSettings({ minimap }: { minimap: MinimapApi }) {
           {t('settings.minimapReset')}
         </Button>
       </div>
-      <p className="settings-row__hint">{t('settings.minimapLimits')}</p>
     </>
   );
 }

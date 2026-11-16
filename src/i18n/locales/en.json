@@ -622,7 +622,8 @@
       "traderLevel": "{{trader}} LL{{value}}",
       "traderRep": "{{trader}} rep {{value}}",
       "traderUnknown": "(loyalty isn't readable from the logs — not checked)",
-      "availableNote": "“Available” means no unmet prerequisite in tarkov.dev's data. Some quests are also gated in game by trader loyalty or by events the data does not encode — check the trader if one is missing."
+      "availableNote": "“Available” means no unmet prerequisite in tarkov.dev's data. Some quests are also gated in game by trader loyalty or by events the data does not encode — check the trader if one is missing.",
+      "objectivesTitle": "Objectives"
     },
     "items": {
       "anyOf": "Any of {{count}} items",
@@ -1040,6 +1041,19 @@
       "2": "sometimes",
       "3": "goes through",
       "4": "easily"
+    }
+  },
+  "mapCard": {
+    "quest": "Quest",
+    "extract": "Extraction",
+    "openWiki": "Open on the wiki",
+    "noWiki": "This quest has no wiki page.",
+    "noPicture": "The wiki has no picture of this extraction.",
+    "enlarge": "Enlarge",
+    "faction": {
+      "pmc": "PMC",
+      "scav": "Scav",
+      "shared": "Co-op"
     }
   }
 }

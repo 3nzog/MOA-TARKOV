@@ -17,7 +17,7 @@ import {
   Warning,
   X,
 } from '@phosphor-icons/react';
-import { Button, IconButton, Input, Segmented, Select, Spinner, Toggle } from '../ui';
+import { Button, HelpTip, IconButton, Input, Segmented, Select, Spinner, Toggle } from '../ui';
 import {
   itemIcon,
   itemImage,
@@ -606,7 +606,9 @@ function Bench({ data, loc, onClose, playerLevel, taskDone }: Props & { data: We
 
         {/* ---- right: stats like the modding screen, then trader levels ---- */}
         <aside className="gs-col gs-right">
-          <div className="gs-block__title">{t('gunsmith.statsTitle')}</div>
+          <div className="gs-block__title">
+            {t('gunsmith.statsTitle')} <HelpTip>{t('gunsmith.statsNote')}</HelpTip>
+          </div>
           <div className="gs-bars">
             <StatBar label={t('gunsmith.stat.ergo')} value={stats.ergonomics} base={factory.ergonomics} max={100} />
             <StatBar label={t('gunsmith.stat.recoilV')} value={stats.recoilVertical} base={factory.recoilVertical} max={Math.max(200, factory.recoilVertical * 1.3)} lowerIsBetter />
@@ -617,7 +619,6 @@ function Bench({ data, loc, onClose, playerLevel, taskDone }: Props & { data: We
             <small>{t('gunsmith.stat.cost')}</small>
             <strong>{rub(cost)}</strong>
           </div>
-          <p className="gs-hint">{t('gunsmith.statsNote')}</p>
 
           {(missing.length > 0 || unavailable.length > 0 || noCash.length > 0) && (
             <div className="gs-warn">

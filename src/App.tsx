@@ -85,11 +85,13 @@ import PlaceLabelLayer from './map/PlaceLabelLayer';
 import { clock, raidMinutes } from './map/raidDuration';
 import { collectObjectiveMaps } from './quests/derive';
 import type { TarkovTask, TaskObjective } from './api/types';
+import type { MapCard } from './map/MapInfoCard';
 import { effectiveStatus } from './state/localProgress';
 
 // The weapon bench and its ~2 MB of data load only when it is first opened.
 const GunsmithBench = lazy(() => import('./gunsmith/GunsmithBench'));
 const BallisticsPanel = lazy(() => import('./ballistics/BallisticsPanel'));
+const MapInfoCard = lazy(() => import('./map/MapInfoCard'));
 import { knownSymbol, setSelfSymbol, useSelfSymbol } from './squad/symbols';
 import { hexForColorId } from '../shared/squadProtocol';
 
@@ -118,6 +120,8 @@ function App() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [gunsmithOpen, setGunsmithOpen] = useState(false);
   const [ballisticsOpen, setBallisticsOpen] = useState(false);
+  // The card over the map for a clicked quest pin or extraction.
+  const [mapCard, setMapCard] = useState<MapCard | null>(null);
   // Cartridges read from the last flea-market screenshot; opening on them.
   const [screenAmmo, setScreenAmmo] = useState<string[] | null>(null);
   const [plannerTab, setPlannerTab] = useState<PlannerTab>('summary');
@@ -139,6 +143,12 @@ function App() {
   });
   const { questState, loading, error } = quests;
   const { selectedMapId, setSelectedMapId, selectedMapDef } = useSelectedMap(questState);
+  // A map change closes the card of the previous map.
+  const [cardMapId, setCardMapId] = useState(selectedMapId);
+  if (cardMapId !== selectedMapId) {
+    setCardMapId(selectedMapId);
+    setMapCard(null);
+  }
   const raidHistory = useRaidHistory();
   const planner = usePlanner();
   const compact = useCompactMode();
@@ -795,6 +805,11 @@ function App() {
         )}
 
         <section className="map-stage map-area">
+              {mapCard && selectedMapId && (
+                <Suspense fallback={null}>
+                  <MapInfoCard card={mapCard} onClose={() => setMapCard(null)} />
+                </Suspense>
+              )}
               {compact.compact && (
                 <div className="compact-exit">
                   <IconButton
@@ -829,6 +844,9 @@ function App() {
                         onCounts={floors.setFloorCounts}
                         onHoverObjective={selection.setHoveredObjectiveId}
                         onTogglePin={selection.togglePin}
+                        onOpenObjective={(task, objective) =>
+                          setMapCard((c) => (c?.kind === 'quest' && c.objective.id === objective.id ? null : { kind: 'quest', task, objective }))
+                        }
                         sharedQuestIds={squadSync.sharedQuestIds}
                         upcoming={appearance.upcomingQuests ? upcomingObjectives : undefined}
                         showNames={appearance.questNames}
@@ -868,7 +886,16 @@ function App() {
                       selectedPoiIds={pois.selectedPoiIds}
                       floors={selectedMapDef?.floors}
                       activeFloorId={floors.activeFloorId}
-                      onSelect={pois.togglePoi}
+                      onSelect={(poi) => {
+                        pois.togglePoi(poi);
+                        if (poi.category === 'extract') {
+                          setMapCard((c) =>
+                            c?.kind === 'extract' && c.poi.id === poi.id
+                              ? null
+                              : { kind: 'extract', poi, names: [...(exitAliases[poi.id] ?? []), poi.label] },
+                          );
+                        }
+                      }}
                     />
                     <GridOverlay mapId={selectedMapId} visible={pois.filterState.gridVisible} />
                     {drawing.drawTool === null && (

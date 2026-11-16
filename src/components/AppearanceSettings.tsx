@@ -1,7 +1,7 @@
 // Settings → Appearance: theme, accent, the glass material, sizes, motion, and
 // the marker the player is drawn with (symbol + colour), with a live preview.
 import { useTranslation } from 'react-i18next';
-import { Button, SectionLabel, Segmented, Slider, Toggle } from '../ui';
+import { Button, HelpTip, SectionLabel, Segmented, Slider, Toggle } from '../ui';
 import { setAppearance, useAppearance } from '../appearance/useAppearance';
 import { ACCENTS, DEFAULT_APPEARANCE, GLASS_PRESETS, type Density } from '../appearance/appearance';
 import { ARROW_SYMBOL, PLAYER_SYMBOLS, markerHtml, setSelfSymbol, useSelfSymbol } from '../squad/symbols';
@@ -15,7 +15,7 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
     <div className="settings-row">
       <div className="settings-row__text">
         <span>{label}</span>
-        {hint && <span className="settings-row__hint">{hint}</span>}
+        <HelpTip>{hint}</HelpTip>
       </div>
       <div className="settings-row__control">{children}</div>
     </div>
@@ -83,7 +83,6 @@ export default function AppearanceSettings({ onReplayIntro }: { onReplayIntro?: 
               />
             ))}
           </div>
-          <span className="settings-row__hint">{t('settings.appearance.markerHint')}</span>
         </div>
       </div>
       <Row label={t('settings.appearance.markerSize')}>

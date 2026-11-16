@@ -68,7 +68,6 @@ export default function SquadServerSettings() {
 
   return (
     <>
-      <p className="settings-row__hint">{t('settings.squadServer.hint')}</p>
       <p className="settings-row__hint">
         {t('settings.squadServer.current')}{' '}
         {isThisPc(getRelayUrl()) ? <strong>{t('settings.squadServer.thisPc')}</strong> : <code>{getRelayUrl()}</code>}

@@ -12,6 +12,7 @@ export { default as Segmented, type SegmentedProps, type SegmentedOption } from 
 export { default as Modal, type ModalProps } from './Modal';
 export { default as Toast, type ToastProps, type ToastVariant } from './Toast';
 export { default as Tooltip, type TooltipProps } from './Tooltip';
+export { default as HelpTip, type HelpTipProps } from './HelpTip';
 export { default as Card, type CardProps } from './Card';
 export { default as Chip, type ChipProps } from './Chip';
 export { Input, TextArea, type InputProps, type TextAreaProps } from './Input';

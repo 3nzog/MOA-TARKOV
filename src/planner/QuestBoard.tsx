@@ -8,7 +8,7 @@ import { canonicalMapId } from '../map/canonicalMap';
 import { collectObjectiveMaps } from '../quests/derive';
 import { buildUnlocks, requirementTree, type QuestInfo, type QuestStatus, type RequirementNode } from '../progression/status';
 import { setQuestOverride, type QuestOverrideStatus } from '../state/localProgress';
-import { Button, Chip, Input, Select, Toggle } from '../ui';
+import { Button, Chip, HelpTip, Input, Select, Toggle } from '../ui';
 import type { PlannerCtx } from './PlannerPanel';
 
 type StatusFilter = QuestStatus | 'all';
@@ -118,6 +118,7 @@ export default function QuestBoard({ ctx, selectedMapId, focusTaskId, onFocusHan
             {t(`planner.status.${s}`)}
           </Chip>
         ))}
+        {status === 'available' && <HelpTip>{t('planner.quests.availableNote')}</HelpTip>}
       </div>
       <div className="planner-row">
         <Select aria-label={t('planner.quests.trader')} value={trader} onChange={(e) => setTrader(e.target.value)}>
@@ -136,7 +137,6 @@ export default function QuestBoard({ ctx, selectedMapId, focusTaskId, onFocusHan
         <Toggle size="sm" checked={onlyKappa} onChange={setOnlyKappa} label={t('planner.quests.onlyKappa')} />
       </div>
 
-      {status === 'available' && <p className="planner-hint">{t('planner.quests.availableNote')}</p>}
       {filtered.length === 0 ? (
         <p className="muted">{t('planner.quests.empty')}</p>
       ) : (
@@ -248,10 +248,15 @@ function QuestRow({ ctx, task, info, unlocks, open, onToggle, onOpenQuest, rowRe
                     : t('planner.quests.traderLevel', { trader: names.trader(r.traderId), value: r.value }),
                 )
                 .join(' · ')}{' '}
-              {t('planner.quests.traderUnknown')}
+              <HelpTip>{t('planner.quests.traderUnknown')}</HelpTip>
             </p>
           )}
 
+          {(task.objectives ?? []).length > 0 && (
+            <h4 className="planner-subhead">
+              {t('planner.quests.objectivesTitle')} <HelpTip>{t('planner.quests.objectivesManual')}</HelpTip>
+            </h4>
+          )}
           {(task.objectives ?? []).length > 0 && (
             <ul className="planner-objectives">
               {(task.objectives ?? []).map((obj) => {
@@ -279,7 +284,6 @@ function QuestRow({ ctx, task, info, unlocks, open, onToggle, onOpenQuest, rowRe
               })}
             </ul>
           )}
-          <p className="planner-hint">{t('planner.quests.objectivesManual')}</p>
 
           {meta && meta.neededKeys.length > 0 && (
             <p className="planner-hint">

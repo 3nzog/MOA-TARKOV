@@ -622,7 +622,8 @@
       "traderLevel": "{{trader}} LL{{value}}",
       "traderRep": "{{trader}} 評判 {{value}}",
       "traderUnknown": "(ロイヤリティはログから読めないため未確認)",
-      "availableNote": "「受注可能」は tarkov.dev のデータ上で未達成の前提がないという意味です。ゲーム内ではトレーダーのロイヤリティや、データに含まれないイベントで解放されるタスクもあります — トレーダーに表示されない場合はそれが原因かもしれません。"
+      "availableNote": "「受注可能」は tarkov.dev のデータ上で未達成の前提がないという意味です。ゲーム内ではトレーダーのロイヤリティや、データに含まれないイベントで解放されるタスクもあります — トレーダーに表示されない場合はそれが原因かもしれません。",
+      "objectivesTitle": "目標"
     },
     "items": {
       "anyOf": "{{count}} 種のうちいずれか",
@@ -1041,5 +1042,18 @@
     },
     "count_one": "{{count}} 種類",
     "fromScreen_one": "スクリーンショットで {{count}} 種類"
+  },
+  "mapCard": {
+    "quest": "タスク",
+    "extract": "脱出地点",
+    "openWiki": "Wikiで開く",
+    "noWiki": "このタスクのWikiページはありません。",
+    "noPicture": "Wikiにこの脱出地点の写真はありません。",
+    "enlarge": "拡大",
+    "faction": {
+      "pmc": "PMC",
+      "scav": "Scav",
+      "shared": "協力"
+    }
   }
 }

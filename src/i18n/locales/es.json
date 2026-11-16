@@ -622,7 +622,8 @@
       "traderLevel": "{{trader}} LL{{value}}",
       "traderRep": "{{trader}} rep {{value}}",
       "traderUnknown": "(la lealtad no aparece en los registros — no se comprueba)",
-      "availableNote": "“Disponible” significa que no hay requisito pendiente en los datos de tarkov.dev. Algunas misiones también dependen en el juego de la lealtad del comerciante o de eventos que los datos no recogen — compruébalo con el comerciante si falta alguna."
+      "availableNote": "“Disponible” significa que no hay requisito pendiente en los datos de tarkov.dev. Algunas misiones también dependen en el juego de la lealtad del comerciante o de eventos que los datos no recogen — compruébalo con el comerciante si falta alguna.",
+      "objectivesTitle": "Objetivos"
     },
     "items": {
       "anyOf": "Cualquiera de {{count}} objetos",
@@ -1040,6 +1041,19 @@
       "2": "a veces",
       "3": "pasa",
       "4": "pasa fácil"
+    }
+  },
+  "mapCard": {
+    "quest": "Misión",
+    "extract": "Extracción",
+    "openWiki": "Abrir en la wiki",
+    "noWiki": "Esta misión no tiene página en la wiki.",
+    "noPicture": "La wiki no tiene foto de esta extracción.",
+    "enlarge": "Ampliar",
+    "faction": {
+      "pmc": "PMC",
+      "scav": "Scav",
+      "shared": "Co-op"
     }
   }
 }

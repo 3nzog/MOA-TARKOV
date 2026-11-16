@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { MagnifyingGlass, Minus, Plus } from '@phosphor-icons/react';
 import { aggregateNeeds, type ItemNeed, type NeedScope } from '../progression/needs';
 import { fleaPrice, formatRub } from '../progression/economy';
-import { Button, IconButton, Input, Segmented, Toggle } from '../ui';
+import { Button, HelpTip, IconButton, Input, Segmented, Toggle } from '../ui';
 import type { PlannerCtx } from './PlannerPanel';
 
 const PAGE = 60;
@@ -95,7 +95,7 @@ export default function NeedsTab({ ctx, onOpenQuest }: { ctx: PlannerCtx; onOpen
       />
       <p className="planner-hint">
         {t('planner.items.summary', { count: needs.filter((n) => !n.currency).length, fir: firCount })}{' '}
-        {t('planner.items.counterNote')}
+        <HelpTip>{t('planner.items.counterNote')}</HelpTip>
       </p>
 
       {visible.length === 0 ? (

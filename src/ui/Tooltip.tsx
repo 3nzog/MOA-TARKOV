@@ -11,12 +11,14 @@ export interface TooltipProps {
   side?: 'top' | 'bottom' | 'left' | 'right';
   /** Show delay in ms. Default 350. */
   delay?: number;
+  /** Wider body, for a paragraph of help text. */
+  wide?: boolean;
 }
 
 const GAP = 8;
 
 /** Hover/focus tooltip. Wraps its child in an inline-flex span. */
-export default function Tooltip({ content, hint, children, side = 'top', delay = 350 }: TooltipProps) {
+export default function Tooltip({ content, hint, children, side = 'top', delay = 350, wide }: TooltipProps) {
   const anchorRef = useRef<HTMLSpanElement>(null);
   const timerRef = useRef<number | null>(null);
   const [pos, setPos] = useState<{ x: number; y: number; side: string } | null>(null);
@@ -79,7 +81,7 @@ export default function Tooltip({ content, hint, children, side = 'top', delay =
       {children}
       {pos &&
         createPortal(
-          <div className="ui-tip" style={{ left: pos.x, top: pos.y, transform }} role="tooltip">
+          <div className={wide ? 'ui-tip ui-tip--wide' : 'ui-tip'} style={{ left: pos.x, top: pos.y, transform }} role="tooltip">
             {content}
             {hint && <span className="ui-tip__hint">{hint}</span>}
           </div>,

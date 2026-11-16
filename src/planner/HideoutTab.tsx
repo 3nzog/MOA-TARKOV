@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { stationStatus } from '../progression/needs';
-import { Button, Select } from '../ui';
+import { Button, HelpTip, Select } from '../ui';
 import { formatSeconds } from './names';
 import type { PlannerCtx } from './PlannerPanel';
 
@@ -26,8 +26,9 @@ export default function HideoutTab({ ctx }: { ctx: PlannerCtx }) {
 
   return (
     <div className="planner-stack">
-      <p className="planner-hint">{t('planner.hideout.hint')}</p>
-      <p className="planner-hint">{t('planner.hideout.progress', { done, total: stations.length })}</p>
+      <p className="planner-hint">
+        {t('planner.hideout.progress', { done, total: stations.length })} <HelpTip>{t('planner.hideout.hint')}</HelpTip>
+      </p>
       <ul className="planner-quests">
         {stations.map(({ station, st }) => {
           const next = station.levels.find((l) => l.level === st.built + 1);
@@ -85,19 +86,16 @@ export default function HideoutTab({ ctx }: { ctx: PlannerCtx }) {
                     {next.traders.map((r) => (
                       <li key={r.traderId}>
                         {t('planner.quests.traderLevel', { trader: names.trader(r.traderId), value: r.level })}
-                        <span className="planner-meta planner-hint">?</span>
+                        <HelpTip>{t('planner.hideout.unknownReqs')}</HelpTip>
                       </li>
                     ))}
                     {next.skills.map((r) => (
                       <li key={r.skill}>
                         {t('planner.hideout.skill', { skill: r.skill, level: r.level })}
-                        <span className="planner-meta planner-hint">?</span>
+                        <HelpTip>{t('planner.hideout.unknownReqs')}</HelpTip>
                       </li>
                     ))}
                   </ul>
-                  {(next.traders.length > 0 || next.skills.length > 0) && (
-                    <p className="planner-hint">{t('planner.hideout.unknownReqs')}</p>
-                  )}
                   <Button size="sm" onClick={() => planner.setStationLevel(station.id, next.level)} disabled={st.blockedBy.length > 0}>
                     {t('planner.hideout.markBuilt', { level: next.level })}
                   </Button>

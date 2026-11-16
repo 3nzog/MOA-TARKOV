@@ -6,7 +6,7 @@ import type { ScannedItems } from './scanned';
 import { useTranslation } from 'react-i18next';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import { estimateCraft, fleaPrice, formatRub, valuePerSlot } from '../progression/economy';
-import { Button, Input, Segmented, Select, Toggle } from '../ui';
+import { Button, HelpTip, Input, Segmented, Select, Toggle } from '../ui';
 import { formatSeconds } from './names';
 import type { PlannerCtx } from './PlannerPanel';
 
@@ -53,6 +53,12 @@ export default function MarketTab({
       />
       <p className={ageDays > 3 ? 'shell-warn planner-age' : 'planner-hint'}>
         {t('planner.market.estimate', { date: dateFmt.format(data.pricesAt) })}
+        {mode === 'crafts' && (
+          <>
+            {' '}
+            <HelpTip>{t('planner.market.craftNote')}</HelpTip>
+          </>
+        )}
       </p>
       {mode === 'crafts' ? <Crafts ctx={ctx} /> : <Prices ctx={ctx} scanned={scanned ?? null} onClearScan={onClearScan} />}
     </div>
@@ -138,7 +144,6 @@ function Crafts({ ctx }: { ctx: PlannerCtx }) {
           {t('planner.showMore', { count: rows.length - limit })}
         </Button>
       )}
-      <p className="planner-hint">{t('planner.market.craftNote')}</p>
     </>
   );
 }

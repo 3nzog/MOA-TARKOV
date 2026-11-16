@@ -21,6 +21,8 @@ interface MarkerLayerProps {
   onCounts?: (counts: Record<string, number>) => void;
   onHoverObjective?: (objectiveId: string | null) => void;
   onTogglePin?: (kind: "task" | "objective", id: string) => void;
+  /** A pin was clicked: opens its card (screenshots, wiki link). */
+  onOpenObjective?: (task: TarkovTask, objective: TaskObjective) => void;
   /** Quest ids ≥2 squadmates (incl. you) have active — pins get the shared-objective ring. */
   sharedQuestIds?: Set<string>;
   /** Objectives of quests the player can take but has not accepted: drawn dimmer. */
@@ -93,6 +95,7 @@ function ObjectiveMarker({
   shared,
   onHoverObjective,
   onTogglePin,
+  onOpenObjective,
   showName,
 }: {
   m: ClassifiedMarker;
@@ -102,6 +105,7 @@ function ObjectiveMarker({
   showName: boolean;
   onHoverObjective?: (id: string | null) => void;
   onTogglePin?: (kind: "task" | "objective", id: string) => void;
+  onOpenObjective?: (task: TarkovTask, objective: TaskObjective) => void;
 }): React.JSX.Element {
   const markerRef = useRef<L.Marker | null>(null);
 
@@ -124,7 +128,10 @@ function ObjectiveMarker({
       eventHandlers={{
         mouseover: () => onHoverObjective?.(m.objective.id),
         mouseout: () => onHoverObjective?.(null),
-        click: () => onTogglePin?.("objective", m.objective.id),
+        click: () => {
+          onTogglePin?.("objective", m.objective.id);
+          onOpenObjective?.(m.task, m.objective);
+        },
       }}
     />
   );
@@ -140,6 +147,7 @@ export default function MarkerLayer({
   onCounts,
   onHoverObjective,
   onTogglePin,
+  onOpenObjective,
   sharedQuestIds,
   upcoming,
   showNames = false,
@@ -210,6 +218,7 @@ export default function MarkerLayer({
             shared={sharedQuestIds?.has(m.task.id) ?? false}
             onHoverObjective={onHoverObjective}
             onTogglePin={onTogglePin}
+            onOpenObjective={onOpenObjective}
             showName={showNames}
           />
         );

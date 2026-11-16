@@ -55,8 +55,7 @@ export default function SummaryTab({ ctx, history, onClearHistory, onOpenQuest }
 
   return (
     <div className="planner-stack">
-      <SectionLabel>{t('planner.profile.title')}</SectionLabel>
-      <p className="planner-hint">{t('planner.profile.hint')}</p>
+      <SectionLabel help={t('planner.profile.hint')}>{t('planner.profile.title')}</SectionLabel>
       <div className="planner-row">
         <label className="planner-row__label" htmlFor="planner-level">{t('planner.profile.level')}</label>
         <Input
@@ -85,7 +84,7 @@ export default function SummaryTab({ ctx, history, onClearHistory, onOpenQuest }
         ]}
       />
 
-      <SectionLabel>{t('planner.summary.progress')}</SectionLabel>
+      <SectionLabel help={t('planner.summary.trackingNote')}>{t('planner.summary.progress')}</SectionLabel>
       <div className="planner-stats">
         <div><span className="mono">{counts.complete}</span>{t('planner.status.complete')}</div>
         <div><span className="mono">{counts.active}</span>{t('planner.status.active')}</div>
@@ -93,7 +92,6 @@ export default function SummaryTab({ ctx, history, onClearHistory, onOpenQuest }
         <div><span className="mono">{counts.locked}</span>{t('planner.status.locked')}</div>
         <div><span className="mono">{counts.kappaDone}/{counts.kappa}</span>Kappa</div>
       </div>
-      <p className="planner-hint">{t('planner.summary.trackingNote')}</p>
 
       {counts.stale.length > 0 && (
         <div className="planner-callout">
@@ -109,8 +107,7 @@ export default function SummaryTab({ ctx, history, onClearHistory, onOpenQuest }
         </div>
       )}
 
-      <SectionLabel>{t('planner.summary.next')}</SectionLabel>
-      <p className="planner-hint">{t('planner.summary.nextHint')}</p>
+      <SectionLabel help={t('planner.summary.nextHint')}>{t('planner.summary.next')}</SectionLabel>
       {suggestions.length === 0 ? (
         <p className="muted">{t('planner.summary.noSuggestions')}</p>
       ) : (
@@ -133,7 +130,7 @@ export default function SummaryTab({ ctx, history, onClearHistory, onOpenQuest }
         </ul>
       )}
 
-      <SectionLabel>{t('planner.stats.title')}</SectionLabel>
+      <SectionLabel help={t('planner.stats.limits')}>{t('planner.stats.title')}</SectionLabel>
       <div className="planner-row">
         <label className="planner-row__label" htmlFor="planner-wipe">{t('planner.stats.wipeStart')}</label>
         <Input
@@ -186,7 +183,6 @@ export default function SummaryTab({ ctx, history, onClearHistory, onOpenQuest }
           </ul>
         </>
       )}
-      <p className="planner-hint">{t('planner.stats.limits')}</p>
       {history.raids.length > 0 && (
         <Button
           size="sm"

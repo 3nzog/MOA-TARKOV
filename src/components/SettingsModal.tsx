@@ -4,7 +4,7 @@ import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
 import { checkForUpdate, applyUpdate, type AvailableUpdate } from '../services/updater';
 import { useTranslation } from 'react-i18next';
-import { Segmented, Modal, Button, SectionLabel, Toggle, Slider, Select } from '../ui';
+import { Segmented, Modal, Button, HelpTip, SectionLabel, Toggle, Slider, Select } from '../ui';
 import { SUPPORTED_LANGS, LANG_LABELS, changeLang, type Lang } from '../i18n';
 import type { HotkeysApi } from '../app/useHotkeys';
 import HotkeySettings from './HotkeySettings';
@@ -214,7 +214,7 @@ export default function SettingsModal({
         <div className="settings-row">
           <div className="settings-row__text">
             <span>{t('settings.language')}</span>
-            <span className="settings-row__hint">{t('settings.languageHint')}</span>
+            <HelpTip>{t('settings.languageHint')}</HelpTip>
           </div>
           <div className="settings-row__control">
             <Select
@@ -244,16 +244,14 @@ export default function SettingsModal({
         <div className="settings-row">
           <div className="settings-row__text">
             <span>{t('settings.jumpToPosition')}</span>
-            <span className="settings-row__hint">
-              {t('settings.jumpToPositionHint')}
-            </span>
+            <HelpTip>{t('settings.jumpToPositionHint')}</HelpTip>
           </div>
           <Toggle checked={followCenter} onChange={onFollowCenterChange} label={t('settings.jumpToPositionLabel')} />
         </div>
         <div className="settings-row">
           <div className="settings-row__text">
             <span>{t('settings.followZoom')}</span>
-            <span className="settings-row__hint">{t('settings.followZoomHint')}</span>
+            <HelpTip>{t('settings.followZoomHint')}</HelpTip>
           </div>
           <div className="settings-row__control">
             <Slider
@@ -273,43 +271,40 @@ export default function SettingsModal({
         <div className="settings-row">
           <div className="settings-row__text">
             <span>{t('settings.automaticFloorsOnly')}</span>
-            <span className="settings-row__hint">
-              {t('settings.automaticFloorsOnlyHint')}
-            </span>
+            <HelpTip>{t('settings.automaticFloorsOnlyHint')}</HelpTip>
           </div>
           <Toggle checked={floorLock} onChange={onFloorLockChange} label={t('settings.automaticFloorsOnlyLabel')} />
         </div>
 
-        <SectionLabel>{t('settings.compactMode')}</SectionLabel>
-        <p className="settings-row__hint">{t('settings.compactModeHint')}</p>
+        <SectionLabel help={t('settings.compactModeHint')}>{t('settings.compactMode')}</SectionLabel>
         {compactOnTopOk === false && <p className="settings-err">{t('settings.compactOnTopFailed')}</p>}
 
             </div>
           )}
           {tab === 'minimap' && (
             <div className="settings-body">
-              <SectionLabel>{t('settings.minimap')}</SectionLabel>
+              <SectionLabel help={`${t('settings.minimapHint')} ${t('settings.minimapLimits')}`}>{t('settings.minimap')}</SectionLabel>
               {minimap ? <MinimapSettings minimap={minimap} /> : <p className="muted">{t('settings.desktopOnly')}</p>}
             </div>
           )}
           {tab === 'hotkeys' && (
             <div className="settings-body">
-              <SectionLabel>{t('settings.hotkeys')}</SectionLabel>
+              <SectionLabel help={t('settings.hotkeysHint')}>{t('settings.hotkeys')}</SectionLabel>
               {hotkeys ? <HotkeySettings hotkeys={hotkeys} /> : <p className="muted">{t('settings.desktopOnly')}</p>}
             </div>
           )}
           {tab === 'party' && (
             <div className="settings-body">
-              <SectionLabel>{t('net.test.title')}</SectionLabel>
+              <SectionLabel help={t('net.test.hint')}>{t('net.test.title')}</SectionLabel>
               <ConnectionTest />
-              <SectionLabel>{t('settings.squadServer.title')}</SectionLabel>
+              <SectionLabel help={t('settings.squadServer.hint')}>{t('settings.squadServer.title')}</SectionLabel>
               <SquadServerSettings />
             </div>
           )}
           {tab === 'devices' && (
             <div className="settings-body">
               <LinkSettings />
-              <SectionLabel>{t('net.test.title')}</SectionLabel>
+              <SectionLabel help={t('net.test.hint')}>{t('net.test.title')}</SectionLabel>
               <ConnectionTest />
             </div>
           )}
@@ -317,7 +312,7 @@ export default function SettingsModal({
             <div className="settings-body">
         {tracker && (
           <>
-            <SectionLabel>{t('settings.tracker.title')}</SectionLabel>
+            <SectionLabel help={`${t('settings.tracker.hint')} ${t('settings.tracker.modeNote')}`}>{t('settings.tracker.title')}</SectionLabel>
             <TrackerSettings tracker={tracker} />
           </>
         )}

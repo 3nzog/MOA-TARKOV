@@ -43,7 +43,6 @@ export default function ConnectionTest({ defaultTarget }: { defaultTarget?: stri
 
   return (
     <div className="conn-test">
-      <p className="settings-row__hint">{t('net.test.hint')}</p>
       <div className="squad-join-row">
         <Input
           mono

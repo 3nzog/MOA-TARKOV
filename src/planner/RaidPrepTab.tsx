@@ -11,7 +11,7 @@ import type { RaidSide } from '../state/raidHistory';
 import { buildRaidPrep, type RaidPrep } from '../progression/raidPrep';
 import { useSquad } from '../squad/useSquad';
 import { hexForColorId } from '../../shared/squadProtocol';
-import { Button, Chip, SectionLabel } from '../ui';
+import { Button, Chip, HelpTip, SectionLabel } from '../ui';
 import type { Names } from './names';
 import type { PlannerCtx } from './PlannerPanel';
 
@@ -177,15 +177,15 @@ export default function RaidPrepTab({
               : t('planner.side.unknownNow')}
             {raidSide && raidSideSource && (
               <span className="planner-hint"> · {t(`planner.side.source.${raidSideSource}`)}</span>
-            )}
+            )}{' '}
+            <HelpTip>
+              {[raidSide === 'scav' ? t('planner.side.scavQuests') : '', panelExits ? '' : t('extractPanel.hint')].filter(Boolean).join(' ')}
+            </HelpTip>
           </p>
-          {raidSide === 'scav' && <p className="planner-hint">{t('planner.side.scavQuests')}</p>}
-          {panelExits ? (
+          {panelExits && (
             <p>
               {t('extractPanel.yourExits', { count: panelExits.length })} {panelExits.join(' · ')}
             </p>
-          ) : (
-            <p className="planner-hint">{t('extractPanel.hint')}</p>
           )}
           {canSetRaidSide && (
             <div className="planner-chips">
@@ -304,7 +304,7 @@ export default function RaidPrepTab({
 
       {teammates.length > 0 && (
         <>
-          <SectionLabel>{t('planner.raid.squad')}</SectionLabel>
+          <SectionLabel help={t('planner.raid.squadNote')}>{t('planner.raid.squad')}</SectionLabel>
           {teammates.map(({ member, tasks: mt, prep: p, fir }) => (
             <div key={member.id} className="planner-mate">
               <div className="planner-mate__head">
@@ -334,7 +334,6 @@ export default function RaidPrepTab({
               )}
             </div>
           ))}
-          <p className="planner-hint">{t('planner.raid.squadNote')}</p>
         </>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TrackerApi } from '../app/useTracker';
-import { Button, Input, Toggle } from '../ui';
+import { Button, HelpTip, Input, Toggle } from '../ui';
 
 /**
  * The key field: a password box (never shown in clear), checked with
@@ -52,8 +52,8 @@ function KeyField({ tracker, onDone }: { tracker: TrackerApi; onDone?: () => voi
         <Button variant="primary" onClick={() => void save()} loading={busy} disabled={!key.trim()}>
           {t('settings.tracker.saveKey')}
         </Button>
+        <HelpTip>{t('settings.tracker.keyFieldHint')}</HelpTip>
       </div>
-      <span className="settings-row__hint">{t('settings.tracker.keyFieldHint')}</span>
       {err && (
         <p className="settings-err">
           {t(`settings.tracker.err.${err}`, { defaultValue: t('settings.tracker.err.unexpected'), minutes: 1 })}
@@ -90,7 +90,6 @@ export default function TrackerSettings({ tracker }: { tracker: TrackerApi }) {
   if (!tracker.hasKey) {
     return (
       <>
-        <p className="settings-row__hint">{t('settings.tracker.hint')}</p>
         <KeyField tracker={tracker} />
         <Button variant="ghost" onClick={() => void tracker.recheck()}>{t('settings.tracker.recheck')}</Button>
         {errText && err?.code !== 'not_configured' && <p className="settings-err">{errText}</p>}
@@ -103,7 +102,6 @@ export default function TrackerSettings({ tracker }: { tracker: TrackerApi }) {
 
   return (
     <>
-      <p className="settings-row__hint">{t('settings.tracker.hint')}</p>
       <p className="settings-ok">
         {t('settings.tracker.connected', { mode })}
         {tracker.displayName ? ` · ${tracker.displayName}` : ''}
@@ -115,7 +113,6 @@ export default function TrackerSettings({ tracker }: { tracker: TrackerApi }) {
           })}
         </p>
       )}
-      <p className="settings-row__hint">{t('settings.tracker.modeNote')}</p>
 
       <div className="settings-row">
         <div className="settings-row__text">
@@ -141,9 +138,7 @@ export default function TrackerSettings({ tracker }: { tracker: TrackerApi }) {
       <div className="settings-row">
         <div className="settings-row__text">
           <span>{t('settings.tracker.autoPush')}</span>
-          <span className="settings-row__hint">
-            {tracker.canWrite ? t('settings.tracker.autoPushHint') : t('settings.tracker.noWrite')}
-          </span>
+          <HelpTip>{tracker.canWrite ? t('settings.tracker.autoPushHint') : t('settings.tracker.noWrite')}</HelpTip>
         </div>
         <Toggle
           checked={tracker.autoPush && tracker.canWrite}
@@ -157,7 +152,7 @@ export default function TrackerSettings({ tracker }: { tracker: TrackerApi }) {
         <div className="settings-row">
           <div className="settings-row__text">
             <span>{t('settings.tracker.diff', { count: tracker.diffCount })}</span>
-            <span className="settings-row__hint">{t('settings.tracker.diffHint')}</span>
+            <HelpTip>{t('settings.tracker.diffHint')}</HelpTip>
           </div>
           <div className="settings-row__control">
             {confirmDiff ? (

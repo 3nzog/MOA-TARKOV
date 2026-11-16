@@ -322,6 +322,25 @@
   animation: ui-fade-in var(--dur-fast) var(--ease-out);
 }
 .ui-tip__hint { color: var(--text-faint); margin-left: 6px; font-family: var(--font-mono); font-size: 10px; }
+.ui-tip--wide { max-width: 320px; padding: 8px 11px; white-space: normal; text-transform: none; letter-spacing: normal; font-family: var(--font-ui, inherit); font-weight: 400; }
+
+/* -------------------------------------------------------------- HelpTip -- */
+.ui-help {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  color: var(--text-faint);
+  font-size: 10px;
+  cursor: help;
+  vertical-align: middle;
+  transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+.ui-help:hover, .ui-help:focus-visible { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); outline: none; }
+.ui-section-label .ui-help { width: 15px; height: 15px; }
 
 /* ------------------------------------------------------------------ Card -- */
 .ui-card {

@@ -40,7 +40,6 @@ export default function HotkeySettings({ hotkeys }: { hotkeys: HotkeysApi }) {
 
   return (
     <>
-      <p className="settings-row__hint">{t('settings.hotkeysHint')}</p>
       <ul className="hotkey-list">
         {HOTKEY_ACTIONS.map((a) => (
           <li key={a}>

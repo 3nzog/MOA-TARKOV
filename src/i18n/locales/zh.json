@@ -622,7 +622,8 @@
       "traderLevel": "{{trader}} LL{{value}}",
       "traderRep": "{{trader}} 声望 {{value}}",
       "traderUnknown": "(日志中无法读取忠诚度 — 未检查)",
-      "availableNote": "“可接取”表示在 tarkov.dev 数据中没有未满足的前置条件。游戏中部分任务还取决于商人忠诚度或数据未记录的事件 — 若商人处没有该任务,可能是这个原因。"
+      "availableNote": "“可接取”表示在 tarkov.dev 数据中没有未满足的前置条件。游戏中部分任务还取决于商人忠诚度或数据未记录的事件 — 若商人处没有该任务,可能是这个原因。",
+      "objectivesTitle": "目标"
     },
     "items": {
       "anyOf": "{{count}} 种物品中任意一种",
@@ -1041,5 +1042,18 @@
     },
     "count_one": "{{count}} 种子弹",
     "fromScreen_one": "截图中看到 {{count}} 种"
+  },
+  "mapCard": {
+    "quest": "任务",
+    "extract": "撤离点",
+    "openWiki": "在维基中打开",
+    "noWiki": "该任务没有维基页面。",
+    "noPicture": "维基上没有这个撤离点的图片。",
+    "enlarge": "放大",
+    "faction": {
+      "pmc": "PMC",
+      "scav": "Scav",
+      "shared": "合作"
+    }
   }
 }
