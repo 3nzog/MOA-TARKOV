@@ -21,7 +21,7 @@ chcp 65001 >nul
 title Tarkov MoA
 cd /d "%~dp0"
 set "SELF=%~f0"
-set "EXE=src-tauri	argetelease	arkov-companion.exe"
+set "EXE=src-tauri\target\release\tarkov-companion.exe"
 call :ui_init
 call :banner
 
@@ -31,9 +31,12 @@ call :refresh_path
 
 rem ---- 1. Atualizar pelo Git ------------------------------------------------------
 rem  Se esta pasta veio do GitHub (tem .git), baixa a versao mais nova antes de
-rem  abrir. Sem internet, sem Git ou com mudancas locais que conflitam, segue com
-rem  a versao que ja esta aqui. Se a atualizacao trouxer um .bat novo, este
-rem  arquivo reinicia com ele (--atualizado evita repetir a busca).
+rem  abrir. Tudo o que o Git responde fica em %TEMP%\TarkovMoA-atualizacao.log.
+rem  Arquivos mudados aqui (o npm costuma mexer no package-lock.json) sao
+rem  guardados com "git stash" antes; se o historico daqui divergiu do GitHub,
+rem  uma copia fica num branch "moa-backup-..." e esta pasta segue o GitHub.
+rem  Nada se perde. Se a atualizacao trouxer um .bat novo, este arquivo
+rem  reinicia com ele (--atualizado evita repetir a busca).
 call :section "1/4" "Atualização"
 if /i "%~1"=="--atualizado" (
   call :ok "Atualizado para a versão mais nova"
@@ -48,28 +51,74 @@ if errorlevel 1 (
   call :note "Git não instalado: abrindo a versão que está aqui."
   goto :updated
 )
+set "GITLOG=%TEMP%\TarkovMoA-atualizacao.log"
+> "%GITLOG%" echo Tarkov MoA - atualizacao - %DATE% %TIME%
 set "OLDHEAD="
 for /f %%H in ('git rev-parse HEAD 2^>nul') do set "OLDHEAD=%%H"
 call :run "Procurando novidades no GitHub"
-rem  Tudo num bloco so: o cmd le o bloco inteiro antes de rodar, entao trocar
-rem  este arquivo no meio do git pull nao atrapalha o que vem depois.
-(
-  git -c credential.helper= -c credential.helper=manager pull --ff-only --quiet >nul 2>&1
-  if errorlevel 1 (
-    call :warn "Não deu para atualizar agora (sem internet, ou arquivos mudados aqui)"
-    call :note "Abrindo a versão que já está instalada."
-  ) else (
-    for /f %%H in ('git rev-parse HEAD 2^>nul') do (
-      if /i not "%%H"=="%OLDHEAD%" (
-        call :ok "Versão nova baixada" "reiniciando com ela"
-        call "%~f0" --atualizado
-        exit /b
-      )
-    )
-    call :ok "Já está na versão mais nova"
-  )
+git -c credential.helper= -c credential.helper=manager fetch --prune origin >>"%GITLOG%" 2>&1
+if errorlevel 1 goto :update_fetch_failed
+set "UPSTREAM="
+for /f "delims=" %%U in ('git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2^>nul') do set "UPSTREAM=%%U"
+if not defined UPSTREAM set "UPSTREAM=origin/main"
+set "NEWHEAD="
+for /f %%H in ('git rev-parse "%UPSTREAM%" 2^>nul') do set "NEWHEAD=%%H"
+if not defined NEWHEAD goto :update_fetch_failed
+if /i "%NEWHEAD%"=="%OLDHEAD%" (
+  call :ok "Já está na versão mais nova"
+  goto :updated
 )
+set "DIRTY="
+for /f "delims=" %%L in ('git status --porcelain --untracked-files^=no 2^>nul') do set "DIRTY=1"
+set "STAMP=%DATE:/=-%_%TIME::=-%"
+set "STAMP=%STAMP: =0%"
+set "STAMP=%STAMP:,=-%"
+set "STAMP=%STAMP:.=-%"
+rem  Tudo num bloco so: o cmd le o bloco inteiro antes de rodar, entao trocar
+rem  este arquivo no meio da atualizacao nao atrapalha o que vem depois.
+(
+  if defined DIRTY (
+    git stash push -m "Tarkov MoA: mudancas locais guardadas antes de atualizar" >>"%GITLOG%" 2>&1
+    call :note "Arquivos mudados nesta pasta foram guardados (git stash)."
+  )
+  git merge --ff-only "%UPSTREAM%" >>"%GITLOG%" 2>&1
+  if errorlevel 1 (
+    git branch "moa-backup-%STAMP%" >>"%GITLOG%" 2>&1
+    git reset --hard "%UPSTREAM%" >>"%GITLOG%" 2>&1
+    call :note "O histórico desta pasta tinha divergido: uma cópia ficou em moa-backup-%STAMP%."
+  )
+  for /f %%H in ('git rev-parse HEAD 2^>nul') do (
+    if /i "%%H"=="%NEWHEAD%" (
+      call :ok "Versão nova baixada" "reiniciando com ela"
+      call "%~f0" --atualizado
+      exit /b
+    )
+  )
+  call :warn "Não deu para aplicar a versão nova"
+  call :note "Detalhes em %GITLOG%. Abrindo a versão que já está instalada."
+)
+goto :updated
+
+:update_fetch_failed
+rem  Diz o motivo pelo que o Git respondeu (o registro completo fica no log).
+findstr /i /c:"Authentication failed" /c:"Repository not found" /c:"could not read Username" /c:"403" /c:"denied" "%GITLOG%" >nul 2>&1
+if not errorlevel 1 (
+  call :warn "O GitHub não aceitou a conta deste PC para baixar o Tarkov MoA"
+  call :note "O repositório é privado: entre com a conta do GitHub que tem acesso"
+  call :note "quando a janela de login abrir, ou peça acesso ao dono do repositório."
+  goto :update_fallback
+)
+findstr /i /c:"Could not resolve host" /c:"unable to access" /c:"timed out" /c:"Failed to connect" "%GITLOG%" >nul 2>&1
+if not errorlevel 1 (
+  call :warn "Sem conexão com o GitHub agora"
+  goto :update_fallback
+)
+call :warn "Não deu para procurar a versão nova"
+:update_fallback
+call :note "Detalhes em %GITLOG%."
+call :note "Abrindo a versão que já está instalada."
 :updated
+if defined MOA_SO_ATUALIZAR exit /b 0
 
 rem ---- 2. Requisitos -----------------------------------------------------------------
 call :section "2/4" "Requisitos do computador"
@@ -153,9 +202,6 @@ call :winget_install Microsoft.EdgeWebView2Runtime || goto :fail
 :webview_ok
 call :ok "WebView2" "motor da janela"
 
-rem ---- App ja aberto? ---------------------------------------------------------
-tasklist /fi "imagename eq tarkov-companion.exe" 2>nul | find /i "tarkov-companion.exe" >nul
-if not errorlevel 1 goto :already_open
 
 rem ---- 3. Compilar so quando precisa ----------------------------------------------
 rem  A versao final (release) abre sem terminal. Ela e compilada na primeira vez
@@ -165,7 +211,19 @@ set "EXE=src-tauri\target\release\tarkov-companion.exe"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$exe = Get-Item -LiteralPath '%EXE%' -ErrorAction SilentlyContinue; if (-not $exe) { exit 1 }; $t = $exe.LastWriteTimeUtc; $dirs = 'src','src-tauri\src','src-tauri\capabilities','src-tauri\icons','public','data\snapshot'; $files = 'package.json','package-lock.json','index.html','vite.config.ts','src-tauri\Cargo.toml','src-tauri\Cargo.lock','src-tauri\tauri.conf.json','scripts\tarkovtracker-key.ps1'; $all = @(Get-ChildItem -LiteralPath $dirs -Recurse -File -ErrorAction SilentlyContinue) + @(Get-Item -LiteralPath $files -ErrorAction SilentlyContinue); if ($all | Where-Object { $_.LastWriteTimeUtc -gt $t } | Select-Object -First 1) { exit 1 }; exit 0"
 if not errorlevel 1 (
   call :ok "Já compilado" "nada mudou desde a última vez"
+  tasklist /fi "imagename eq tarkov-companion.exe" 2>nul | find /i "tarkov-companion.exe" >nul
+  if not errorlevel 1 goto :already_open
   goto :launch
+)
+
+rem  Precisa recompilar e o MoA esta aberto: ele segura o .exe, entao fecha
+rem  (o que voce marcou ja esta salvo) e abre a versao nova no fim.
+tasklist /fi "imagename eq tarkov-companion.exe" 2>nul | find /i "tarkov-companion.exe" >nul
+if not errorlevel 1 (
+  call :run "Fechando o MoA aberto para instalar a versão nova"
+  taskkill /im tarkov-companion.exe >nul 2>&1
+  timeout /t 4 >nul
+  taskkill /f /im tarkov-companion.exe >nul 2>&1
 )
 
 call :run "Baixando e conferindo as dependências (npm)"
@@ -174,6 +232,7 @@ call npm install --no-audit --no-fund
 set "NPMERR=%errorlevel%"
 echo %R%
 if not "%NPMERR%"=="0" goto :npm_failed
+if exist ".git" git checkout -- package-lock.json >nul 2>&1
 call :ok "Dependências prontas"
 call :run "Compilando o Tarkov MoA"
 call :note "Na primeira vez leva alguns minutos; depois só recompila quando o código mudar."
@@ -312,14 +371,15 @@ rem  Recarrega o PATH do registro, para enxergar o que acabou de ser instalado.
 for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')"`) do set "PATH=%%P"
 exit /b 0
 
-rem  Atalhos no Menu Iniciar, para achar o MoA pela pesquisa do Windows:
-rem  "Tarkov MoA" abre na hora o programa ja compilado; "Atualizar Tarkov MoA"
-rem  roda este arquivo (busca novidades no GitHub, recompila se precisar e abre).
+rem  Atalho no Menu Iniciar, para achar o MoA pela pesquisa do Windows. Ele
+rem  abre por este arquivo, que busca a versao nova antes (2-3 s quando nao ha
+rem  nada novo). Antes ele abria o .exe direto e o MoA nunca se atualizava por
+rem  ali; o atalho "Atualizar Tarkov MoA" daquela versao e removido.
 :start_menu
 set "MOA_EXE=%CD%\%EXE%"
 set "MOA_BAT=%SELF%"
 set "MOA_DIR=%CD%"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = [Environment]::GetFolderPath('Programs'); $w = New-Object -ComObject WScript.Shell; $a = $w.CreateShortcut((Join-Path $p 'Tarkov MoA.lnk')); $a.TargetPath = $env:MOA_EXE; $a.WorkingDirectory = Split-Path $env:MOA_EXE; $a.IconLocation = $env:MOA_EXE + ',0'; $a.Description = 'Tarkov MoA'; $a.Save(); $b = $w.CreateShortcut((Join-Path $p 'Atualizar Tarkov MoA.lnk')); $b.TargetPath = $env:MOA_BAT; $b.WorkingDirectory = $env:MOA_DIR; $b.IconLocation = (Join-Path $env:MOA_DIR 'src-tauri\icons\icon.ico') + ',0'; $b.Description = 'Busca a versao mais nova do Tarkov MoA, recompila se precisar e abre'; $b.Save()" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = [Environment]::GetFolderPath('Programs'); $w = New-Object -ComObject WScript.Shell; $a = $w.CreateShortcut((Join-Path $p 'Tarkov MoA.lnk')); $a.TargetPath = $env:MOA_BAT; $a.WorkingDirectory = $env:MOA_DIR; $a.IconLocation = $env:MOA_EXE + ',0'; $a.Description = 'Tarkov MoA (busca a versao nova e abre)'; $a.Save(); Remove-Item -LiteralPath (Join-Path $p 'Atualizar Tarkov MoA.lnk') -ErrorAction SilentlyContinue" >nul 2>&1
 if errorlevel 1 (
   call :warn "Não deu para criar os atalhos no Menu Iniciar"
 ) else (
