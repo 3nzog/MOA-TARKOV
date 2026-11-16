@@ -1000,9 +1000,6 @@
       }
     }
   },
-  "level": {
-    "fromScreen": "从截图读取到等级 {{level}} — 已更新 MoA（如开启发送，也会更新 TarkovTracker）。"
-  },
   "ballistics": {
     "title": "弹道",
     "subtitle": "每把枪的全部子弹",

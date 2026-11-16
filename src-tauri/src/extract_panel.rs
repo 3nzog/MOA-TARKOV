@@ -113,65 +113,6 @@ pub fn read_panel(path: &Path, game_lang: Option<&str>) -> windows::core::Result
     Ok(PanelText { lines, missing_language })
 }
 
-/// Where the flea market writes the player's level ("Nível atual: 12", under
-/// ADD OFFER): small and faint, so it is read from its own crop, enlarged.
-/// The market's top bar is centred, so the crop is measured from the centre in
-/// screen heights (1920x1080: x 1198-1349, y 76-113).
-pub fn level_crop(w: u32, h: u32) -> PanelCrop {
-    let hf = h as f64;
-    let x0 = (w as f64 / 2.0 + hf * 0.22).round() as u32;
-    let x1 = ((w as f64 / 2.0 + hf * 0.36).round() as u32).min(w);
-    let y0 = (hf * 0.07).round() as u32;
-    let y1 = (hf * 0.105).round() as u32;
-    PanelCrop { x: x0.min(w.saturating_sub(1)), y: y0, width: x1.saturating_sub(x0).max(1), height: y1.saturating_sub(y0).max(1), scale: 6 }
-}
-
-/// OCR of the level crop: its lines (the app finds "Nível atual: N" in them).
-#[cfg(windows)]
-pub fn read_level_lines(path: &Path, game_lang: Option<&str>) -> windows::core::Result<Vec<String>> {
-    use windows::core::HSTRING;
-    use windows::Graphics::Imaging::{
-        BitmapAlphaMode, BitmapBounds, BitmapDecoder, BitmapPixelFormat, BitmapTransform, ColorManagementMode,
-        ExifOrientationMode,
-    };
-    use windows::Storage::{FileAccessMode, StorageFile};
-    unsafe {
-        let _ = windows::Win32::System::WinRT::RoInitialize(windows::Win32::System::WinRT::RO_INIT_MULTITHREADED);
-    }
-    let file = StorageFile::GetFileFromPathAsync(&HSTRING::from(path.as_os_str()))?.get()?;
-    let stream = file.OpenAsync(FileAccessMode::Read)?.get()?;
-    let decoder = BitmapDecoder::CreateAsync(&stream)?.get()?;
-    let (w, h) = (decoder.PixelWidth()?, decoder.PixelHeight()?);
-    if w < 400 || h < 300 {
-        return Ok(Vec::new());
-    }
-    let c = level_crop(w, h);
-    let transform = BitmapTransform::new()?;
-    transform.SetScaledWidth(w * c.scale)?;
-    transform.SetScaledHeight(h * c.scale)?;
-    transform.SetBounds(BitmapBounds { X: c.x * c.scale, Y: c.y * c.scale, Width: c.width * c.scale, Height: c.height * c.scale })?;
-    let bitmap = decoder
-        .GetSoftwareBitmapTransformedAsync(
-            BitmapPixelFormat::Bgra8,
-            BitmapAlphaMode::Premultiplied,
-            &transform,
-            ExifOrientationMode::IgnoreExifOrientation,
-            ColorManagementMode::DoNotColorManage,
-        )?
-        .get()?;
-    let (engine, _) = pick_engine(game_lang)?;
-    let result = engine.RecognizeAsync(&bitmap)?.get()?;
-    let mut lines = Vec::new();
-    for line in result.Lines()? {
-        let t = line.Text()?.to_string();
-        let t = t.trim();
-        if !t.is_empty() && t.len() <= 80 {
-            lines.push(t.to_owned());
-        }
-    }
-    Ok(lines)
-}
-
 /// The OCR recognizer for the game's language when Windows has it (Cyrillic and
 /// CJK need their own; Latin ones also read the English names the game leaves
 /// untranslated), else the Windows display language's. Also returns the game's
@@ -221,10 +162,6 @@ pub struct ScreenText {
     pub lines: Vec<ScreenLine>,
     #[serde(rename = "missingLanguage")]
     pub missing_language: Option<String>,
-    /// The flea market's small "current level" line, read from its own
-    /// enlarged crop (empty on other screens).
-    #[serde(rename = "levelLines")]
-    pub level_lines: Vec<String>,
 }
 
 /// Upscale for the whole screen: inventory short names are ~10 px tall at
@@ -255,7 +192,7 @@ pub fn read_screen(path: &Path, game_lang: Option<&str>) -> windows::core::Resul
     let decoder = BitmapDecoder::CreateAsync(&stream)?.get()?;
     let (w, h) = (decoder.PixelWidth()?, decoder.PixelHeight()?);
     if w < 200 || h < 200 {
-        return Ok(ScreenText { width: w, height: h, lines: Vec::new(), missing_language: None, level_lines: Vec::new() });
+        return Ok(ScreenText { width: w, height: h, lines: Vec::new(), missing_language: None });
     }
     let max_dim = OcrEngine::MaxImageDimension().unwrap_or(4096);
     let scale = std::env::var("MOA_OCR_SCALE").ok().and_then(|v| v.parse().ok()).filter(|k: &u32| w * k <= max_dim && h * k <= max_dim).unwrap_or_else(|| screen_scale(w, h, max_dim));
@@ -287,12 +224,12 @@ pub fn read_screen(path: &Path, game_lang: Option<&str>) -> windows::core::Resul
         }
         lines.push(ScreenLine { text, words });
     }
-    Ok(ScreenText { width: w, height: h, lines, missing_language, level_lines: Vec::new() })
+    Ok(ScreenText { width: w, height: h, lines, missing_language })
 }
 
 #[cfg(not(windows))]
 pub fn read_screen(_path: &Path, _game_lang: Option<&str>) -> Result<ScreenText, String> {
-    Ok(ScreenText { width: 0, height: 0, lines: Vec::new(), missing_language: None, level_lines: Vec::new() })
+    Ok(ScreenText { width: 0, height: 0, lines: Vec::new(), missing_language: None })
 }
 
 #[cfg(all(not(windows), test))]
@@ -361,17 +298,6 @@ mod tests {
 
     /// Runs real OCR on an image: cargo test ocr_ -- --ignored --nocapture
     /// with MOA_OCR_SAMPLE set to a screenshot path.
-    /// cargo test level_reads_a_sample -- --ignored --nocapture (MOA_OCR_SAMPLE, MOA_OCR_LANG)
-    #[test]
-    #[ignore]
-    #[cfg(windows)]
-    fn level_reads_a_sample() {
-        let path = std::env::var("MOA_OCR_SAMPLE").expect("MOA_OCR_SAMPLE");
-        let lang = std::env::var("MOA_OCR_LANG").ok();
-        let lines = read_level_lines(std::path::Path::new(&path), lang.as_deref()).expect("ocr");
-        println!("LEVEL LINES {:?}", lines);
-    }
-
     #[test]
     #[ignore]
     fn ocr_reads_a_sample() {

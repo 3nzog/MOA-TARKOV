@@ -1000,9 +1000,6 @@
       }
     }
   },
-  "level": {
-    "fromScreen": "スクリーンショットからレベル {{level}} を読み取りました — MoA を更新しました（送信がオンなら TarkovTracker も）。"
-  },
   "ballistics": {
     "title": "弾薬性能",
     "subtitle": "武器ごとの全弾薬",

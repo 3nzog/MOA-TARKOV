@@ -1000,9 +1000,6 @@
       }
     }
   },
-  "level": {
-    "fromScreen": "Nível {{level}} lido da print — atualizado no MoA (e no TarkovTracker, se o envio estiver ligado)."
-  },
   "ballistics": {
     "title": "Balística",
     "subtitle": "Todas as balas de cada arma",

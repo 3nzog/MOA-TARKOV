@@ -26,8 +26,6 @@ export interface ScreenText {
   width: number;
   height: number;
   lines: ScreenLine[];
-  /** The flea market's "current level" line, read from an enlarged crop. */
-  levelLines?: string[];
 }
 
 /** item id → [full name, short name] */
