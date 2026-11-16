@@ -460,7 +460,16 @@
       "failed": "暂时无法加载这张地图。",
       "credit": "{{kind}} 地图作者",
       "via": "来源",
-      "noMarkers": "这是图片：MoA 的标记只显示在主地图上。"
+      "useAsMain": "用作主地图",
+      "backToNormal": "返回普通地图",
+      "recalibrate": "重新校准",
+      "calHint": "第一次需要在这张图上点出 4 个撤离点的位置；之后所有标记都会画在这张图上。",
+      "calibratedHint": "已校准：你的位置、队友、任务和撤离点会画在这张图上。",
+      "clickWhere": "在图上点击这个撤离点的位置：",
+      "skip": "找不到",
+      "noMoreRefs": "没有可点击的撤离点了。取消后再仔细试一次。",
+      "calFailed": "这些点不行（可能在同一处点了两次）。请重新校准。",
+      "calDone": "完成！这张地图现在是你的主地图。"
     }
   },
   "onboarding": {

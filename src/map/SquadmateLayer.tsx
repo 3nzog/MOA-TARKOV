@@ -6,7 +6,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Marker } from "react-leaflet";
 import L from "leaflet";
-import { getGameToLatLng, getMapDef } from "./mapDefs";
+import { getGameToLatLng } from "./mapDefs";
+import { headingOffset } from "./headingOffset";
+import { useArtStore } from "./artCalibration";
 import { useSquad } from "../squad/useSquad";
 import type { MemberPosition } from "../squad/SquadContext";
 import { hexForColorId, type SquadMember } from "../../shared/squadProtocol";
@@ -115,7 +117,7 @@ function SquadmateMarker({
 export default function SquadmateLayer({ mapId }: { mapId: string }) {
   const squad = useSquad();
   const toLatLng = getGameToLatLng(mapId);
-  const mapRotation = getMapDef(mapId)?.rotation ?? 0;
+  useArtStore();
 
   // Tick so staleness fades update over time even without new messages. 2.5s
   // steps + a matching CSS opacity transition read as a continuous fade over
@@ -140,7 +142,7 @@ export default function SquadmateLayer({ mapId }: { mapId: string }) {
             member={m}
             pos={pos}
             toLatLng={toLatLng}
-            mapRotation={mapRotation}
+            mapRotation={headingOffset(mapId, pos.payload.x, pos.payload.z)}
             now={now}
           />
         );

@@ -367,6 +367,22 @@ function App() {
   );
   const isPoiDimmed = useCallback((p: Poi) => tierOf(p) === 'other', [tierOf]);
 
+  // Exits to calibrate a hand-made map with (their names are on the pictures).
+  const artRefs = useMemo(
+    () =>
+      pois.currentPois
+        // Exits only: transits are newer than most of the pictures.
+        .filter((p) => p.category === 'extract')
+        .map((p) => {
+          const own = p.label;
+          // The pictures are in English: show that name too when it differs
+          // (the alias list starts with English; see getExitAliases).
+          const en = exitAliases[p.id]?.[0];
+          return { label: en && en !== own ? `${own} — ${en}` : own, x: p.position.x, z: p.position.z };
+        }),
+    [pois.currentPois, exitAliases],
+  );
+
   // Scav sniper posts for the minimap (when the Sniper Scav filter is on).
   const minimapSnipers = useMemo(
     () => sniperSpots(pois.currentPois.filter(isPoiVisible)).map((s) => s.center),
@@ -867,6 +883,8 @@ function App() {
                   {artOpen && ART_MAPS[canonicalMapId(selectedMapId)] && (
                     <ArtMapViewer
                       maps={ART_MAPS[canonicalMapId(selectedMapId)]}
+                      mapId={canonicalMapId(selectedMapId)}
+                      refs={artRefs}
                       mapName={selectedMapName}
                       onClose={() => setArtOpen(false)}
                     />

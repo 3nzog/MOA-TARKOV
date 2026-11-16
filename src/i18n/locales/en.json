@@ -460,7 +460,16 @@
       "failed": "Could not load this map now.",
       "credit": "{{kind}} map by",
       "via": "shown by",
-      "noMarkers": "It is a picture: MoA markers are on the main map only."
+      "useAsMain": "Use as the main map",
+      "backToNormal": "Back to the normal map",
+      "recalibrate": "Calibrate again",
+      "calHint": "The first time you click where 4 exits are on this picture; after that every marker is drawn on it.",
+      "calibratedHint": "Calibrated: your position, friends, quests and exits are drawn on this picture.",
+      "clickWhere": "Click on the picture where this exit is:",
+      "skip": "Can’t find it",
+      "noMoreRefs": "No more exits to click. Cancel and try again, clicking more carefully.",
+      "calFailed": "Those points did not work (maybe two clicks on the same spot). Calibrate again.",
+      "calDone": "Done! This map is now your main map."
     }
   },
   "onboarding": {

@@ -1119,3 +1119,33 @@ button:disabled {
 .art-map__credit a {
   color: var(--text-dim);
 }
+
+.art-cal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--text);
+}
+.art-cal span {
+  flex: none;
+}
+.art-cal select {
+  flex: 1;
+  min-width: 220px;
+}
+.art-map--picking .leaflet-container {
+  cursor: crosshair;
+}
+.art-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}

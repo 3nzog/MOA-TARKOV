@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Marker } from 'react-leaflet';
 import L from 'leaflet';
 import { getGameToLatLng, getMapDef } from './mapDefs';
+import { headingOffset } from './headingOffset';
+import { useArtStore } from './artCalibration';
 import { markerHtml } from '../squad/symbols';
 
 export interface PlayerMarkerProps {
@@ -23,7 +25,9 @@ export default function PlayerMarker({ position, mapId, symbol, color = 'var(--l
   // so marker *positions* are already rotated. The heading, however, is a
   // plain screen-space CSS rotate() that bypasses the CRS — so it must add the
   // same map rotation by hand, else it reads 180° off on every current map.
-  const mapRotation = getMapDef(mapId)?.rotation ?? 0;
+  // (On a calibrated hand-made map the picture's own turn is added too.)
+  useArtStore();
+  const mapRotation = position ? headingOffset(mapId, position.x, position.z) : getMapDef(mapId)?.rotation ?? 0;
 
   const icon = useMemo(
     () =>

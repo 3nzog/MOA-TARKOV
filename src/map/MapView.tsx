@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { MapContainer, ImageOverlay, TileLayer, useMap } from "react-leaflet";
-import { TILE_STYLES } from "./mapStyles";
+import { TILE_STYLES, artMapUrl } from "./mapStyles";
+import { activeArt, useArtStore } from "./artCalibration";
+import ArtOverlay from "./ArtOverlay";
+import { artBounds, makeArtCRS } from "./artCrs";
 import { useTranslation } from "react-i18next";
 import L from "leaflet";
 import { Plus, Minus } from "@phosphor-icons/react";
@@ -105,7 +108,10 @@ export default function MapView({
 }: MapViewProps): React.JSX.Element {
   const { t } = useTranslation();
   const def = MAPS[canonicalMapId(mapId)];
-  const crs = useMemo(() => (def ? makeCRS(def) : null), [def]);
+  // A calibrated hand-made map chosen for this map (Map tools → 3D / 2D).
+  useArtStore();
+  const art = activeArt(canonicalMapId(mapId));
+  const crs = useMemo(() => (art ? makeArtCRS(art) : def ? makeCRS(def) : null), [def, art]);
 
   if (!def || !crs) {
     return (
@@ -115,12 +121,13 @@ export default function MapView({
     );
   }
 
-  const bounds = leafletBounds(def);
+  const vectorBounds = leafletBounds(def);
+  const bounds: L.LatLngBoundsExpression = art ? artBounds(art) : vectorBounds;
   const tiles = mapStyle === 'relief' ? TILE_STYLES[canonicalMapId(mapId)] : undefined;
 
   return (
     <MapContainer
-      key={mapId}
+      key={`${mapId}:${art?.key ?? mapStyle}`}
       crs={crs}
       bounds={bounds}
       style={{ height: "100%", width: "100%" }}
@@ -128,7 +135,7 @@ export default function MapView({
       // Inertia adds a momentum glide after each drag-release that reads as
       // "sluggish" panning — off so the map stops exactly when the mouse does.
       inertia={false}
-      minZoom={-3}
+      minZoom={art ? -5 : -3}
       maxZoom={7}
       // Fractional zoom steps: each scroll notch changes zoom by 0.25 instead
       // of a whole level so a wheel gesture reads as a smooth ramp.
@@ -157,7 +164,9 @@ export default function MapView({
       // of floating over the map (BSD-2 license carried in the repo).
       attributionControl={false}
     >
-      {tiles ? (
+      {art ? (
+        <ArtOverlay cal={art} url={artMapUrl(art.key)} />
+      ) : tiles ? (
         // Same CRS as tarkov.dev's own map, so its tile pyramid lines up with
         // every marker (tileSize is per map: the Lab's is 175).
         <TileLayer
@@ -172,13 +181,13 @@ export default function MapView({
       ) : def.svgUrl.endsWith(".svg") ? (
         <FloorVisualOverlay
           svgUrl={def.svgUrl}
-          bounds={bounds}
+          bounds={vectorBounds}
           floors={def.floors}
           activeFloorId={activeFloorId}
           extraSvgUrls={def.extraSvgUrls}
         />
       ) : (
-        <ImageOverlay url={def.svgUrl} bounds={bounds} />
+        <ImageOverlay url={def.svgUrl} bounds={vectorBounds} />
       )}
       <ZoomDock />
       <ZoomDragRescue />

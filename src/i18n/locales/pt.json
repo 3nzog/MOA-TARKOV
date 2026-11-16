@@ -460,7 +460,16 @@
       "failed": "Não deu para carregar este mapa agora.",
       "credit": "Mapa {{kind}} feito por",
       "via": "mostrado pelo",
-      "noMarkers": "É uma imagem: as marcações do MoA aparecem só no mapa principal."
+      "useAsMain": "Usar como mapa principal",
+      "backToNormal": "Voltar ao mapa normal",
+      "recalibrate": "Calibrar de novo",
+      "calHint": "Na primeira vez você clica onde ficam 4 extrações nesta imagem; depois todas as marcações aparecem em cima dela.",
+      "calibratedHint": "Já calibrado: sua posição, amigos, missões e extrações aparecem em cima desta imagem.",
+      "clickWhere": "Clique na imagem onde fica a extração:",
+      "skip": "Não acho esta",
+      "noMoreRefs": "Acabaram as extrações para clicar. Cancele e tente de novo, clicando com mais cuidado.",
+      "calFailed": "Os pontos não deram certo (talvez dois cliques no mesmo lugar). Calibre de novo.",
+      "calDone": "Pronto! Este mapa agora é o seu mapa principal."
     }
   },
   "onboarding": {
