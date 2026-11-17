@@ -1093,5 +1093,33 @@
       "down": "Reconnecting…",
       "nokey": "No code"
     }
+  },
+  "route": {
+    "title": "Raid route",
+    "show": "Show the raid route",
+    "hide": "Hide the raid route",
+    "you": "You",
+    "help": "Plans the order that finishes the most objectives before the raid ends, from where you spawned to an exit of your side. So MoA knows your spawn, take a screenshot right after spawning (or pick the spawn on the map). Every new screenshot adjusts the route, and spots you or the party walked up to drop off the list. With party on, the squad's quests count too: a place you both need is a single stop. Times are straight-line estimates with a margin.",
+    "summary_one": "{{count}} objective · ~{{min}} min",
+    "summary_other": "{{count}} objectives · ~{{min}} min",
+    "budget": "{{min}} min of raid",
+    "party": "Party quests",
+    "pickHint": "Click a blue spawn on the map",
+    "pickSpawn": "Pick spawn",
+    "from": {
+      "picked": "From the spawn you picked",
+      "self": "From your last screenshot",
+      "party": "From the middle of the party"
+    },
+    "noStart": "Take a screenshot when you spawn, or pick the spawn on the map",
+    "done": "Done (take off the route)",
+    "nothing": "No objective fits in the time left: head straight for the exit.",
+    "none": "No active quest with a marked place on this map.",
+    "left_one": "{{count}} objective does not fit in this raid's time",
+    "left_other": "{{count}} objectives do not fit in this raid's time",
+    "reset_one": "Put {{count}} done stop back on the route",
+    "reset_other": "Put {{count}} done stops back on the route",
+    "more_one": "+{{count}} objective at the same place",
+    "more_other": "+{{count}} objectives at the same place"
   }
 }

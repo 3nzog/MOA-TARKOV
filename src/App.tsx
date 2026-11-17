@@ -32,6 +32,9 @@ import DrawLayer from './map/DrawLayer';
 import MapToolsDock from './map/MapToolsDock';
 import FollowCamera from './map/FollowCamera';
 import SquadQuestLayer from './map/SquadQuestLayer';
+import RouteLayer from './route/RouteLayer';
+import RoutePanel from './route/RoutePanel';
+import { useRaidRoute } from './route/useRaidRoute';
 import SquadQuestSummary from './components/SquadQuestSummary';
 import { useSettings } from './app/useSettings';
 import { useRailWidth } from './app/useRailWidth';
@@ -462,6 +465,20 @@ function App() {
       endsAt: liveRaidSide === 'pmc' && minutes ? liveRaid.startedAt + minutes * 60_000 : null,
     };
   }, [liveRaid, liveRaidMapId, liveRaidSide]);
+  // The raid route: the most objectives (yours, and the squad's with party on)
+  // from the spawn to an exit before the raid ends.
+  const route = useRaidRoute({
+    mapId: selectedMapId,
+    own: questState,
+    mateStates: squadSync.squadQuestStates,
+    squad,
+    selfName: squad.members.find((m) => m.id === squad.selfId)?.name ?? t('route.you'),
+    selfColor: selfColor ?? '#4fd1ff',
+    playerPos,
+    raid: minimapRaid,
+    pois: pois.currentPois,
+    tierOf,
+  });
   const [clockNow, setClockNow] = useState(() => Date.now());
   useEffect(() => {
     if (!liveRaid) return;
@@ -919,7 +936,17 @@ function App() {
                       }}
                     />
                     <GridOverlay mapId={selectedMapId} visible={pois.filterState.gridVisible} />
-                    {drawing.drawTool === null && (
+                    {route.on && (
+                      <RouteLayer
+                        mapId={selectedMapId}
+                        plan={route.plan}
+                        start={route.start}
+                        picking={route.picking}
+                        spawns={route.spawns}
+                        onPick={route.pickStart}
+                      />
+                    )}
+                    {drawing.drawTool === null && !(route.on && route.picking) && (
                       <MapClickPlacer mapId={selectedMapId} onAdd={pois.addCustom} />
                     )}
                     {pois.customEnabled && squadSync.showOwnOnMap && (
@@ -959,7 +986,10 @@ function App() {
                     onRelief={(on) => setAppearance({ mapStyle: on ? 'relief' : 'vector' })}
                     artCount={ART_MAPS[canonicalMapId(selectedMapId)]?.length ?? 0}
                     onArt={() => setArtOpen(true)}
+                    route={route.on}
+                    onRoute={route.setOn}
                   />
+                  {route.on && <RoutePanel route={route} inSquad={squad.inSquad} />}
                   {artOpen && ART_MAPS[canonicalMapId(selectedMapId)] && (
                     <ArtMapViewer
                       maps={ART_MAPS[canonicalMapId(selectedMapId)]}

@@ -1093,5 +1093,33 @@
       "down": "Reconectando…",
       "nokey": "Sem código"
     }
+  },
+  "route": {
+    "title": "Rota da raid",
+    "show": "Mostrar a rota da raid",
+    "hide": "Esconder a rota da raid",
+    "you": "Você",
+    "help": "Monta a ordem que conclui mais objetivos antes do fim da raid, saindo de onde você nasceu e terminando numa extração do seu lado. Para o MoA saber o spawn, tire um print logo ao nascer (ou escolha o spawn no mapa). A cada print novo a rota se ajusta, e os pontos por onde você ou a party passou saem da lista. Com a party ligada, entram as missões do squad também: um lugar que os dois precisam vira uma parada só. Os tempos são estimativas em linha reta, com margem.",
+    "summary_one": "{{count}} objetivo · ~{{min}} min",
+    "summary_other": "{{count}} objetivos · ~{{min}} min",
+    "budget": "{{min}} min de raid",
+    "party": "Missões da party",
+    "pickHint": "Clique num spawn azul no mapa",
+    "pickSpawn": "Escolher spawn",
+    "from": {
+      "picked": "Saindo do spawn escolhido",
+      "self": "Saindo do seu último print",
+      "party": "Saindo do meio da party"
+    },
+    "noStart": "Tire um print ao nascer, ou escolha o spawn no mapa",
+    "done": "Feito (tirar da rota)",
+    "nothing": "Nenhum objetivo cabe no tempo que sobra: vá direto para a extração.",
+    "none": "Nenhuma missão ativa com lugar marcado neste mapa.",
+    "left_one": "{{count}} objetivo não cabe no tempo desta raid",
+    "left_other": "{{count}} objetivos não cabem no tempo desta raid",
+    "reset_one": "Voltar {{count}} concluído para a rota",
+    "reset_other": "Voltar {{count}} concluídos para a rota",
+    "more_one": "+{{count}} objetivo no mesmo lugar",
+    "more_other": "+{{count}} objetivos no mesmo lugar"
   }
 }

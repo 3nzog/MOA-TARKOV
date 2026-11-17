@@ -2,7 +2,7 @@
 // zoom dock. Two controls only (Moacir's spec): toggle the pen, and clear all
 // your drawings on this map (the eraser icon — per-stroke erasing is gone).
 
-import { PencilSimple, Eraser, Mountains, Cube } from "@phosphor-icons/react";
+import { PencilSimple, Eraser, Mountains, Cube, Path } from "@phosphor-icons/react";
 import { useTranslation } from "react-i18next";
 import type { DrawTool } from "./DrawLayer";
 
@@ -20,6 +20,9 @@ interface MapToolsDockProps {
   /** Hand-made 2D / 3D maps for this map (opens the viewer). */
   artCount?: number;
   onArt?: () => void;
+  /** The raid route (most objectives before the raid ends): on, and its switch. */
+  route?: boolean;
+  onRoute?: (on: boolean) => void;
 }
 
 export default function MapToolsDock({
@@ -33,11 +36,25 @@ export default function MapToolsDock({
   onRelief,
   artCount = 0,
   onArt,
+  route = false,
+  onRoute,
 }: MapToolsDockProps) {
   const { t } = useTranslation();
   const penOn = tool === "pen";
   return (
     <div className="tc-tools-dock">
+      {onRoute && (
+        <button
+          type="button"
+          aria-pressed={route}
+          title={route ? t('route.hide') : t('route.show')}
+          aria-label={t('route.title')}
+          className={route ? "active" : undefined}
+          onClick={() => onRoute(!route)}
+        >
+          <Path weight={route ? "bold" : "regular"} />
+        </button>
+      )}
       <button
         type="button"
         aria-label={t('rail.drawOnMap')}
