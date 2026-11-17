@@ -1039,7 +1039,7 @@
       "armorHint": "Cuánto desgasta el blindaje",
       "frag": "Fragmentación",
       "speed": "Velocidad m/s",
-      "price": "Precio mercadillo"
+      "price": "Precio/bala"
     },
     "effect": {
       "0": "no pasa",
@@ -1047,7 +1047,18 @@
       "2": "a veces",
       "3": "pasa",
       "4": "pasa fácil"
-    }
+    },
+    "value": {
+      "title": "Mejor relación calidad-precio contra clase",
+      "help": "Elige la clase del chaleco del objetivo. MoA señala la bala más barata que la atraviesa, y la más barata que la atraviesa con holgura. El precio es el del comerciante (la munición está prohibida en el mercadillo) o el del mercadillo cuando se vende allí. Solo cuenta lo que puedes comprar con los niveles de comerciante que marcaste en MoA (sin niveles marcados, todo cuenta como disponible). Con una captura del mercado abierta, también muestra la mejor de las que aparecen en ella.",
+      "through": "Más barata que atraviesa",
+      "easily": "Más barata que atraviesa con holgura",
+      "onScreen": "Mejor de tu captura",
+      "none": "Ninguna que puedas comprar atraviesa clase {{n}}",
+      "tag": "mejor precio"
+    },
+    "flea": "mercadillo",
+    "ll": "NL{{n}}"
   },
   "mapCard": {
     "quest": "Misión",

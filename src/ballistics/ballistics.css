@@ -127,3 +127,35 @@
 .bl-tag svg { vertical-align: -2px; }
 .bl-legend { display: inline-flex; align-items: center; gap: 4px; margin-right: var(--sp-3); }
 .bl-foot { line-height: 2; }
+
+/* Best value against the target's armor class */
+.bl-value {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-lg);
+  background: var(--bg-sunken);
+}
+.bl-value__label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-caption); font-weight: 600; }
+.bl-value__label svg { color: #5ee07f; font-size: 16px; }
+.bl-value__picks { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.bl-value__pick {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 6px 10px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  cursor: default;
+}
+.bl-value__pick small { font-size: var(--fs-micro); color: var(--text-faint); text-transform: uppercase; letter-spacing: var(--track-label); }
+.bl-value__pick small svg { vertical-align: -2px; color: #ffd34d; }
+.bl-value__pick strong { font-size: var(--fs-caption); }
+.bl-value__pick .bl-price { font-size: var(--fs-caption); color: #5ee07f; }
+.bl-value__none { font-size: var(--fs-caption); color: var(--text-faint); }
+.bl-tag--value { background: rgba(94, 224, 127, 0.18); color: #5ee07f; }
+.bl-price { color: var(--text); white-space: nowrap; }
+.bl-price small { display: block; font-size: 10px; color: var(--text-faint); }
+.bl-price.is-locked { opacity: 0.45; }

@@ -10,6 +10,12 @@ export interface Price {
   l?: number;
   st?: string;
   sp?: number;
+  /** Cheapest trader offer: trader id, price (RUB) and loyalty level needed. */
+  bt?: string;
+  bp?: number;
+  bl?: number;
+  /** Not sold on the flea market (banned there). */
+  nf?: boolean;
 }
 export interface Locale {
   items: ItemNames;

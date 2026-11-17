@@ -1039,7 +1039,7 @@
       "armorHint": "How much the round wears armor down",
       "frag": "Fragmentation",
       "speed": "Speed m/s",
-      "price": "Flea price"
+      "price": "Price/round"
     },
     "effect": {
       "0": "won't go through",
@@ -1047,7 +1047,18 @@
       "2": "sometimes",
       "3": "goes through",
       "4": "easily"
-    }
+    },
+    "value": {
+      "title": "Best value against class",
+      "help": "Pick the target's armor class. MoA points out the cheapest round that goes through it, and the cheapest that goes through it easily. The price is the trader's (ammo is banned on the flea) or the flea's when the round is sold there. Only what you can buy with the trader levels you set in MoA counts (with none set, everything counts as open). With a market screenshot open, it also shows the best among the ones on it.",
+      "through": "Cheapest that goes through",
+      "easily": "Cheapest that goes through easily",
+      "onScreen": "Best on your screenshot",
+      "none": "Nothing you can buy goes through class {{n}}",
+      "tag": "best value"
+    },
+    "flea": "flea",
+    "ll": "LL{{n}}"
   },
   "mapCard": {
     "quest": "Quest",

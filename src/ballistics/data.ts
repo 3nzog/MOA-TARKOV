@@ -115,6 +115,63 @@ export function ammoFor(pick: SearchHit, data: AmmoData): string[] {
     .map(([id]) => id);
 }
 
+/** What one round costs: on the flea when it is sold there, else from the trader. */
+export interface RoundPrice {
+  price: number;
+  source: 'flea' | 'trader' | null;
+  trader?: string;
+  level?: number;
+  /** Your loyalty with that trader is too low to buy it (when you told MoA your levels). */
+  locked: boolean;
+}
+
+export function roundPrice(
+  p: { a?: number; l?: number; bt?: string; bp?: number; bl?: number; nf?: boolean } | undefined,
+  traderLevels: Record<string, number> | null,
+): RoundPrice {
+  const flea = p && !p.nf ? (p.a ?? p.l ?? 0) : 0;
+  const trader = p?.bp ?? 0;
+  const locked = !!(traderLevels && p?.bt && (traderLevels[p.bt] ?? 0) < (p.bl ?? 1));
+  // The trader when you can buy there and it is not dearer than the flea.
+  if (trader > 0 && !locked && (flea <= 0 || trader <= flea)) return { price: trader, source: 'trader', trader: p!.bt, level: p!.bl, locked: false };
+  if (flea > 0) return { price: flea, source: 'flea', locked: false };
+  if (trader > 0) return { price: trader, source: 'trader', trader: p!.bt, level: p!.bl, locked: true };
+  return { price: 0, source: null, locked: false };
+}
+
+export interface ValuePick {
+  id: string;
+  price: number;
+}
+
+/**
+ * Best value against armor of `armorClass`: the cheapest cartridge (with a
+ * market price) that goes through it ("3" or better on classEffect), and the
+ * cheapest that goes through it easily ("4"), when that is a different one.
+ * Cartridges with no market price (flea-banned, unknown) are left out.
+ */
+export function bestValue(
+  ids: string[],
+  data: AmmoData,
+  priceOf: (id: string) => number,
+  armorClass: number,
+): { through: ValuePick | null; easily: ValuePick | null } {
+  const cheapest = (min: number): ValuePick | null => {
+    let best: ValuePick | null = null;
+    for (const id of ids) {
+      const a = data.ammo[id];
+      const price = priceOf(id);
+      if (!a || a.g || price <= 0 || classEffect(a.p, armorClass) < min) continue;
+      // Cheaper wins; at the same price, the one that goes through better.
+      if (!best || price < best.price || (price === best.price && (a.p ?? 0) > (data.ammo[best.id].p ?? 0))) best = { id, price };
+    }
+    return best;
+  };
+  const through = cheapest(3);
+  const easily = cheapest(4);
+  return { through, easily: easily && easily.id !== through?.id ? easily : null };
+}
+
 /**
  * Cartridges named on a screenshot (the flea market's ammo list, a stash…):
  * full names in the OCR'd lines, the longest one per line ("M855A1" before

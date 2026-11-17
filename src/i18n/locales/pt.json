@@ -1039,7 +1039,7 @@
       "armorHint": "Quanto a bala desgasta a blindagem",
       "frag": "Fragmentação",
       "speed": "Velocidade m/s",
-      "price": "Preço flea"
+      "price": "Preço/bala"
     },
     "effect": {
       "0": "não passa",
@@ -1047,7 +1047,18 @@
       "2": "às vezes",
       "3": "passa",
       "4": "passa fácil"
-    }
+    },
+    "value": {
+      "title": "Custo-benefício contra classe",
+      "help": "Escolha a classe do colete do alvo. O MoA aponta a munição mais barata por bala que fura essa classe, e a mais barata que fura com folga. O preço é o do comerciante (as balas são proibidas no flea) ou do flea quando a bala é vendida lá. Só conta o que você consegue comprar com os níveis de comerciante que marcou no MoA (sem níveis marcados, considera tudo liberado). Com um print do mercado aberto, mostra também a melhor entre as do print.",
+      "through": "Mais barata que fura",
+      "easily": "Mais barata que fura fácil",
+      "onScreen": "Melhor do seu print",
+      "none": "Nenhuma que você possa comprar fura classe {{n}}",
+      "tag": "melhor custo"
+    },
+    "flea": "flea",
+    "ll": "LL{{n}}"
   },
   "mapCard": {
     "quest": "Missão",

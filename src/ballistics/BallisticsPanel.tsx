@@ -5,11 +5,12 @@
 // opens it on the cartridges that were on screen.
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Camera, MagnifyingGlass, X } from '@phosphor-icons/react';
-import { IconButton, Input, Spinner, Toggle } from '../ui';
+import { Camera, CurrencyCircleDollar, MagnifyingGlass, X } from '@phosphor-icons/react';
+import { HelpTip, IconButton, Input, Segmented, Spinner, Toggle } from '../ui';
 import { loadLocale, loadPrices, type Price } from '../prices/usePriceScan';
 import { itemIcon } from '../gunsmith/data';
-import { ammoFor, caliberLabel, classEffect, loadAmmoData, search, type AmmoData, type AmmoStats, type Names, type SearchHit } from './data';
+import { useTraderLevels } from '../gunsmith/availability';
+import { ammoFor, bestValue, caliberLabel, classEffect, loadAmmoData, roundPrice, search, type ValuePick, type AmmoData, type AmmoStats, type Names, type SearchHit } from './data';
 import '../gunsmith/gunsmith.css';
 import './ballistics.css';
 
@@ -31,11 +32,17 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
   const [data, setData] = useState<AmmoData | null>(null);
   const [names, setNames] = useState<Names | null>(null);
   const [prices, setPrices] = useState<Record<string, Price>>({});
+  const [traders, setTraders] = useState<Record<string, string>>({});
+  // Your loyalty levels, when you set them (Gunsmith / planner); else all open.
+  const saved = useTraderLevels();
+  const levels = saved.set ? saved.levels : null;
   const [query, setQuery] = useState('');
   const [pick, setPick] = useState<SearchHit | null>(null);
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'p', desc: true });
   const [hideTracers, setHideTracers] = useState(false);
   const [hover, setHover] = useState<string | null>(null);
+  /** Armor class of the target, for the best-value pick. */
+  const [target, setTarget] = useState(4);
 
   useEffect(() => {
     let alive = true;
@@ -44,6 +51,7 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
       if (!alive) return;
       setData(d);
       setNames(l.items as Names);
+      setTraders(l.traders);
       setPrices(p);
     });
     return () => {
@@ -74,7 +82,7 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
 
   const name = (id: string) => names?.[id]?.[0] ?? id;
   const short = (id: string) => names?.[id]?.[1] ?? name(id);
-  const price = (id: string) => prices[id]?.a ?? prices[id]?.l ?? 0;
+  const priceInfo = (id: string) => roundPrice(prices[id], levels);
 
   const rows = useMemo(() => {
     if (!data || !pick) return [];
@@ -87,7 +95,7 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
         case 'd':
           return totalDamage(a);
         case 'price':
-          return prices[id]?.a ?? prices[id]?.l ?? 0;
+          return roundPrice(prices[id], levels).price;
         default:
           return a[sort.key] ?? 0;
       }
@@ -98,7 +106,24 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
       const c = typeof a === 'string' ? a.localeCompare(String(b)) : a - (b as number);
       return sort.desc ? -c : c;
     });
-  }, [data, pick, sort, hideTracers, names, prices]);
+  }, [data, pick, sort, hideTracers, names, prices, levels]);
+
+  // Best value against the target's armor: among the list, and among the
+  // cartridges on the market screenshot when there is one.
+  const value = useMemo(() => {
+    if (!data) return null;
+    // Only what you can buy now counts.
+    const priceOf = (id: string) => {
+      const r = roundPrice(prices[id], levels);
+      return r.locked ? 0 : r.price;
+    };
+    const onScreen = rows.filter((id) => seen.has(id));
+    return {
+      all: bestValue(rows, data, priceOf, target),
+      screen: onScreen.length > 0 ? bestValue(onScreen, data, priceOf, target).through : null,
+    };
+  }, [data, rows, prices, target, seen, levels]);
+  const bestId = value?.all.through?.id ?? null;
 
   const choose = (h: SearchHit) => {
     setPick(h);
@@ -192,6 +217,29 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
             </label>
           </div>
 
+          {value && (
+            <div className="bl-value">
+              <span className="bl-value__label">
+                <CurrencyCircleDollar weight="fill" /> {t('ballistics.value.title')}
+              </span>
+              <Segmented
+                options={VALUE_CLASSES.map((c) => ({ id: String(c), label: String(c) }))}
+                value={String(target)}
+                onChange={(id) => setTarget(Number(id))}
+              />
+              <HelpTip>{t('ballistics.value.help')}</HelpTip>
+              <div className="bl-value__picks">
+                {value.all.through ? (
+                  <ValueLine label={t('ballistics.value.through')} pick={value.all.through} name={name} onHover={setHover} />
+                ) : (
+                  <span className="bl-value__none">{t('ballistics.value.none', { n: target })}</span>
+                )}
+                {value.all.easily && <ValueLine label={t('ballistics.value.easily')} pick={value.all.easily} name={name} onHover={setHover} />}
+                {value.screen && <ValueLine label={t('ballistics.value.onScreen')} pick={value.screen} name={name} onHover={setHover} screen />}
+              </div>
+            </div>
+          )}
+
           <PenChart data={data} ids={rows} short={short} hover={hover} onHover={setHover} seen={seen} />
 
           <div className="bl-table-wrap">
@@ -215,7 +263,7 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
               <tbody>
                 {rows.map((id) => {
                   const a = data.ammo[id];
-                  const p = price(id);
+                  const p = priceInfo(id);
                   return (
                     <tr
                       key={id}
@@ -228,6 +276,7 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
                         <span>
                           {name(id)}
                           {a.t && <span className="bl-tag">{t('ballistics.tracer')}</span>}
+                          {id === bestId && <span className="bl-tag bl-tag--value">{t('ballistics.value.tag')}</span>}
                           {seen.has(id) && (
                             <span className="bl-tag bl-tag--seen">
                               <Camera />
@@ -248,7 +297,14 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
                           </td>
                         );
                       })}
-                      <td className="bl-num bl-price">{p > 0 ? `${p.toLocaleString(i18n.language)} ₽` : '—'}</td>
+                      <td className={`bl-num bl-price${p.locked ? ' is-locked' : ''}`}>
+                        {p.price > 0 ? `${p.price.toLocaleString(i18n.language)} ₽` : '—'}
+                        {p.source && (
+                          <small>
+                            {p.source === 'flea' ? t('ballistics.flea') : `${traders[p.trader ?? ''] ?? ''} ${t('ballistics.ll', { n: p.level ?? 1 })}`}
+                          </small>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -268,6 +324,34 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
         </div>
       )}
     </div>
+  );
+}
+
+const VALUE_CLASSES = [2, 3, 4, 5, 6] as const;
+
+/** One best-value pick: what it is for, the cartridge and its price per round. */
+function ValueLine({
+  label,
+  pick,
+  name,
+  onHover,
+  screen,
+}: {
+  label: string;
+  pick: ValuePick;
+  name: (id: string) => string;
+  onHover: (id: string | null) => void;
+  screen?: boolean;
+}) {
+  const { i18n } = useTranslation();
+  return (
+    <span className="bl-value__pick" onMouseEnter={() => onHover(pick.id)} onMouseLeave={() => onHover(null)}>
+      <small>
+        {screen && <Camera />} {label}
+      </small>
+      <strong>{name(pick.id)}</strong>
+      <span className="bl-price">{pick.price.toLocaleString(i18n.language)} ₽</span>
+    </span>
   );
 }
 
