@@ -16,10 +16,7 @@ import { Toast, IconButton, Spinner } from './ui';
 import Spine, { type RailSection } from './shell/Spine';
 import RailResizer from './shell/RailResizer';
 import { useRelativeTime } from './hooks/useRelativeTime';
-import SettingsModal from './components/SettingsModal';
 import Onboarding, { ONBOARDED_KEY } from './onboarding/Onboarding';
-import PatchNotesModal from './components/PatchNotesModal';
-import FeedbackModal from './feedback/FeedbackModal';
 import SquadSection from './squad/SquadSection';
 import SquadmateLayer from './map/SquadmateLayer';
 import { useSquad } from './squad/useSquad';
@@ -70,10 +67,9 @@ import { currentRaid, learnSides, raidSide, setManualSide, setPanelSide, type Ra
 import { exitTier, sideFromPanel } from './poi/exitTier';
 import { facetDefaultOn } from './poi/facets';
 import DangerZoneLayer from './map/DangerZoneLayer';
-import ArtMapViewer from './map/ArtMapViewer';
 import { ART_MAPS, TILE_STYLES } from './map/mapStyles';
 import { sniperSpots } from './poi/sniper';
-import PlannerPanel, { type PlannerTab } from './planner/PlannerPanel';
+import type { PlannerTab } from './planner/PlannerPanel';
 import { scannedItems } from './planner/scanned';
 import { setAppearance, useAppearance } from './appearance/useAppearance';
 import GlassIntro from './intro/GlassIntro';
@@ -101,6 +97,25 @@ import type { PhoneState } from './phone/phoneApi';
 import { effectiveStatus } from './state/localProgress';
 
 // The weapon bench and its ~2 MB of data load only when it is first opened.
+/**
+ * The raid pill's clock: time left (PMC) or time in raid. It ticks on its own
+ * every second, so the rest of the app does not re-render with it.
+ */
+function RaidPillClock({ startedAt, endsAt }: { startedAt: number; endsAt: number | null }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  return <>{endsAt ? clock(endsAt - now) : `+${clock(now - startedAt)}`}</>;
+}
+
+// Opened on demand: each loads the first time it is opened, so the app starts lighter.
+const SettingsModal = lazy(() => import('./components/SettingsModal'));
+const PatchNotesModal = lazy(() => import('./components/PatchNotesModal'));
+const FeedbackModal = lazy(() => import('./feedback/FeedbackModal'));
+const ArtMapViewer = lazy(() => import('./map/ArtMapViewer'));
+const PlannerPanel = lazy(() => import('./planner/PlannerPanel'));
 const GunsmithBench = lazy(() => import('./gunsmith/GunsmithBench'));
 const BallisticsPanel = lazy(() => import('./ballistics/BallisticsPanel'));
 const MapInfoCard = lazy(() => import('./map/MapInfoCard'));
@@ -543,12 +558,6 @@ function App() {
   // Item names for the loot route's stops (loaded once a loot goal or "loot on the way" is on).
   const routeItemNames = useItemNames(route.on && (route.goal !== 'quests' || route.lootOnWay));
   useSoundAlerts({ raid: minimapRaid, toExit: route.toExit, routeDone: route.doneCount, hotKey: route.selfHeat?.key ?? null });
-  const [clockNow, setClockNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!liveRaid) return;
-    const id = window.setInterval(() => setClockNow(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, [liveRaid]);
   const minimapMates = useMemo(
     () =>
       squad.members.flatMap((m) => {
@@ -806,7 +815,7 @@ function App() {
                     </span>
                     {minimapRaid && (
                       <span className="raid-pill__clock mono" title={t(minimapRaid.endsAt ? 'raidPill.leftHint' : 'raidPill.elapsedHint')}>
-                        {minimapRaid.endsAt ? clock(minimapRaid.endsAt - clockNow) : `+${clock(clockNow - minimapRaid.startedAt)}`}
+                        <RaidPillClock startedAt={minimapRaid.startedAt} endsAt={minimapRaid.endsAt} />
                       </span>
                     )}
                     {liveRaid.profileKey ? (
@@ -848,33 +857,35 @@ function App() {
             </div>
             <div className="rail-panel__body">
               {railSection === 'planner' ? (
-                <PlannerPanel
-                  scanned={onMarketTab ? scannedItems(priceScan.result) : null}
-                  onClearScan={priceScan.clear}
-                  load={progressionLoad}
-                  tasks={quests.tasks}
-                  statuses={questStatuses}
-                  progress={quests.progress}
-                  setProgress={quests.setProgress}
-                  planner={planner}
-                  history={raidHistory.history}
-                  onClearHistory={raidHistory.clear}
-                  questState={questState}
-                  selectedMapId={selectedMapId}
-                  selectedMapName={selectedMapName}
-                  ranking={mapRanking}
-                  routeObjectives={routeObjectives}
-                  mapPois={pois.currentPois}
-                  squadQuestStates={squadSync.squadQuestStates}
-                  raidSide={liveRaidSide}
-                  raidSideSource={liveRaidSideSource}
-                  raidInProgress={!!liveRaid}
-                  canSetRaidSide={!!liveRaid?.profileKey}
-                  onSetRaidSide={setLiveRaidSide}
-                  panelExits={panelExitNames}
-                  tab={plannerTab}
-                  onTab={setPlannerTab}
-                />
+                <Suspense fallback={<Spinner size="md" />}>
+                  <PlannerPanel
+                    scanned={onMarketTab ? scannedItems(priceScan.result) : null}
+                    onClearScan={priceScan.clear}
+                    load={progressionLoad}
+                    tasks={quests.tasks}
+                    statuses={questStatuses}
+                    progress={quests.progress}
+                    setProgress={quests.setProgress}
+                    planner={planner}
+                    history={raidHistory.history}
+                    onClearHistory={raidHistory.clear}
+                    questState={questState}
+                    selectedMapId={selectedMapId}
+                    selectedMapName={selectedMapName}
+                    ranking={mapRanking}
+                    routeObjectives={routeObjectives}
+                    mapPois={pois.currentPois}
+                    squadQuestStates={squadSync.squadQuestStates}
+                    raidSide={liveRaidSide}
+                    raidSideSource={liveRaidSideSource}
+                    raidInProgress={!!liveRaid}
+                    canSetRaidSide={!!liveRaid?.profileKey}
+                    onSetRaidSide={setLiveRaidSide}
+                    panelExits={panelExitNames}
+                    tab={plannerTab}
+                    onTab={setPlannerTab}
+                  />
+                </Suspense>
               ) : railSection === 'squad' ? (
                 <>
                   <SquadSection sharedQuestNames={squadSync.sharedQuestNames} />
@@ -1070,13 +1081,15 @@ function App() {
                   />
                   {route.on && <RoutePanel route={route} inSquad={squad.inSquad} names={routeItemNames} />}
                   {artOpen && ART_MAPS[canonicalMapId(selectedMapId)] && (
-                    <ArtMapViewer
-                      maps={ART_MAPS[canonicalMapId(selectedMapId)]}
-                      mapId={canonicalMapId(selectedMapId)}
-                      refs={artRefs}
-                      mapName={selectedMapName}
-                      onClose={() => setArtOpen(false)}
-                    />
+                    <Suspense fallback={null}>
+                      <ArtMapViewer
+                        maps={ART_MAPS[canonicalMapId(selectedMapId)]}
+                        mapId={canonicalMapId(selectedMapId)}
+                        refs={artRefs}
+                        mapName={selectedMapName}
+                        onClose={() => setArtOpen(false)}
+                      />
+                    </Suspense>
                   )}
                 </>
               ) : !questState ? (
@@ -1093,26 +1106,28 @@ function App() {
         </section>
       </div>
       {settingsOpen && (
-        <SettingsModal
-          initialTab={settingsTab}
-          onClose={() => setSettingsOpen(false)}
-          railSide={settings.railSide}
-          onRailSideChange={settings.setRailSide}
-          followCenter={settings.followCenter}
-          onFollowCenterChange={settings.setFollowCenter}
-          followZoom={settings.followZoom}
-          onFollowZoomChange={settings.setFollowZoom}
-          floorLock={settings.floorLock}
-          onFloorLockChange={floors.changeFloorLock}
-          hotkeys={hotkeys}
-          compactOnTopOk={compact.onTopOk}
-          minimap={minimap}
-          tracker={tracker}
-          onReplayIntro={() => {
-            setSettingsOpen(false);
-            setShowIntro(true);
-          }}
-        />
+        <Suspense fallback={null}>
+          <SettingsModal
+            initialTab={settingsTab}
+            onClose={() => setSettingsOpen(false)}
+            railSide={settings.railSide}
+            onRailSideChange={settings.setRailSide}
+            followCenter={settings.followCenter}
+            onFollowCenterChange={settings.setFollowCenter}
+            followZoom={settings.followZoom}
+            onFollowZoomChange={settings.setFollowZoom}
+            floorLock={settings.floorLock}
+            onFloorLockChange={floors.changeFloorLock}
+            hotkeys={hotkeys}
+            compactOnTopOk={compact.onTopOk}
+            minimap={minimap}
+            tracker={tracker}
+            onReplayIntro={() => {
+              setSettingsOpen(false);
+              setShowIntro(true);
+            }}
+          />
+        </Suspense>
       )}
       {onboardingOpen && (
         <Onboarding
@@ -1153,15 +1168,19 @@ function App() {
         </Suspense>
       )}
       {patchNotesOpen && (
-        <PatchNotesModal onClose={() => setPatchNotesOpen(false)} />
+        <Suspense fallback={null}>
+          <PatchNotesModal onClose={() => setPatchNotesOpen(false)} />
+        </Suspense>
       )}
       {feedbackOpen && (
-        <FeedbackModal
-          onClose={() => setFeedbackOpen(false)}
-          appVersion={update.appVersion}
-          activeMapId={selectedMapId}
-          squadActive={squad.inSquad}
-        />
+        <Suspense fallback={null}>
+          <FeedbackModal
+            onClose={() => setFeedbackOpen(false)}
+            appVersion={update.appVersion}
+            activeMapId={selectedMapId}
+            squadActive={squad.inSquad}
+          />
+        </Suspense>
       )}
     </div>
   );
