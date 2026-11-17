@@ -1151,5 +1151,11 @@
       "stop": "Cuando tú (o el grupo) llegas a una parada de la ruta, o marcas una como hecha.",
       "quest": "Cuando el registro del juego dice que una misión se completó."
     }
+  },
+  "questScreen": {
+    "added_one": "Captura de la pantalla Tareas: {{count}} misión marcada como activa:",
+    "added_other": "Captura de la pantalla Tareas: {{count}} misiones marcadas como activas:",
+    "allKnown_one": "Captura de la pantalla Tareas: la {{count}} misión activa ya estaba en MoA.",
+    "allKnown_other": "Captura de la pantalla Tareas: las {{count}} misiones activas ya estaban en MoA."
   }
 }

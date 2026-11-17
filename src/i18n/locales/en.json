@@ -1151,5 +1151,11 @@
       "stop": "When you (or the party) reach a stop of the raid route, or tick one off.",
       "quest": "When the game's log says a quest is done."
     }
+  },
+  "questScreen": {
+    "added_one": "Tasks screen screenshot: {{count}} quest marked active:",
+    "added_other": "Tasks screen screenshot: {{count}} quests marked active:",
+    "allKnown_one": "Tasks screen screenshot: the {{count}} active quest was already in MoA.",
+    "allKnown_other": "Tasks screen screenshot: all {{count}} active quests were already in MoA."
   }
 }

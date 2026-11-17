@@ -36,6 +36,7 @@ import RouteLayer from './route/RouteLayer';
 import RoutePanel from './route/RoutePanel';
 import { useRaidRoute } from './route/useRaidRoute';
 import { questDoneSound, useSoundAlerts } from './sound/useSoundAlerts';
+import { useQuestScreen } from './quests/useQuestScreen';
 import SquadQuestSummary from './components/SquadQuestSummary';
 import { useSettings } from './app/useSettings';
 import { useRailWidth } from './app/useRailWidth';
@@ -176,6 +177,8 @@ function App() {
   const extractSkipUntil = useRef(0);
   // An O+O warning waits a moment: if the screenshot was an inventory instead, it is dropped.
   const panelToastTimer = useRef<number | undefined>(undefined);
+  // A screenshot of the game's Tasks screen marks the listed active quests the logs missed.
+  useQuestScreen({ tasks: quests.tasks, progress: quests.progress, setProgress: quests.setProgress, notify: setToast });
   const priceScan = usePriceScan(
     () => extractSkipUntil.current,
     () => window.clearTimeout(panelToastTimer.current),

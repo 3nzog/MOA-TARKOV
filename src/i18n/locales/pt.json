@@ -1151,5 +1151,11 @@
       "stop": "Quando você (ou a party) chega numa parada da rota da raid, ou marca uma como feita.",
       "quest": "Quando o log do jogo diz que uma missão foi concluída."
     }
+  },
+  "questScreen": {
+    "added_one": "Print da tela Tarefas: {{count}} missão marcada como ativa:",
+    "added_other": "Print da tela Tarefas: {{count}} missões marcadas como ativas:",
+    "allKnown_one": "Print da tela Tarefas: a {{count}} missão ativa já estava no MoA.",
+    "allKnown_other": "Print da tela Tarefas: as {{count}} missões ativas já estavam no MoA."
   }
 }
