@@ -60,7 +60,7 @@ import { useProgressionData, useQuestStatuses } from './app/useProgression';
 import { useHotkeys, type HotkeyAction } from './app/useHotkeys';
 import { useCompactMode } from './app/useCompactMode';
 import { useMinimapWindow } from './app/useMinimapWindow';
-import { minimapPoints } from './minimap/protocol';
+import { minimapPoints, minimapRoute } from './minimap/protocol';
 import { exitsForSide, findPanelMap, matchExtractPanel, type ExitAliases } from './poi/extractPanel';
 import { getExitAliases } from './api/tarkov-dev';
 import type { Poi } from './poi/types';
@@ -539,11 +539,29 @@ function App() {
       }),
     [squad.members, squad.positions, squad.selfId, selectedMapId],
   );
+  // The raid route on the small maps: its line, its stops, and the next stop as a
+  // named point (rim arrow and distance, like the exits).
+  const smallRoute = useMemo(() => {
+    const plan = route.plan;
+    if (!route.on || !plan || !route.start) return null;
+    const first = plan.stops[0];
+    const title = first
+      ? `1 · ${first.info?.place ?? first.items[0]?.task.name ?? ''}`
+      : plan.exit
+        ? plan.exit.label
+        : null;
+    return minimapRoute(route.start, plan.stops, plan.exit, plan.paths, title);
+  }, [route.on, route.plan, route.start]);
+  const smallMapPoints = useMemo(
+    () => (smallRoute?.next ? [...minimapFeedPoints, smallRoute.next] : minimapFeedPoints),
+    [minimapFeedPoints, smallRoute],
+  );
   const minimap = useMinimapWindow({
     mapId: selectedMapId,
     pos: playerPos,
     activeFloorId: floors.activeFloorId ?? null,
-    points: minimapFeedPoints,
+    points: smallMapPoints,
+    route: smallRoute?.route ?? null,
     self: minimapSelf,
     mates: minimapMates,
     inRaid: !!liveRaid,
@@ -556,13 +574,14 @@ function App() {
       mapName: selectedMapId ? (SUPPORTED_MAP_NAMES[canonicalMapId(selectedMapId)] ?? null) : null,
       pos: playerPos,
       activeFloorId: floors.activeFloorId ?? null,
-      points: minimapFeedPoints,
+      points: smallMapPoints,
       self: minimapSelf,
       mates: minimapMates,
       raidClock: minimapRaid,
+      route: smallRoute?.route ?? null,
       sentAt: 0,
     }),
-    [selectedMapId, playerPos, floors.activeFloorId, minimapFeedPoints, minimapSelf, minimapMates, minimapRaid],
+    [selectedMapId, playerPos, floors.activeFloorId, smallMapPoints, minimapSelf, minimapMates, minimapRaid, smallRoute],
   );
   const phone = usePhoneShare(phoneState);
   // Quests the player can take now (prerequisites and level met) but the logs

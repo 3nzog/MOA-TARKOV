@@ -77,7 +77,7 @@ export function parseMinimapSettings(raw: string | null): MinimapSettings {
 export interface MinimapPoint {
   x: number;
   z: number;
-  kind: 'quest' | 'extract' | 'transit' | 'sniper';
+  kind: 'quest' | 'extract' | 'transit' | 'sniper' | 'route';
   /** The player's own exits carry a name; the overlay points to them from its edge. */
   label?: string;
   /** Not the player's (other side, or not in the O+O list): drawn faded, no name. */
@@ -193,9 +193,65 @@ export interface MinimapState {
   /** The raid's clock: ends at (PMC, time left) or only its start (time in raid). */
   raidClock?: { startedAt: number; endsAt: number | null } | null;
   mates?: { id: string; name: string; color: string; symbol: string | null; x: number; z: number; rotation: number; ts: number }[];
+  /** The raid route: its line and the stops still ahead (the next one is also a named point). */
+  route?: MinimapRoute | null;
   settings: Pick<MinimapSettings, 'locked' | 'headingUp' | 'zoom' | 'opacity' | 'shape'>;
   /** Localized strings, so the overlay needs no i18n bootstrapping of its own. */
   text: { waitingRaid: string; dragHint: string; lock: string; ago: string };
+}
+
+/** The route as the small map draws it. */
+export interface MinimapRoute {
+  /** The way from the start through the stops to the exit, game coordinates. */
+  line: { x: number; z: number }[];
+  /** The stops still ahead, in order. */
+  stops: { x: number; z: number }[];
+}
+
+/** The colour of the route on every map. */
+export const ROUTE_COLOR = '#4fd1ff';
+const ROUTE_MAX_POINTS = 400;
+
+/**
+ * The route for the small maps: its line (thinned to at most 400 points) and
+ * its stops; and the next stop as a named point, so it gets the rim arrow and
+ * the distance like the exits.
+ */
+export function minimapRoute(
+  start: { x: number; z: number },
+  stops: { x: number; z: number }[],
+  exit: { x: number; z: number } | null,
+  paths: { x: number; z: number }[][] | undefined,
+  nextLabel: string | null,
+): { route: MinimapRoute; next: MinimapPoint | null } {
+  const ends = [start, ...stops, ...(exit ? [exit] : [])];
+  let line: { x: number; z: number }[] = [];
+  for (let i = 1; i < ends.length; i++) {
+    const way = paths?.[i - 1] ?? [ends[i - 1], ends[i]];
+    line.push(...(i === 1 ? way : way.slice(1)));
+  }
+  if (line.length > ROUTE_MAX_POINTS) {
+    // Every step-th point and always the last one (the exit): never more than the cap.
+    const step = Math.ceil((line.length - 1) / (ROUTE_MAX_POINTS - 1));
+    const last = line.length - 1;
+    line = line.filter((_, i) => (i % step === 0 && i < last) || i === last);
+  }
+  const round = (p: { x: number; z: number }) => ({ x: Math.round(p.x * 10) / 10, z: Math.round(p.z * 10) / 10 });
+  const first = stops[0] ?? exit;
+  return {
+    route: { line: line.map(round), stops: stops.map(round) },
+    next: first && nextLabel ? { ...round(first), kind: 'route', label: shortExitLabel(nextLabel) } : null,
+  };
+}
+
+/** A route received from the main window, checked enough to draw. */
+export function parseMinimapRoute(raw: unknown): MinimapRoute | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Partial<MinimapRoute>;
+  const pts = (v: unknown) =>
+    Array.isArray(v) ? v.filter((p): p is { x: number; z: number } => !!p && Number.isFinite(p.x) && Number.isFinite(p.z)).slice(0, ROUTE_MAX_POINTS) : [];
+  const line = pts(r.line);
+  return line.length >= 2 ? { line, stops: pts(r.stops) } : null;
 }
 
 /**

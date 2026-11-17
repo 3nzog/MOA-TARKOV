@@ -2,7 +2,7 @@
 // serves the page and streams the map state; the QR code carries the address
 // and the key.
 import { invoke } from '@tauri-apps/api/core';
-import type { MinimapState } from '../minimap/protocol';
+import { parseMinimapRoute, type MinimapState } from '../minimap/protocol';
 
 export interface PhoneQr {
   size: number;
@@ -70,6 +70,7 @@ export function parsePhoneState(raw: unknown): PhoneState | null {
       self: v.self,
       mates: Array.isArray(v.mates) ? v.mates : [],
       raidClock: v.raidClock ?? null,
+      route: parseMinimapRoute(v.route),
       sentAt: typeof v.sentAt === 'number' ? v.sentAt : Date.now(),
     };
   } catch {

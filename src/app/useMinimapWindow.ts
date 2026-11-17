@@ -32,6 +32,8 @@ interface Feed {
   /** A raid is running right now (from the game logs). */
   inRaid: boolean;
   raidClock?: MinimapState['raidClock'];
+  /** The raid route (when it is on). */
+  route?: MinimapState['route'];
 }
 
 type WinLike = {
@@ -237,6 +239,7 @@ export function useMinimapWindow(feed: Feed) {
       self: feed.self,
       mates: feed.mates,
       raidClock: feed.raidClock ?? null,
+      route: feed.route ?? null,
       settings: {
         locked: settings.locked,
         headingUp: settings.headingUp,
@@ -251,7 +254,7 @@ export function useMinimapWindow(feed: Feed) {
         ago: t('minimap.ago', { min: '{{min}}' }),
       },
     }),
-    [feed.mapId, feed.pos, feed.activeFloorId, feed.points, feed.self, feed.mates, feed.raidClock, settings, t],
+    [feed.mapId, feed.pos, feed.activeFloorId, feed.points, feed.self, feed.mates, feed.raidClock, feed.route, settings, t],
   );
 
   useEffect(() => {

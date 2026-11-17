@@ -7,7 +7,7 @@
 // the last screenshot position fix. So it moves when a screenshot is taken, not
 // continuously; a fix that is getting old fades out instead of lying.
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CircleMarker, MapContainer, ImageOverlay, Marker, useMap } from 'react-leaflet';
+import { CircleMarker, MapContainer, ImageOverlay, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Lock } from '@phosphor-icons/react';
@@ -26,6 +26,8 @@ import {
   EV_STATE,
   distanceLabel,
   edgeMarker,
+  parseMinimapRoute,
+  ROUTE_COLOR,
   headingAngle,
   layoutLabels,
   rotateOffset,
@@ -236,7 +238,16 @@ export default function MinimapApp() {
   const shapeCls = settings.shape === 'circle' ? 'minimap--circle' : 'minimap--square';
   const toLatLng = mapId ? getGameToLatLng(mapId) : null;
   const colorOf = (p: MinimapPoint) =>
-    p.kind === 'quest' ? MARKER_COLORS.Y : p.kind === 'sniper' ? MARKER_COLORS.SNIPER : p.kind === 'transit' ? MARKER_COLORS.O : MARKER_COLORS.G;
+    p.kind === 'route'
+      ? ROUTE_COLOR
+      : p.kind === 'quest'
+        ? MARKER_COLORS.Y
+        : p.kind === 'sniper'
+          ? MARKER_COLORS.SNIPER
+          : p.kind === 'transit'
+            ? MARKER_COLORS.O
+            : MARKER_COLORS.G;
+  const route = parseMinimapRoute(state.route);
 
   return (
     <div
@@ -283,6 +294,25 @@ export default function MinimapApp() {
                 />
               ) : (
                 <ImageOverlay url={def.svgUrl} bounds={leafletBounds(def)} />
+              )}
+              {toLatLng && route && (
+                <>
+                  <Polyline positions={route.line.map((p) => toLatLng(p.x, p.z))} interactive={false} pathOptions={{ color: '#000', weight: 5, opacity: 0.4 }} />
+                  <Polyline
+                    positions={route.line.map((p) => toLatLng(p.x, p.z))}
+                    interactive={false}
+                    pathOptions={{ color: ROUTE_COLOR, weight: 2.5, dashArray: '6 5', opacity: 0.95 }}
+                  />
+                  {route.stops.map((p, i) => (
+                    <CircleMarker
+                      key={`r${i}`}
+                      center={toLatLng(p.x, p.z)}
+                      radius={i === 0 ? 5 : 3.5}
+                      interactive={false}
+                      pathOptions={{ color: TOKEN_HEX.bgSunken, weight: 1.5, fillColor: ROUTE_COLOR, fillOpacity: i === 0 ? 1 : 0.7 }}
+                    />
+                  ))}
+                </>
               )}
               {toLatLng &&
                 state.points.map((p, i) => (

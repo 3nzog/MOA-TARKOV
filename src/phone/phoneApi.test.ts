@@ -32,3 +32,12 @@ describe('phone map helpers', () => {
     expect(parsePhoneState(42)).toBeNull();
   });
 });
+
+describe('the raid route on the phone', () => {
+  it('passes a sane route through and drops a broken one', () => {
+    const base = { mapId: 'm', points: [], route: { line: [{ x: 0, z: 0 }, { x: 10, z: 5 }], stops: [{ x: 10, z: 5 }] } };
+    expect(parsePhoneState(JSON.stringify(base))?.route).toEqual(base.route);
+    expect(parsePhoneState(JSON.stringify({ ...base, route: { line: 'x' } }))?.route).toBeNull();
+    expect(parsePhoneState(JSON.stringify({ mapId: 'm', points: [] }))?.route).toBeNull();
+  });
+});

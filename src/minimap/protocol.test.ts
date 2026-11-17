@@ -8,6 +8,8 @@ import {
   headingAngle,
   layoutLabels,
   minimapPoints,
+  minimapRoute,
+  parseMinimapRoute,
   parseMinimapSettings,
   rotateOffset,
   shortExitLabel,
@@ -141,5 +143,43 @@ describe('label layout', () => {
     expect(ys[0]).toBe(260);
     expect(Math.abs(ys[1] - ys[0])).toBeGreaterThanOrEqual(13);
     expect(ys[2]).toBe(100);
+  });
+});
+
+describe('the raid route on the small maps', () => {
+  const start = { x: 0, z: 0 };
+  const stops = [{ x: 100, z: 0 }, { x: 200, z: 50 }];
+  const exit = { x: 300, z: 50 };
+
+  it('joins the legs into one line, with the next stop as a named point', () => {
+    const { route, next } = minimapRoute(start, stops, exit, undefined, '1 · Dorms');
+    expect(route.line).toEqual([start, stops[0], stops[1], exit]);
+    expect(route.stops).toEqual(stops);
+    expect(next).toEqual({ x: 100, z: 0, kind: 'route', label: '1 · Dorms' });
+  });
+
+  it('follows the bent ways when there are some, and thins a long line', () => {
+    const bent = [
+      [start, { x: 50, z: 30 }, stops[0]],
+      [stops[0], stops[1]],
+      [stops[1], exit],
+    ];
+    expect(minimapRoute(start, stops, exit, bent, 'x').route.line).toEqual([start, { x: 50, z: 30 }, stops[0], stops[1], exit]);
+    const long = [Array.from({ length: 2000 }, (_, i) => ({ x: i, z: 0 }))];
+    const thin = minimapRoute(start, [], { x: 1999, z: 0 }, long, null).route.line;
+    expect(thin.length).toBeLessThanOrEqual(400);
+    expect(thin[thin.length - 1]).toEqual({ x: 1999, z: 0 });
+  });
+
+  it('with no stops left, the exit is next; with no label, no named point', () => {
+    expect(minimapRoute(start, [], exit, undefined, 'Gate').next).toMatchObject({ x: 300, z: 50, label: 'Gate' });
+    expect(minimapRoute(start, stops, exit, undefined, null).next).toBeNull();
+  });
+
+  it('checks what it receives', () => {
+    expect(parseMinimapRoute({ line: [start, exit], stops: [stops[0], { x: 'no' }] })).toEqual({ line: [start, exit], stops: [stops[0]] });
+    expect(parseMinimapRoute({ line: [start] })).toBeNull();
+    expect(parseMinimapRoute(null)).toBeNull();
+    expect(parseMinimapRoute('route')).toBeNull();
   });
 });

@@ -183,6 +183,9 @@ export default function FloorVisualOverlay({
       if (onlyGroups) keepOnlyGroups(svg, onlyGroups);
       const base = L.svgOverlay(svg, bounds, { interactive: false });
       base.addTo(map);
+      // The map is fetched, so it can arrive after lines and circles already
+      // drawn in the same pane (the route, the minimap's points): it goes under them.
+      base.bringToBack();
       overlays.push(base);
       setSvgEl(svg);
       // Extra geometry overlays mount AFTER the base so they sit on top.
@@ -196,6 +199,9 @@ export default function FloorVisualOverlay({
           esvg.querySelectorAll<SVGElement>(SHAPE_SEL).forEach(goldify);
           const extra = L.svgOverlay(esvg, bounds, { interactive: false });
           extra.addTo(map);
+          // Above the base map, still under everything drawn on it.
+          extra.bringToBack();
+          base.bringToBack();
           overlays.push(extra);
         } catch {
           /* network error on an optional overlay -> skip */

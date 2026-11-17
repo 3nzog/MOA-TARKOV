@@ -3,7 +3,7 @@
 // phone changes anything on the PC.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CircleMarker, ImageOverlay, MapContainer, Marker, Tooltip, useMap } from 'react-leaflet';
+import { CircleMarker, ImageOverlay, MapContainer, Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Crosshair, WifiHigh, WifiSlash } from '@phosphor-icons/react';
@@ -16,7 +16,7 @@ import { markerHtml } from '../squad/symbols';
 import { clock } from '../map/raidDuration';
 import { TOKEN_HEX } from '../ui/tokens';
 import { MARKER_COLORS } from '../poi/registry';
-import { headingAngle, type MinimapPoint } from '../minimap/protocol';
+import { headingAngle, ROUTE_COLOR, type MinimapPoint } from '../minimap/protocol';
 import { parsePhoneState, phoneSocketUrl, type PhoneState } from './phoneApi';
 import '../App.css';
 import './phone.css';
@@ -27,7 +27,15 @@ const RETRY_MS = 2500;
 type Conn = 'connecting' | 'live' | 'down' | 'nokey';
 
 const colorOf = (p: MinimapPoint) =>
-  p.kind === 'quest' ? MARKER_COLORS.Y : p.kind === 'sniper' ? MARKER_COLORS.SNIPER : p.kind === 'transit' ? MARKER_COLORS.O : MARKER_COLORS.G;
+  p.kind === 'route'
+    ? ROUTE_COLOR
+    : p.kind === 'quest'
+      ? MARKER_COLORS.Y
+      : p.kind === 'sniper'
+        ? MARKER_COLORS.SNIPER
+        : p.kind === 'transit'
+          ? MARKER_COLORS.O
+          : MARKER_COLORS.G;
 
 /** The PC's state over the socket, reconnecting on its own. */
 function usePhoneFeed(): { state: PhoneState | null; conn: Conn } {
@@ -159,6 +167,7 @@ export default function PhoneApp() {
   const def = mapId ? MAPS[mapId] : undefined;
   const crs = useMemo(() => (def ? makeCRS(def) : null), [def]);
   const toLatLng = mapId ? getGameToLatLng(mapId) : null;
+  const route = state?.route ?? null;
   const pos = state?.pos ?? null;
   const age = pos ? now - pos.ts : Infinity;
   const mapRot = mapId ? (getMapDef(mapId)?.rotation ?? 0) : 0;
@@ -200,6 +209,25 @@ export default function PhoneApp() {
             />
           ) : (
             <ImageOverlay url={def.svgUrl} bounds={leafletBounds(def)} />
+          )}
+          {toLatLng && route && (
+            <>
+              <Polyline positions={route.line.map((p) => toLatLng(p.x, p.z))} interactive={false} pathOptions={{ color: '#000', weight: 7, opacity: 0.4 }} />
+              <Polyline
+                positions={route.line.map((p) => toLatLng(p.x, p.z))}
+                interactive={false}
+                pathOptions={{ color: ROUTE_COLOR, weight: 3.5, dashArray: '9 7', opacity: 0.95 }}
+              />
+              {route.stops.map((p, i) => (
+                <CircleMarker
+                  key={`r${i}`}
+                  center={toLatLng(p.x, p.z)}
+                  radius={i === 0 ? 8 : 5}
+                  interactive={false}
+                  pathOptions={{ color: TOKEN_HEX.bgSunken, weight: 2, fillColor: ROUTE_COLOR, fillOpacity: i === 0 ? 1 : 0.75 }}
+                />
+              ))}
+            </>
           )}
           {toLatLng &&
             state!.points.map((p, i) => (
