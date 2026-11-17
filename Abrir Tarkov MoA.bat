@@ -293,6 +293,8 @@ if defined NOUPDATE (
 call :section "4/4" "Abrindo"
 call :ok "Tudo pronto"
 call :start_menu
+rem  O .exe aberto por aqui nao confere o GitHub de novo (acabou de conferir).
+set "MOA_FROM_LAUNCHER=1"
 start "" "%EXE%"
 echo.
 echo     %ACC%%B%▶  Boa caçada, operador.%R%

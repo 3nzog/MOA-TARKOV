@@ -11,6 +11,7 @@ mod net;
 mod party;
 mod phone;
 mod screenshots;
+mod self_update;
 mod tracker;
 mod weblinks;
 
@@ -18,6 +19,11 @@ use std::sync::{Arc, Mutex};
 use tauri::{Listener, Manager};
 
 fn main() {
+    // Opened directly (not by the .bat) with a newer version on GitHub: the
+    // .bat takes over, updates and opens the new version.
+    if self_update::hand_over_if_outdated() {
+        return;
+    }
     let screenshots_dir = Arc::new(Mutex::new(None));
     let screenshots_state = screenshots::ScreenshotsDir(screenshots_dir.clone());
 
