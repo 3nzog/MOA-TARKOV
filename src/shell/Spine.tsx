@@ -34,7 +34,8 @@ export interface SpineProps {
   /** Quest count for the selected map (badge on the Quests section). */
   questCount?: number;
   // Utilities (draw tools live in the on-map MapToolsDock now)
-  updateVersion?: string | null;
+  /** Text of the "update" button (null: nothing to update). */
+  updateLabel?: string | null;
   updating?: boolean;
   onUpdate?: () => void;
   onSyncLogs: () => void;
@@ -94,7 +95,7 @@ export default function Spine({
   onToggleSection,
   squadCount,
   questCount,
-  updateVersion,
+  updateLabel,
   updating,
   onUpdate,
   onSyncLogs,
@@ -174,9 +175,9 @@ export default function Spine({
         </SpineButton>
       )}
 
-      {updateVersion && (
+      {updateLabel && (
         <SpineButton
-          label={updating ? t('rail.updating') : t('rail.updateTo', { version: updateVersion })}
+          label={updating ? t('rail.updating') : updateLabel}
           side={side}
           className="spine__btn--update"
           disabled={updating}

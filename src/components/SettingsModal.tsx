@@ -122,7 +122,9 @@ export default function SettingsModal({
     const u = await checkForUpdate();
     if (u) {
       setFoundUpdate(u);
-      setUpdateMsg(t('settings.updateAvailable', { version: u.version }));
+      setUpdateMsg(
+        u.kind === 'source' ? t('settings.sourceUpdateFound', { count: u.count }) : t('settings.updateAvailable', { version: u.version }),
+      );
     } else {
       setUpdateMsg(t('settings.upToDate'));
     }
@@ -132,10 +134,14 @@ export default function SettingsModal({
   const handleInstallUpdate = useCallback(async () => {
     if (!foundUpdate) return;
     setInstalling(true);
-    setUpdateMsg(t('settings.downloadingUpdate', { version: foundUpdate.version }));
+    setUpdateMsg(
+      foundUpdate.kind === 'source'
+        ? t('settings.sourceUpdating')
+        : t('settings.downloadingUpdate', { version: foundUpdate.version }),
+    );
     try {
-      await applyUpdate(foundUpdate.update, ({ downloaded, total }) => {
-        if (total) {
+      await applyUpdate(foundUpdate, ({ downloaded, total }) => {
+        if (total && foundUpdate.kind === 'release') {
           setUpdateMsg(t('settings.downloadingUpdateProgress', { version: foundUpdate.version, pct: Math.round((downloaded / total) * 100) }));
         }
       });

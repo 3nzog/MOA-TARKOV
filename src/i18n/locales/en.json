@@ -56,7 +56,9 @@
     "exitCompact": "Exit compact mode",
     "gunsmith": "Weapon bench",
     "ballistics": "Ballistics",
-    "phone": "Map on phone"
+    "phone": "Map on phone",
+    "updateSource_one": "New version on GitHub ({{count}} change): update",
+    "updateSource_other": "New version on GitHub ({{count}} changes): update"
   },
   "settings": {
     "title": "Settings",
@@ -317,7 +319,10 @@
       "sniperRangeHint": "Radius of the 360° red ring around each Scav sniper. An average of how far they hit; adjust if you like.",
       "sniperCone": "Likely aim cone",
       "sniperConeHint": "Also shows where the sniper probably aims, estimated from the exits, loot and spawns around it. An estimate: the game does not tell where it aims."
-    }
+    },
+    "sourceUpdateFound_one": "New version on GitHub ({{count}} change). Click the green arrow on the side bar to update.",
+    "sourceUpdateFound_other": "New version on GitHub ({{count}} changes). Click the green arrow on the side bar to update.",
+    "sourceUpdating": "Opening the updater: MoA closes and comes back with the new version."
   },
   "errors": {
     "failedToLoadQuestData": "Failed to load quest data",

@@ -56,7 +56,9 @@
     "exitCompact": "Sair do modo compacto",
     "gunsmith": "Mesa de armas",
     "ballistics": "Balística",
-    "phone": "Mapa no celular"
+    "phone": "Mapa no celular",
+    "updateSource_one": "Versão nova no GitHub ({{count}} mudança): atualizar",
+    "updateSource_other": "Versão nova no GitHub ({{count}} mudanças): atualizar"
   },
   "settings": {
     "title": "Configurações",
@@ -317,7 +319,10 @@
       "sniperRangeHint": "Raio do círculo vermelho de 360° em volta de cada sniper Scav. É uma média de quanto eles acertam; ajuste se quiser.",
       "sniperCone": "Cone de mira provável",
       "sniperConeHint": "Mostra também para onde o sniper provavelmente mira, estimado pelas extrações, loot e spawns em volta. É uma estimativa: o jogo não informa a mira."
-    }
+    },
+    "sourceUpdateFound_one": "Versão nova no GitHub ({{count}} mudança). Clique na seta verde da barra lateral para atualizar.",
+    "sourceUpdateFound_other": "Versão nova no GitHub ({{count}} mudanças). Clique na seta verde da barra lateral para atualizar.",
+    "sourceUpdating": "Abrindo o atualizador: o MoA fecha e volta com a versão nova."
   },
   "errors": {
     "failedToLoadQuestData": "Falha ao carregar os dados das missões",

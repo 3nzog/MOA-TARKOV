@@ -56,7 +56,9 @@
     "exitCompact": "退出紧凑模式",
     "gunsmith": "改枪台",
     "ballistics": "弹道",
-    "phone": "手机地图"
+    "phone": "手机地图",
+    "updateSource_one": "GitHub 上有新版本（{{count}} 项更改）：更新",
+    "updateSource_other": "GitHub 上有新版本（{{count}} 项更改）：更新"
   },
   "settings": {
     "title": "设置",
@@ -317,7 +319,10 @@
       "sniperRangeHint": "每个 Scav 狙击手周围 360° 红圈的半径。是他们命中距离的平均值，可自行调整。",
       "sniperCone": "可能的瞄准锥",
       "sniperConeHint": "同时显示狙击手可能瞄准的方向，根据周围的撤离点、物资和出生点估计。这是估计：游戏不提供瞄准方向。"
-    }
+    },
+    "sourceUpdateFound_one": "GitHub 上有新版本（{{count}} 项更改）。点击侧边栏的绿色箭头即可更新。",
+    "sourceUpdateFound_other": "GitHub 上有新版本（{{count}} 项更改）。点击侧边栏的绿色箭头即可更新。",
+    "sourceUpdating": "正在打开更新程序：MoA 会关闭，并以新版本重新打开。"
   },
   "errors": {
     "failedToLoadQuestData": "加载任务数据失败",

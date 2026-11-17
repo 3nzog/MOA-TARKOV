@@ -56,7 +56,9 @@
     "exitCompact": "Salir del modo compacto",
     "gunsmith": "Banco de armas",
     "ballistics": "Balística",
-    "phone": "Mapa en el móvil"
+    "phone": "Mapa en el móvil",
+    "updateSource_one": "Nueva versión en GitHub ({{count}} cambio): actualizar",
+    "updateSource_other": "Nueva versión en GitHub ({{count}} cambios): actualizar"
   },
   "settings": {
     "title": "Ajustes",
@@ -317,7 +319,10 @@
       "sniperRangeHint": "Radio del anillo rojo de 360° alrededor de cada francotirador Scav. Es un promedio de cuánto aciertan; ajústalo si quieres.",
       "sniperCone": "Cono de puntería probable",
       "sniperConeHint": "Muestra también hacia dónde apunta probablemente, estimado por las extracciones, el botín y los spawns cercanos. Es una estimación: el juego no lo informa."
-    }
+    },
+    "sourceUpdateFound_one": "Nueva versión en GitHub ({{count}} cambio). Haz clic en la flecha verde de la barra lateral para actualizar.",
+    "sourceUpdateFound_other": "Nueva versión en GitHub ({{count}} cambios). Haz clic en la flecha verde de la barra lateral para actualizar.",
+    "sourceUpdating": "Abriendo el actualizador: MoA se cierra y vuelve con la nueva versión."
   },
   "errors": {
     "failedToLoadQuestData": "No se pudieron cargar los datos de misiones",

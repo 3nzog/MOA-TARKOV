@@ -56,7 +56,9 @@
     "exitCompact": "コンパクトモードを終了",
     "gunsmith": "武器ベンチ",
     "ballistics": "弾薬性能",
-    "phone": "スマホで地図"
+    "phone": "スマホで地図",
+    "updateSource_one": "GitHubに新しいバージョン（変更{{count}}件）：更新",
+    "updateSource_other": "GitHubに新しいバージョン（変更{{count}}件）：更新"
   },
   "settings": {
     "title": "設定",
@@ -317,7 +319,10 @@
       "sniperRangeHint": "各スカブスナイパーの周りの 360° の赤い円の半径。命中する距離の目安です。必要なら調整してください。",
       "sniperCone": "推定される狙いのコーン",
       "sniperConeHint": "周囲の脱出地点・ルート・スポーンから、狙っていそうな方向も表示します。推定です：ゲームは狙いを示しません。"
-    }
+    },
+    "sourceUpdateFound_one": "GitHubに新しいバージョンがあります（変更{{count}}件）。サイドバーの緑の矢印で更新します。",
+    "sourceUpdateFound_other": "GitHubに新しいバージョンがあります（変更{{count}}件）。サイドバーの緑の矢印で更新します。",
+    "sourceUpdating": "アップデーターを開いています：MoAは閉じて、新しいバージョンで再び開きます。"
   },
   "errors": {
     "failedToLoadQuestData": "クエストデータの読み込みに失敗しました",

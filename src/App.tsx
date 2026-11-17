@@ -652,7 +652,7 @@ function App() {
               ? questState.availableTasksByMap[selectedMapId]?.length ?? 0
               : 0
           }
-          updateVersion={update.availableUpdate?.version ?? null}
+          updateLabel={update.label}
           updating={update.updating}
           onUpdate={update.apply}
           onSyncLogs={logReplay.replay}

@@ -108,6 +108,8 @@ fn main() {
             phone::phone_start,
             phone::phone_stop,
             phone::phone_status,
+            self_update::source_update_check,
+            self_update::source_update_apply,
             phone::phone_new_key,
             phone::phone_publish,
             link::link_set_auto_accept,

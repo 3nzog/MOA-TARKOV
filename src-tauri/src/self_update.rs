@@ -92,11 +92,7 @@ fn upstream(root: &Path) -> Option<String> {
 /// GitHub has commits this folder does not have yet. A folder that is only
 /// ahead (unsent work of its own) is up to date.
 fn behind(root: &Path) -> bool {
-    let Some(up) = upstream(root) else { return false };
-    let range = format!("HEAD..{up}");
-    git_out(root, &["rev-list", "--count", &range])
-        .and_then(|n| n.parse::<u64>().ok())
-        .is_some_and(|n| n > 0)
+    pending(root).is_some()
 }
 
 /// Opens the .bat in its own window, marked so that the .exe it opens at the
@@ -123,6 +119,56 @@ pub fn hand_over_if_outdated() -> bool {
         return false;
     }
     hand_over(&root)
+}
+
+/// A newer version waiting on GitHub, for the "update" button in the app.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceUpdate {
+    /// Commits this folder does not have yet.
+    pub count: u64,
+    /// The newest one's title.
+    pub subject: String,
+}
+
+fn pending(root: &Path) -> Option<SourceUpdate> {
+    let up = upstream(root)?;
+    let count = git_out(root, &["rev-list", "--count", &format!("HEAD..{up}")])?.parse::<u64>().ok()?;
+    (count > 0).then(|| SourceUpdate {
+        count,
+        subject: git_out(root, &["log", "-1", "--format=%s", &up]).unwrap_or_default(),
+    })
+}
+
+/// Asks GitHub (git fetch) whether this folder is behind. Null when up to
+/// date, offline, or when this is not a folder the .bat updates (or a
+/// development build).
+#[tauri::command]
+pub async fn source_update_check() -> Option<SourceUpdate> {
+    if cfg!(debug_assertions) {
+        return None;
+    }
+    tauri::async_runtime::spawn_blocking(|| {
+        let root = project_root()?;
+        if !fetch(&root, Duration::from_secs(20)) {
+            return None;
+        }
+        pending(&root)
+    })
+    .await
+    .ok()
+    .flatten()
+}
+
+/// Opens the .bat to update and closes the app (it reopens at the end).
+#[tauri::command]
+pub fn source_update_apply(app: tauri::AppHandle) -> Result<(), String> {
+    let root = project_root().ok_or("not-source")?;
+    if !hand_over(&root) {
+        return Err("launcher".into());
+    }
+    app.exit(0);
+    Ok(())
 }
 
 #[cfg(test)]
