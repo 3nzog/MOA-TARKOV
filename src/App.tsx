@@ -33,6 +33,8 @@ import MapToolsDock from './map/MapToolsDock';
 import FollowCamera from './map/FollowCamera';
 import SquadQuestLayer from './map/SquadQuestLayer';
 import RouteLayer from './route/RouteLayer';
+import HeatLayer from './route/HeatLayer';
+import { useItemNames } from './route/itemNames';
 import RoutePanel from './route/RoutePanel';
 import { useRaidRoute } from './route/useRaidRoute';
 import { questDoneSound, useSoundAlerts } from './sound/useSoundAlerts';
@@ -510,6 +512,8 @@ function App() {
     tierOf,
     hideoutNeeds: routeHideoutNeeds,
   });
+  // Item names for the loot route's stops (loaded once a loot goal or "loot on the way" is on).
+  const routeItemNames = useItemNames(route.on && (route.goal !== 'quests' || route.lootOnWay));
   useSoundAlerts({ raid: minimapRaid, toExit: route.toExit, routeDone: route.doneCount });
   const [clockNow, setClockNow] = useState(() => Date.now());
   useEffect(() => {
@@ -968,16 +972,10 @@ function App() {
                       }}
                     />
                     <GridOverlay mapId={selectedMapId} visible={pois.filterState.gridVisible} />
-                    {route.on && (
-                      <RouteLayer
-                        mapId={selectedMapId}
-                        plan={route.plan}
-                        start={route.start}
-                        picking={route.picking}
-                        spawns={route.spawns}
-                        onPick={route.pickStart}
-                      />
+                    {route.on && route.heat.on && (
+                      <HeatLayer mapId={selectedMapId} sources={route.heat.sources} phase={route.heat.phase} raid={route.raidSeconds} />
                     )}
+                    {route.on && <RouteLayer mapId={selectedMapId} route={route} names={routeItemNames} />}
                     {drawing.drawTool === null && !(route.on && route.picking) && (
                       <MapClickPlacer mapId={selectedMapId} onAdd={pois.addCustom} />
                     )}
@@ -1021,7 +1019,7 @@ function App() {
                     route={route.on}
                     onRoute={route.setOn}
                   />
-                  {route.on && <RoutePanel route={route} inSquad={squad.inSquad} />}
+                  {route.on && <RoutePanel route={route} inSquad={squad.inSquad} names={routeItemNames} />}
                   {artOpen && ART_MAPS[canonicalMapId(selectedMapId)] && (
                     <ArtMapViewer
                       maps={ART_MAPS[canonicalMapId(selectedMapId)]}

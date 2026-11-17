@@ -1110,7 +1110,7 @@
     "show": "显示战局路线",
     "hide": "隐藏战局路线",
     "you": "你",
-    "help": "始终从你当前所在位置到本阵营的撤离点，规划在战局结束前完成最多目标的顺序。MoA 通过你最后一张截图知道你的位置：出生时截一张，路上再截几张，每张截图都会从那里重新规划路线。没有截图时，可以在地图上选择出生点（直到下一张截图）。你或小队经过的点会从列表中移除。开启小队后，小队成员的任务也会计入：两人都需要的地点只算一站。时间为直线距离的估算，并留有余量。",
+    "help": "按你选的目标规划战局：任务（完成最多目标的顺序）、物资（最赚钱的地方、藏身处还缺的物品，或武器、弹药和配件）或 Scav（它们刷出的地方）。总是从你现在所在的位置（最后一张截图）出发，在本阵营的撤离点结束。4 种风格并排显示：直接走直线；均衡和隐蔽会绕开热区（那个时段常有玩家的地方：开局在出生点，中期在物资点，后期在撤离点），隐蔽还会去掉太拥挤的地方；激进会去有 PMC 的地方，但避开地雷和狙击手。热区和绕路都是估算：MoA 不知道墙在哪里，也不知道玩家的真实位置。",
     "summary_one": "{{count}} 个目标 · 约 {{min}} 分钟",
     "summary_other": "{{count}} 个目标 · 约 {{min}} 分钟",
     "budget": "战局 {{min}} 分钟",
@@ -1134,7 +1134,89 @@
     "more_other": "同一地点另有 {{count}} 个目标",
     "ageNow": "刚刚",
     "age_one": "{{count}} 分钟前",
-    "age_other": "{{count}} 分钟前"
+    "age_other": "{{count}} 分钟前",
+    "goal": {
+      "quests": "任务",
+      "loot": "物资",
+      "scavs": "Scav",
+      "money": "金钱",
+      "hideout": "藏身处",
+      "weapons": "武器"
+    },
+    "weapon": {
+      "guns": "武器",
+      "ammo": "弹药",
+      "parts": "配件"
+    },
+    "hideoutNote": "优先藏身处还缺的物品可能刷出的地方（在 规划 → 藏身处 设置等级）。",
+    "styleLabel": "路线风格",
+    "style": {
+      "direct": "直接",
+      "balanced": "均衡",
+      "stealth": "隐蔽",
+      "aggressive": "激进"
+    },
+    "hotShare": "热区内 {{pct}}%",
+    "heatToggle": "在地图上显示热区",
+    "phase": {
+      "0": "开局",
+      "1": "中期",
+      "2": "后期"
+    },
+    "onWay": {
+      "toggle": "沿途物资",
+      "extra": "+{{s}} 秒绕路 · 约 {{value}} ₽",
+      "count_one": "路线附近有 {{count}} 处物资（地图上的金色）",
+      "count_other": "路线附近有 {{count}} 处物资（地图上的金色）"
+    },
+    "car": "坐车撤离（商人 Fence 声望）",
+    "carExit": "车辆撤离点",
+    "computing": "正在计算路线…",
+    "noneHere": "这张地图上没有。",
+    "leftHot_one": "去掉了 {{count}} 个地方：那个时段太拥挤",
+    "leftHot_other": "去掉了 {{count}} 个地方：那个时段太拥挤",
+    "worth": {
+      "quests_one": "{{count}} 个目标",
+      "quests_other": "{{count}} 个目标",
+      "money": "潜在约 {{value}} ₽",
+      "scavs_one": "{{count}} 个 Scav 刷新点",
+      "scavs_other": "{{count}} 个 Scav 刷新点",
+      "areas_one": "{{count}} 处",
+      "areas_other": "{{count}} 处"
+    },
+    "loot": {
+      "area": "物资点",
+      "key": "可能需要钥匙：{{key}}"
+    },
+    "scavs": {
+      "area": "Scav 区域",
+      "spawns_one": "{{count}} 个刷新点",
+      "spawns_other": "{{count}} 个刷新点",
+      "boss": "可能刷出 Boss"
+    },
+    "cg": {
+      "money": "保险箱",
+      "tech": "技术",
+      "military": "军用",
+      "med": "医疗",
+      "food": "食物",
+      "cache": "藏匿点",
+      "body": "尸体",
+      "bag": "包",
+      "loose": "散落"
+    },
+    "hot": {
+      "spawn": "这时是 PMC 出生点",
+      "loot": "争抢的物资",
+      "boss": "Boss 区域",
+      "extract": "拥挤的撤离点",
+      "transit": "拥挤的转移点",
+      "sniper": "Scav 狙击手",
+      "edge": "地图边缘（狙击手）",
+      "mine": "雷区",
+      "gun": "固定机枪",
+      "btr": "BTR"
+    }
   },
   "sounds": {
     "title": "声音提醒",

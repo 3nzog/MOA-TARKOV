@@ -136,3 +136,53 @@
 .tc-route-tip span { color: var(--text-dim); }
 .tc-route-tip em { color: var(--text-faint); font-style: normal; font-size: 11px; }
 .route-stop__more { font-size: var(--fs-micro); color: var(--text-faint); }
+
+/* Goal, styles and extras */
+.route-card__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.route-card__busy { display: flex; align-items: center; gap: 6px; }
+.route-styles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.route-style {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-sunken);
+  color: var(--text-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast, 120ms) var(--ease-out), background var(--dur-fast, 120ms) var(--ease-out), transform var(--dur-fast, 120ms) var(--ease-out);
+}
+.route-style:hover { border-color: color-mix(in srgb, #4fd1ff 45%, var(--border)); transform: translateY(-1px); }
+.route-style:focus-visible { outline: 2px solid #4fd1ff; outline-offset: 2px; }
+.route-style strong { font-size: var(--fs-caption); color: var(--text); }
+.route-style span { font-size: var(--fs-caption); color: var(--text); }
+.route-style small { font-size: var(--fs-micro); color: var(--text-faint); }
+.route-style--on { border-color: #4fd1ff; background: rgba(79, 209, 255, 0.1); box-shadow: inset 0 0 0 1px rgba(79, 209, 255, 0.35); }
+.route-stop__hot { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-micro); color: #ff8a3d; }
+.tc-route-stop__warn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #ff8a3d;
+  color: #1a0d00;
+  font: 900 9px/1 var(--font-ui);
+  font-style: normal;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.6);
+}
+.tc-route-stop { position: relative; }
+.tc-route-tip__hot { color: #ff8a3d !important; }
+/* The route's line runs along, like something moving on it. */
+.tc-route-line { animation: tc-route-flow 1.1s linear infinite; }
+@keyframes tc-route-flow { to { stroke-dashoffset: -16; } }
+.tc-route-line--hot { animation: none; }
+@media (prefers-reduced-motion: reduce) { .tc-route-line { animation: none; } }

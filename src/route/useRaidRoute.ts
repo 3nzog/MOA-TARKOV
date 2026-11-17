@@ -160,8 +160,9 @@ function exitOf(p: Poi): RouteExit {
     label: p.label,
     x: p.position.x,
     z: p.position.z,
-    // The car leaves about a minute after you pay; a switch or an item takes a while too.
-    penalty: car ? 60 : m.requiresSwitch ? 90 : m.requiresItem ? 60 : 0,
+    // The car leaves about a minute after you pay; a switch or an item takes a while too
+    // (V-Ex on Customs needs both the power switch and the payment).
+    penalty: (car ? 60 : 0) + (m.requiresSwitch ? 90 : 0) + (m.requiresItem && !car ? 60 : 0),
     note: p.note,
     car,
     price: m.payItem === ROUBLES && typeof m.payCount === 'number' ? m.payCount : undefined,
@@ -283,18 +284,17 @@ export function useRaidRoute(o: Options): RaidRoute {
   const startTs = from?.ts ?? null;
   const startAge = startTs === null ? null : Math.max(0, Math.floor((now - startTs) / 60_000));
 
+  const inRaid = !!o.raid;
   const exits = useMemo<RouteExit[]>(() => {
     const extracts = pois.filter((p) => p.category === 'extract');
-    let mine = extracts.filter((p) => tierOf(p) === 'mine');
+    const faction = (p: Poi) => String((p.meta as { faction?: string } | undefined)?.faction ?? 'shared').toLowerCase();
+    // Planning outside a raid: a PMC raid (every exit counts as yours on the map then,
+    // Scav-only ones included). In a raid, the side and the O+O list decide.
+    let mine = extracts.filter((p) => tierOf(p) === 'mine' && (inRaid || faction(p) !== 'scav'));
     // In a raid with the side not known yet: a PMC's exits.
-    if (mine.length === 0) {
-      mine = extracts.filter((p) => {
-        const f = String((p.meta as { faction?: string } | undefined)?.faction ?? 'shared').toLowerCase();
-        return f !== 'scav';
-      });
-    }
+    if (mine.length === 0) mine = extracts.filter((p) => faction(p) !== 'scav');
     return mine.map(exitOf);
-  }, [pois, tierOf]);
+  }, [pois, tierOf, inRaid]);
 
   const { raid } = o;
   const raidSeconds = (raidMinutes(mapId) ?? 40) * 60;

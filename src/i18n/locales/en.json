@@ -1110,7 +1110,7 @@
     "show": "Show the raid route",
     "hide": "Hide the raid route",
     "you": "You",
-    "help": "Plans the order that finishes the most objectives before the raid ends, always from where you are now to an exit of your side. MoA knows where you are from your last screenshot: take one when you spawn and more along the way, and every screenshot re-plans the route from there. Without one, you can pick the spawn on the map (it holds until your next screenshot). Spots you or the party walked up to drop off the list. With party on, the squad's quests count too: a place you both need is a single stop. Times are straight-line estimates with a margin.",
+    "help": "Plans the raid for the goal you pick: Quests (the order that finishes the most objectives), Loot (the areas that pay the most in money, the items your hideout still needs, or guns, ammo and attachments) or Scavs (where they spawn). It always starts from where you are now (your last screenshot) and ends at an exit of your side. The 4 styles show side by side: Direct goes straight; Balanced and Discreet walk around the hot zones (where players tend to be at that moment of the raid: spawns early, loot mid-raid, exits late) and Discreet leaves out what is very busy; Aggressive goes where PMCs are but keeps out of mines and snipers. Hot zones and detours are estimates: MoA does not know where walls are or where players really are.",
     "summary_one": "{{count}} objective · ~{{min}} min",
     "summary_other": "{{count}} objectives · ~{{min}} min",
     "budget": "{{min}} min of raid",
@@ -1134,7 +1134,89 @@
     "more_other": "+{{count}} objectives at the same place",
     "ageNow": "just now",
     "age_one": "{{count}} min ago",
-    "age_other": "{{count}} min ago"
+    "age_other": "{{count}} min ago",
+    "goal": {
+      "quests": "Quests",
+      "loot": "Loot",
+      "scavs": "Scavs",
+      "money": "Money",
+      "hideout": "Hideout",
+      "weapons": "Weapons"
+    },
+    "weapon": {
+      "guns": "Guns",
+      "ammo": "Ammo",
+      "parts": "Attachments"
+    },
+    "hideoutNote": "Favours where the items your hideout still needs can spawn (set the levels in Planner → Hideout).",
+    "styleLabel": "Route style",
+    "style": {
+      "direct": "Direct",
+      "balanced": "Balanced",
+      "stealth": "Discreet",
+      "aggressive": "Aggressive"
+    },
+    "hotShare": "{{pct}}% in hot zones",
+    "heatToggle": "Hot zones on the map",
+    "phase": {
+      "0": "Start",
+      "1": "Middle",
+      "2": "End"
+    },
+    "onWay": {
+      "toggle": "Loot on the way",
+      "extra": "+{{s}} s detour · ~{{value}} ₽",
+      "count_one": "{{count}} loot spot near the way (gold on the map)",
+      "count_other": "{{count}} loot spots near the way (gold on the map)"
+    },
+    "car": "End at the car (Fence reputation)",
+    "carExit": "Car exit",
+    "computing": "Planning the routes…",
+    "noneHere": "None of that on this map.",
+    "leftHot_one": "{{count}} place left out: very busy at that time",
+    "leftHot_other": "{{count}} places left out: very busy at that time",
+    "worth": {
+      "quests_one": "{{count}} objective",
+      "quests_other": "{{count}} objectives",
+      "money": "~{{value}} ₽ potential",
+      "scavs_one": "{{count}} Scav spawn",
+      "scavs_other": "{{count}} Scav spawns",
+      "areas_one": "{{count}} area",
+      "areas_other": "{{count}} areas"
+    },
+    "loot": {
+      "area": "Loot area",
+      "key": "May need the key: {{key}}"
+    },
+    "scavs": {
+      "area": "Scav area",
+      "spawns_one": "{{count}} spawn point",
+      "spawns_other": "{{count}} spawn points",
+      "boss": "a boss may spawn"
+    },
+    "cg": {
+      "money": "Safes",
+      "tech": "Tech",
+      "military": "Military",
+      "med": "Medical",
+      "food": "Food",
+      "cache": "Caches",
+      "body": "Bodies",
+      "bag": "Bags",
+      "loose": "Loose"
+    },
+    "hot": {
+      "spawn": "PMC spawn at that time",
+      "loot": "Contested loot",
+      "boss": "Boss area",
+      "extract": "Busy exit",
+      "transit": "Busy transit",
+      "sniper": "Scav sniper",
+      "edge": "Map edge (sniper)",
+      "mine": "Minefield",
+      "gun": "Mounted gun",
+      "btr": "BTR"
+    }
   },
   "sounds": {
     "title": "Sound alerts",

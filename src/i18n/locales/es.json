@@ -1110,7 +1110,7 @@
     "show": "Mostrar la ruta de la incursión",
     "hide": "Ocultar la ruta de la incursión",
     "you": "Tú",
-    "help": "Arma el orden que completa más objetivos antes de que termine la incursión, siempre desde donde estás ahora hasta una extracción de tu bando. MoA sabe dónde estás por tu última captura: haz una al aparecer y otras por el camino, y con cada captura la ruta se rehace desde ahí. Sin captura, puedes elegir el spawn en el mapa (vale hasta la próxima captura). Los puntos por donde pasaste tú o el grupo salen de la lista. Con el grupo activado, también cuentan las misiones del escuadrón: un lugar que ambos necesitan es una sola parada. Los tiempos son estimaciones en línea recta, con margen.",
+    "help": "Arma la incursión según el objetivo que elijas: Misiones (el orden que completa más objetivos), Botín (las zonas que más rinden en dinero, los objetos que le faltan a tu refugio, o armas, munición y accesorios) o Scavs (dónde aparecen). Siempre sale de donde estás ahora (tu última captura) y termina en una extracción de tu bando. Los 4 estilos aparecen lado a lado: Directo va recto; Equilibrado y Discreto rodean las zonas calientes (donde suele haber jugadores en ese momento: spawns al principio, botín a mitad, extracciones al final) y Discreto deja fuera lo que esté muy concurrido; Agresivo pasa por donde hay PMC, pero evita minas y francotiradores. Las zonas calientes y los desvíos son estimaciones: MoA no sabe dónde hay paredes ni dónde están de verdad los jugadores.",
     "summary_one": "{{count}} objetivo · ~{{min}} min",
     "summary_other": "{{count}} objetivos · ~{{min}} min",
     "budget": "{{min}} min de incursión",
@@ -1134,7 +1134,89 @@
     "more_other": "+{{count}} objetivos en el mismo lugar",
     "ageNow": "ahora",
     "age_one": "hace {{count}} min",
-    "age_other": "hace {{count}} min"
+    "age_other": "hace {{count}} min",
+    "goal": {
+      "quests": "Misiones",
+      "loot": "Botín",
+      "scavs": "Scavs",
+      "money": "Dinero",
+      "hideout": "Refugio",
+      "weapons": "Armas"
+    },
+    "weapon": {
+      "guns": "Armas",
+      "ammo": "Munición",
+      "parts": "Accesorios"
+    },
+    "hideoutNote": "Prioriza dónde pueden aparecer los objetos que le faltan a tu refugio (marca los niveles en Planificador → Refugio).",
+    "styleLabel": "Estilo de ruta",
+    "style": {
+      "direct": "Directo",
+      "balanced": "Equilibrado",
+      "stealth": "Discreto",
+      "aggressive": "Agresivo"
+    },
+    "hotShare": "{{pct}}% en zona caliente",
+    "heatToggle": "Zonas calientes en el mapa",
+    "phase": {
+      "0": "Inicio",
+      "1": "Mitad",
+      "2": "Final"
+    },
+    "onWay": {
+      "toggle": "Botín en el camino",
+      "extra": "+{{s}} s de desvío · ~{{value}} ₽",
+      "count_one": "{{count}} lugar con botín cerca del camino (dorado en el mapa)",
+      "count_other": "{{count}} lugares con botín cerca del camino (dorados en el mapa)"
+    },
+    "car": "Terminar en el coche (reputación con Fence)",
+    "carExit": "Extracción en coche",
+    "computing": "Calculando las rutas…",
+    "noneHere": "Nada de eso en este mapa.",
+    "leftHot_one": "{{count}} lugar quedó fuera: muy concurrido a esa hora",
+    "leftHot_other": "{{count}} lugares quedaron fuera: muy concurridos a esa hora",
+    "worth": {
+      "quests_one": "{{count}} objetivo",
+      "quests_other": "{{count}} objetivos",
+      "money": "~{{value}} ₽ en potencia",
+      "scavs_one": "{{count}} spawn de scav",
+      "scavs_other": "{{count}} spawns de scav",
+      "areas_one": "{{count}} zona",
+      "areas_other": "{{count}} zonas"
+    },
+    "loot": {
+      "area": "Zona de botín",
+      "key": "Puede necesitar la llave: {{key}}"
+    },
+    "scavs": {
+      "area": "Zona de scavs",
+      "spawns_one": "{{count}} punto de aparición",
+      "spawns_other": "{{count}} puntos de aparición",
+      "boss": "puede aparecer un jefe"
+    },
+    "cg": {
+      "money": "Cajas fuertes",
+      "tech": "Técnicos",
+      "military": "Militares",
+      "med": "Médicos",
+      "food": "Comida",
+      "cache": "Alijos",
+      "body": "Cuerpos",
+      "bag": "Bolsas",
+      "loose": "Sueltos"
+    },
+    "hot": {
+      "spawn": "Spawn de PMC a esa hora",
+      "loot": "Botín disputado",
+      "boss": "Zona de jefe",
+      "extract": "Extracción concurrida",
+      "transit": "Tránsito concurrido",
+      "sniper": "Francotirador scav",
+      "edge": "Borde del mapa (francotirador)",
+      "mine": "Campo de minas",
+      "gun": "Ametralladora fija",
+      "btr": "BTR"
+    }
   },
   "sounds": {
     "title": "Alertas sonoras",
