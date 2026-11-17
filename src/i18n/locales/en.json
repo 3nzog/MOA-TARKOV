@@ -1228,13 +1228,15 @@
       "raidTime": "Raid time",
       "extract": "Time to head for the exit",
       "stop": "Route stop done",
-      "quest": "Quest done"
+      "quest": "Quest done",
+      "hot": "Hot zone"
     },
     "groupHelp": {
       "raidTime": "Beeps at 10, 5 and 2 minutes left (PMC raids, whose end is known). Less time, more and higher beeps.",
       "extract": "When the time left barely covers the walk from your latest screenshot to the nearest exit of your side (with a minute to spare).",
       "stop": "When you (or the party) reach a stop of the raid route, or tick one off.",
-      "quest": "When the game's log says a quest is done."
+      "quest": "When the game's log says a quest is done.",
+      "hot": "When a screenshot of yours lands in a busy place for that moment of the raid (PMC spawns early, contested loot, boss areas, exits late, snipers, mines). At most once every 2 minutes per place."
     }
   },
   "questScreen": {

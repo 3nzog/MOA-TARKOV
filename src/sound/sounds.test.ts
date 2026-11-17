@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dueClockSound, groupOf, parseSoundPrefs, type SoundKind } from './sounds';
+import { dueClockSound, dueHotSound, groupOf, parseSoundPrefs, type SoundKind } from './sounds';
 
 const MIN = 60_000;
 
@@ -36,5 +36,21 @@ describe('sound preferences', () => {
     expect(groupOf('time10')).toBe('raidTime');
     expect(groupOf('time2')).toBe('raidTime');
     expect(groupOf('extract')).toBe('extract');
+  });
+});
+
+describe('the hot place sound', () => {
+  it('sounds once per place, again only after two minutes', () => {
+    const last = new Map<string, number>();
+    expect(dueHotSound('spawn:1:2', 0, last)).toBe(true);
+    expect(dueHotSound('spawn:1:2', 60_000, last)).toBe(false);
+    expect(dueHotSound('boss:5:5', 60_000, last)).toBe(true);
+    expect(dueHotSound('spawn:1:2', 2 * MIN + 1, last)).toBe(true);
+  });
+
+  it('has its own switch, on by default', () => {
+    expect(groupOf('hot')).toBe('hot');
+    expect(parseSoundPrefs(null).groups.hot).toBe(true);
+    expect(parseSoundPrefs(JSON.stringify({ groups: { hot: false } })).groups.hot).toBe(false);
   });
 });

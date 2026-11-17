@@ -1,13 +1,13 @@
 // Sound alerts: short tones made on the spot with the Web Audio API (no audio
 // files, no voice). Each alert has its own pattern so it can be told apart
 // without looking: the raid clock, "time to head for the exit", a route stop
-// done, a quest done. Preferences live per PC.
+// done, a quest done, a hot place. Preferences live per PC.
 import { useSyncExternalStore } from 'react';
 
-export type SoundKind = 'time10' | 'time5' | 'time2' | 'extract' | 'stop' | 'quest';
+export type SoundKind = 'time10' | 'time5' | 'time2' | 'extract' | 'stop' | 'quest' | 'hot';
 /** The switches in Settings (the three raid-clock sounds share one). */
-export type SoundGroup = 'raidTime' | 'extract' | 'stop' | 'quest';
-export const SOUND_GROUPS: readonly SoundGroup[] = ['raidTime', 'extract', 'stop', 'quest'];
+export type SoundGroup = 'raidTime' | 'extract' | 'stop' | 'quest' | 'hot';
+export const SOUND_GROUPS: readonly SoundGroup[] = ['raidTime', 'extract', 'stop', 'quest', 'hot'];
 
 export const groupOf = (k: SoundKind): SoundGroup =>
   k === 'time10' || k === 'time5' || k === 'time2' ? 'raidTime' : k;
@@ -20,7 +20,7 @@ export interface SoundPrefs {
 }
 
 const KEY = 'tc_sounds_v1';
-const DEFAULTS: SoundPrefs = { on: true, volume: 0.6, groups: { raidTime: true, extract: true, stop: true, quest: true } };
+const DEFAULTS: SoundPrefs = { on: true, volume: 0.6, groups: { raidTime: true, extract: true, stop: true, quest: true, hot: true } };
 
 export function parseSoundPrefs(raw: string | null): SoundPrefs {
   try {
@@ -78,6 +78,8 @@ const PATTERNS: Record<SoundKind, { notes: Note[]; wave: OscillatorType }> = {
   stop: { wave: 'sine', notes: [[880, 0, 0.1], [1320, 0.11, 0.16]] },
   // Quest done: a major arpeggio.
   quest: { wave: 'triangle', notes: [[523, 0, 0.14], [659, 0.12, 0.14], [784, 0.24, 0.14], [1047, 0.36, 0.3]] },
+  // A hot place: two low, rough notes going down.
+  hot: { wave: 'sawtooth', notes: [[392, 0, 0.16], [294, 0.2, 0.3]] },
 };
 
 let ctx: AudioContext | null = null;
@@ -107,8 +109,8 @@ export function playSound(kind: SoundKind, force = false): void {
   if (!ac || p.volume <= 0) return;
   const { notes, wave } = PATTERNS[kind];
   const t0 = ac.currentTime + 0.02;
-  // Square waves are much louder to the ear.
-  const peak = p.volume * (wave === 'square' ? 0.12 : 0.3);
+  // Square and sawtooth waves are much louder to the ear.
+  const peak = p.volume * (wave === 'square' || wave === 'sawtooth' ? 0.12 : 0.3);
   for (const [freq, at, len] of notes) {
     const osc = ac.createOscillator();
     const gain = ac.createGain();
@@ -139,4 +141,18 @@ export function dueClockSound(leftMs: number, played: ReadonlySet<SoundKind>): S
     if (leftMs <= at && leftMs > at - 60_000 && !played.has(kind)) return kind;
   }
   return null;
+}
+
+/** Walking into the same hot place again sounds only after this long. */
+export const HOT_COOLDOWN_MS = 2 * 60_000;
+
+/**
+ * Whether entering the hot place `key` should sound now: not if it sounded
+ * for that place less than HOT_COOLDOWN_MS ago (`last` remembers when).
+ */
+export function dueHotSound(key: string, now: number, last: Map<string, number>): boolean {
+  const at = last.get(key);
+  if (at !== undefined && now - at < HOT_COOLDOWN_MS) return false;
+  last.set(key, now);
+  return true;
 }

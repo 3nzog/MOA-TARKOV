@@ -514,7 +514,7 @@ function App() {
   });
   // Item names for the loot route's stops (loaded once a loot goal or "loot on the way" is on).
   const routeItemNames = useItemNames(route.on && (route.goal !== 'quests' || route.lootOnWay));
-  useSoundAlerts({ raid: minimapRaid, toExit: route.toExit, routeDone: route.doneCount });
+  useSoundAlerts({ raid: minimapRaid, toExit: route.toExit, routeDone: route.doneCount, hotKey: route.selfHeat?.key ?? null });
   const [clockNow, setClockNow] = useState(() => Date.now());
   useEffect(() => {
     if (!liveRaid) return;

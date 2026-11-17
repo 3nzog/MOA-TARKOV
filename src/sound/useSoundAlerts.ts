@@ -3,10 +3,11 @@
 //  - time to head for the exit: what is left barely covers the walk from your
 //    latest position to the nearest exit of your side (plus a minute);
 //  - a stop of the raid route done (walked up to, or ticked off);
-//  - a quest done (the game's log says so): see questDoneSound.
+//  - a quest done (the game's log says so): see questDoneSound;
+//  - your screenshot puts you in a hot place right now (once per place every 2 min).
 // Each plays once per raid.
 import { useEffect, useRef } from 'react';
-import { dueClockSound, playSound, type SoundKind } from './sounds';
+import { dueClockSound, dueHotSound, playSound, type SoundKind } from './sounds';
 
 /** Kept on top of the walk to the exit before "head for the exit" sounds. */
 const EXIT_MARGIN_S = 60;
@@ -17,9 +18,11 @@ interface Options {
   toExit: number | null;
   /** Route stops done this raid. */
   routeDone: number;
+  /** The hot place your latest position is in (null: none). */
+  hotKey?: string | null;
 }
 
-export function useSoundAlerts({ raid, toExit, routeDone }: Options): void {
+export function useSoundAlerts({ raid, toExit, routeDone, hotKey = null }: Options): void {
   const played = useRef<{ raid: number | null; kinds: Set<SoundKind> }>({ raid: null, kinds: new Set() });
   const toExitRef = useRef(toExit);
   useEffect(() => {
@@ -61,6 +64,13 @@ export function useSoundAlerts({ raid, toExit, routeDone }: Options): void {
     if (prev.raid === startedAt && routeDone > prev.n) playSound('stop');
     lastDone.current = { raid: startedAt, n: routeDone };
   }, [routeDone, startedAt]);
+
+  // Walking into a hot place (a new screenshot there), in a raid.
+  const hotPlayed = useRef(new Map<string, number>());
+  useEffect(() => {
+    if (!hotKey || startedAt === null) return;
+    if (dueHotSound(hotKey, Date.now(), hotPlayed.current)) playSound('hot');
+  }, [hotKey, startedAt]);
 }
 
 /** A quest event from the game's log: "Finished" sounds. */
