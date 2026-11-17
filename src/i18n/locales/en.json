@@ -1132,5 +1132,24 @@
     "reset_other": "Put {{count}} done stops back on the route",
     "more_one": "+{{count}} objective at the same place",
     "more_other": "+{{count}} objectives at the same place"
+  },
+  "sounds": {
+    "title": "Sound alerts",
+    "on": "Play sound alerts",
+    "volume": "Volume",
+    "test": "Test the sound",
+    "help": "Short sounds, no voice, each with its own pattern so you know what it is without looking. Each plays once per raid.",
+    "group": {
+      "raidTime": "Raid time",
+      "extract": "Time to head for the exit",
+      "stop": "Route stop done",
+      "quest": "Quest done"
+    },
+    "groupHelp": {
+      "raidTime": "Beeps at 10, 5 and 2 minutes left (PMC raids, whose end is known). Less time, more and higher beeps.",
+      "extract": "When the time left barely covers the walk from your latest screenshot to the nearest exit of your side (with a minute to spare).",
+      "stop": "When you (or the party) reach a stop of the raid route, or tick one off.",
+      "quest": "When the game's log says a quest is done."
+    }
   }
 }

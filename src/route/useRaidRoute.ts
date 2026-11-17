@@ -11,7 +11,7 @@ import type { PlayerPos } from '../app/useGameEvents';
 import { raidMinutes } from '../map/raidDuration';
 import { canonicalMapId } from '../map/canonicalMap';
 import { hexForColorId } from '../../shared/squadProtocol';
-import { buildStops, centroid, planRoute, type Point, type RouteExit, type RoutePlan, type RouteWho } from './plan';
+import { buildStops, centroid, nearestExit, planRoute, type Point, type RouteExit, type RoutePlan, type RouteWho } from './plan';
 
 const KEY = 'tc_route_v1';
 /** Walking up to a stop this close counts as done. */
@@ -75,6 +75,8 @@ export interface RaidRoute {
   /** Stops reached or skipped this raid (they come back with "reset"). */
   doneCount: number;
   reset: () => void;
+  /** Seconds from your latest position this raid to the nearest exit of your side (null: no position). */
+  toExit: number | null;
 }
 
 interface Options {
@@ -194,6 +196,9 @@ export function useRaidRoute(o: Options): RaidRoute {
     return minutes * 60 - MARGIN_S;
   }, [mapId, raid, now]);
 
+  const own = o.playerPos && fresh(o.playerPos.ts) ? o.playerPos : null;
+  const toExit = useMemo(() => (own && exits.length ? nearestExit(own, exits).s : null), [own, exits]);
+
   const plan = useMemo(() => {
     if (!prefs.on || !start) return null;
     const open = allStops.filter((s) => !current.done.includes(s.id));
@@ -222,5 +227,6 @@ export function useRaidRoute(o: Options): RaidRoute {
     skip: (id) => setPerRaid({ ...current, done: [...current.done, id] }),
     doneCount: current.done.length,
     reset: () => setPerRaid({ key: resetKey, picked: null, done: [], picking: false }),
+    toExit,
   };
 }

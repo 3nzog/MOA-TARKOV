@@ -35,6 +35,7 @@ import SquadQuestLayer from './map/SquadQuestLayer';
 import RouteLayer from './route/RouteLayer';
 import RoutePanel from './route/RoutePanel';
 import { useRaidRoute } from './route/useRaidRoute';
+import { questDoneSound, useSoundAlerts } from './sound/useSoundAlerts';
 import SquadQuestSummary from './components/SquadQuestSummary';
 import { useSettings } from './app/useSettings';
 import { useRailWidth } from './app/useRailWidth';
@@ -265,7 +266,10 @@ function App() {
     setProgress: quests.setProgress,
     setSelectedMapId,
     setHistory: raidHistory.setHistory,
-    onLiveQuestEvent: tracker.onLiveQuest,
+    onLiveQuestEvent: (id, status) => {
+      tracker.onLiveQuest(id, status);
+      questDoneSound(status);
+    },
     onExtractPanel: (lines, missingLanguage) => extractPanelHandler.current?.(lines, missingLanguage),
   });
   const logReplay = useLogReplay(setToast);
@@ -479,6 +483,7 @@ function App() {
     pois: pois.currentPois,
     tierOf,
   });
+  useSoundAlerts({ raid: minimapRaid, toExit: route.toExit, routeDone: route.doneCount });
   const [clockNow, setClockNow] = useState(() => Date.now());
   useEffect(() => {
     if (!liveRaid) return;

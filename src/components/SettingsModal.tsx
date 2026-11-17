@@ -16,6 +16,7 @@ import type { TrackerApi } from '../app/useTracker';
 import AppearanceSettings from './AppearanceSettings';
 import LinkSettings from '../link/LinkSettings';
 import ConnectionTest from '../net/ConnectionTest';
+import SoundSettings from '../sound/SoundSettings';
 import {
   Desktop,
   Info,
@@ -281,6 +282,9 @@ export default function SettingsModal({
           </div>
           <Toggle checked={floorLock} onChange={onFloorLockChange} label={t('settings.automaticFloorsOnlyLabel')} />
         </div>
+
+        <SectionLabel help={t('sounds.help')}>{t('sounds.title')}</SectionLabel>
+        <SoundSettings />
 
         <SectionLabel help={t('settings.compactModeHint')}>{t('settings.compactMode')}</SectionLabel>
         {compactOnTopOk === false && <p className="settings-err">{t('settings.compactOnTopFailed')}</p>}

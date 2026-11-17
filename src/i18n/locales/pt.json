@@ -1132,5 +1132,24 @@
     "reset_other": "Voltar {{count}} concluídos para a rota",
     "more_one": "+{{count}} objetivo no mesmo lugar",
     "more_other": "+{{count}} objetivos no mesmo lugar"
+  },
+  "sounds": {
+    "title": "Alertas sonoros",
+    "on": "Tocar alertas sonoros",
+    "volume": "Volume",
+    "test": "Testar o som",
+    "help": "Sons curtos, sem voz, cada um com um toque diferente, para você saber o que é sem olhar a tela. Tocam uma vez por raid.",
+    "group": {
+      "raidTime": "Tempo de raid",
+      "extract": "Hora de ir pra extração",
+      "stop": "Parada da rota concluída",
+      "quest": "Missão concluída"
+    },
+    "groupHelp": {
+      "raidTime": "Bipes quando faltam 10, 5 e 2 minutos (raids de PMC, em que o fim é conhecido). Quanto menos tempo, mais bipes e mais agudo.",
+      "extract": "Quando o tempo que sobra mal dá para andar do seu último print até a extração mais perto do seu lado (com 1 minuto de folga).",
+      "stop": "Quando você (ou a party) chega numa parada da rota da raid, ou marca uma como feita.",
+      "quest": "Quando o log do jogo diz que uma missão foi concluída."
+    }
   }
 }

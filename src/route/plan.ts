@@ -151,10 +151,15 @@ interface Ctx {
 
 /** Best exit after `last`, and the seconds to it. Null exits: no exit leg. */
 function bestExit(ctx: Ctx, last: Point): { exit: RouteExit | null; s: number } {
+  return nearestExit(last, ctx.exits);
+}
+
+/** The exit quickest to reach from `from` (its condition's extra time counted), and the seconds. */
+export function nearestExit(from: Point, exits: RouteExit[]): { exit: RouteExit | null; s: number } {
   let exit: RouteExit | null = null;
-  let s = ctx.exits.length ? Infinity : 0;
-  for (const e of ctx.exits) {
-    const v = travelSeconds(last, e) + e.penalty;
+  let s = exits.length ? Infinity : 0;
+  for (const e of exits) {
+    const v = travelSeconds(from, e) + e.penalty;
     if (v < s) {
       s = v;
       exit = e;

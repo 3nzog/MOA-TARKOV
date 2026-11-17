@@ -1132,5 +1132,24 @@
     "reset_other": "Devolver {{count}} hechos a la ruta",
     "more_one": "+{{count}} objetivo en el mismo lugar",
     "more_other": "+{{count}} objetivos en el mismo lugar"
+  },
+  "sounds": {
+    "title": "Alertas sonoras",
+    "on": "Reproducir alertas sonoras",
+    "volume": "Volumen",
+    "test": "Probar el sonido",
+    "help": "Sonidos cortos, sin voz, cada uno con su propio patrón para saber qué es sin mirar. Cada uno suena una vez por incursión.",
+    "group": {
+      "raidTime": "Tiempo de incursión",
+      "extract": "Hora de ir a la extracción",
+      "stop": "Parada de la ruta hecha",
+      "quest": "Misión completada"
+    },
+    "groupHelp": {
+      "raidTime": "Pitidos cuando quedan 10, 5 y 2 minutos (incursiones de PMC, cuyo final se conoce). Menos tiempo, más pitidos y más agudos.",
+      "extract": "Cuando el tiempo que queda apenas alcanza para caminar desde tu última captura hasta la extracción más cercana de tu bando (con un minuto de margen).",
+      "stop": "Cuando tú (o el grupo) llegas a una parada de la ruta, o marcas una como hecha.",
+      "quest": "Cuando el registro del juego dice que una misión se completó."
+    }
   }
 }
