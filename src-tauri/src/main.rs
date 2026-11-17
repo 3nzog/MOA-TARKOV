@@ -11,6 +11,7 @@ mod net;
 mod party;
 mod screenshots;
 mod tracker;
+mod weblinks;
 
 use std::sync::{Arc, Mutex};
 use tauri::{Listener, Manager};
@@ -65,6 +66,7 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            weblinks::open_external,
             eft_config::get_eft_config,
             eft_config::get_resolved_logs_dir,
             eft_config::set_eft_install_root,

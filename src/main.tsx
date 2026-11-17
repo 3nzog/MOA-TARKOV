@@ -13,9 +13,13 @@ import { LinkProvider } from './link/LinkProvider'
 import { setupI18n } from './i18n'
 import MinimapApp from './minimap/MinimapApp'
 import { initAppearance } from './appearance/useAppearance'
+import { installExternalLinks } from './services/openExternal'
 
 // Theme, accent and glass come from the saved appearance before anything paints.
 initAppearance()
+
+// Links to the wiki, tarkov.dev and the like open in the player's browser.
+installExternalLinks()
 
 // The same bundle serves the minimap overlay window (opened by the main window
 // with ?view=minimap). It renders only the minimap — no squad connection, no
