@@ -15,6 +15,19 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "0.10.0",
+    date: "2026-11-17",
+    changes: [
+      "New look: Thermal. The app as seen through a thermal sight — cold violet surfaces, heat in the thermal scale, your route as the cold line through it, springy animations. The light theme is the sight's black-hot mode. Animations stop with \"reduce motion\" or with animations off in Settings → Appearance.",
+      "Raid route: pick the goal — quests, loot (money, hideout items or weapons) or Scavs — and compare four styles side by side: direct, balanced, discreet (walks around busy places) and aggressive (goes where players are, still avoids mines and snipers). It always starts from your latest screenshot.",
+      "Hot zones: where players tend to be at each moment of the raid (spawns early, loot mid-raid, exits late), shown on the map, with a ⚠ on busy stops and an optional sound when you walk into one.",
+      "The route on the in-game minimap and on the phone; loot worth a short detour; ending at the car exit for Fence reputation; \"Which map pays off\" and \"Only what the route needs\" in Planner → Raid.",
+      "A screenshot of the game's Tasks screen marks the quests listed there as active when the logs missed them. Ammo shows the cheapest round that gets through a given armour class, at trader prices.",
+      "Faster: the minimap window loads only its own code, panels load when first opened, and the raid clock no longer redraws the whole app every second. Fixed: quest and exit dots on the minimap could be hidden under the map art.",
+      "Squad Mode: no change to the squad protocol; 0.9.0 and 0.10.0 still see each other.",
+    ],
+  },
+  {
     version: "0.9.0",
     date: "2026-08-26",
     changes: [
