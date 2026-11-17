@@ -1110,7 +1110,7 @@
     "show": "Mostrar a rota da raid",
     "hide": "Esconder a rota da raid",
     "you": "Você",
-    "help": "Monta a ordem que conclui mais objetivos antes do fim da raid, saindo de onde você nasceu e terminando numa extração do seu lado. Para o MoA saber o spawn, tire um print logo ao nascer (ou escolha o spawn no mapa). A cada print novo a rota se ajusta, e os pontos por onde você ou a party passou saem da lista. Com a party ligada, entram as missões do squad também: um lugar que os dois precisam vira uma parada só. Os tempos são estimativas em linha reta, com margem.",
+    "help": "Monta a ordem que conclui mais objetivos antes do fim da raid, sempre saindo de onde você está agora e terminando numa extração do seu lado. O MoA sabe onde você está pelo seu último print: tire um ao nascer e outros pelo caminho, e a cada print a rota é refeita a partir dali. Sem print, dá pra escolher o spawn no mapa (vale até o próximo print). Os pontos por onde você ou a party passou saem da lista. Com a party ligada, entram as missões do squad também: um lugar que os dois precisam vira uma parada só. Os tempos são estimativas em linha reta, com margem.",
     "summary_one": "{{count}} objetivo · ~{{min}} min",
     "summary_other": "{{count}} objetivos · ~{{min}} min",
     "budget": "{{min}} min de raid",
@@ -1118,11 +1118,11 @@
     "pickHint": "Clique num spawn azul no mapa",
     "pickSpawn": "Escolher spawn",
     "from": {
-      "picked": "Saindo do spawn escolhido",
-      "self": "Saindo do seu último print",
-      "party": "Saindo do meio da party"
+      "picked": "Saindo do spawn escolhido (até o próximo print)",
+      "self": "Saindo de onde você está (seu último print)",
+      "party": "Saindo da posição da party"
     },
-    "noStart": "Tire um print ao nascer, ou escolha o spawn no mapa",
+    "noStart": "Tire um print para o MoA saber onde você está, ou escolha o spawn no mapa",
     "done": "Feito (tirar da rota)",
     "nothing": "Nenhum objetivo cabe no tempo que sobra: vá direto para a extração.",
     "none": "Nenhuma missão ativa com lugar marcado neste mapa.",
@@ -1131,7 +1131,10 @@
     "reset_one": "Voltar {{count}} concluído para a rota",
     "reset_other": "Voltar {{count}} concluídos para a rota",
     "more_one": "+{{count}} objetivo no mesmo lugar",
-    "more_other": "+{{count}} objetivos no mesmo lugar"
+    "more_other": "+{{count}} objetivos no mesmo lugar",
+    "ageNow": "agora",
+    "age_one": "há {{count}} min",
+    "age_other": "há {{count}} min"
   },
   "sounds": {
     "title": "Alertas sonoros",

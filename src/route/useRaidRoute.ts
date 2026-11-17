@@ -1,5 +1,6 @@
-// The raid route for the map on screen: where it starts (your screenshot at
-// the spawn, the squad's middle, or a spawn picked on the map), the stops
+// The raid route for the map on screen: where it starts (where you are now,
+// from your latest screenshot; a spawn picked on the map until one comes; or
+// the party's position), the stops
 // (your objectives, plus your squadmates' with "party" on), the exits of your
 // side and the time left. Re-planned at every new position, so it adjusts as
 // you go; stops someone of the party walked up to drop out on their own.
@@ -11,7 +12,7 @@ import type { PlayerPos } from '../app/useGameEvents';
 import { raidMinutes } from '../map/raidDuration';
 import { canonicalMapId } from '../map/canonicalMap';
 import { hexForColorId } from '../../shared/squadProtocol';
-import { buildStops, centroid, nearestExit, planRoute, type Point, type RouteExit, type RoutePlan, type RouteWho } from './plan';
+import { buildStops, nearestExit, planRoute, routeStart, type Point, type RouteExit, type RoutePlan, type RouteStartSource, type RouteWho } from './plan';
 
 const KEY = 'tc_route_v1';
 /** Walking up to a stop this close counts as done. */
@@ -52,7 +53,7 @@ export interface RouteSquad {
   hiddenQuests: Record<string, boolean>;
 }
 
-export type RouteStartSource = 'picked' | 'self' | 'party';
+export type { RouteStartSource };
 
 export interface RaidRoute {
   on: boolean;
@@ -64,6 +65,8 @@ export interface RaidRoute {
   plan: RoutePlan | null;
   start: Point | null;
   startSource: RouteStartSource | null;
+  /** Minutes since the start position was taken (your screenshot or the pick); null for the party's. */
+  startAge: number | null;
   /** Seconds the plan may use. */
   budget: number;
   /** Clicking a spawn on the map sets the start. */
@@ -92,6 +95,16 @@ interface Options {
   tierOf: (p: Poi) => ExitTier | null;
 }
 
+interface PerRaid {
+  key: string;
+  picked: Point | null;
+  /** When the spawn was picked: a screenshot after this wins over it. */
+  pickedAt: number;
+  done: string[];
+  picking: boolean;
+}
+const emptyRaid = (key: string): PerRaid => ({ key, picked: null, pickedAt: 0, done: [], picking: false });
+
 const exitPenalty = (p: Poi): number => {
   const m = (p.meta ?? {}) as { isCar?: boolean; requiresSwitch?: boolean; requiresItem?: boolean };
   return m.isCar ? 120 : m.requiresSwitch ? 90 : m.requiresItem ? 60 : 0;
@@ -109,22 +122,17 @@ export function useRaidRoute(o: Options): RaidRoute {
 
   // Everything picked, reached or skipped belongs to one raid on one map.
   const resetKey = `${o.mapId ?? ''}|${o.raid?.startedAt ?? 'plan'}`;
-  const [perRaid, setPerRaid] = useState<{ key: string; picked: Point | null; done: string[]; picking: boolean }>({
-    key: resetKey,
-    picked: null,
-    done: [],
-    picking: false,
-  });
-  const current = perRaid.key === resetKey ? perRaid : { key: resetKey, picked: null, done: [], picking: false };
+  const [perRaid, setPerRaid] = useState<PerRaid>(() => emptyRaid(resetKey));
+  const current = perRaid.key === resetKey ? perRaid : emptyRaid(resetKey);
   if (current !== perRaid) setPerRaid(current);
 
-  // The clock moves the budget: re-plan every 30 s in a raid.
+  // The clock moves the budget (and how old your position is): re-plan every 30 s.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!prefs.on || !o.raid) return;
+    if (!prefs.on) return;
     const id = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(id);
-  }, [prefs.on, o.raid]);
+  }, [prefs.on]);
 
   const { squad, mapId } = o;
   const party = prefs.party && squad.inSquad;
@@ -152,9 +160,9 @@ export function useRaidRoute(o: Options): RaidRoute {
     (ts: number) => (startedAt !== null ? ts >= startedAt - 60_000 : now - ts <= STALE_OUT_OF_RAID_MS),
     [startedAt, now],
   );
-  const fixes = useMemo<Point[]>(() => {
+  const own = o.playerPos && fresh(o.playerPos.ts) ? o.playerPos : null;
+  const mateFixes = useMemo<Point[]>(() => {
     const out: Point[] = [];
-    if (o.playerPos && fresh(o.playerPos.ts)) out.push({ x: o.playerPos.x, z: o.playerPos.z });
     if (party && mapId) {
       for (const m of mates) {
         const p = squad.positions[m.id];
@@ -162,7 +170,8 @@ export function useRaidRoute(o: Options): RaidRoute {
       }
     }
     return out;
-  }, [o.playerPos, fresh, party, mapId, mates, squad.positions]);
+  }, [fresh, party, mapId, mates, squad.positions]);
+  const fixes = useMemo<Point[]>(() => (own ? [{ x: own.x, z: own.z }, ...mateFixes] : mateFixes), [own, mateFixes]);
 
   // Stops someone walked up to count as done for the rest of the raid.
   const reached = allStops.filter(
@@ -170,9 +179,13 @@ export function useRaidRoute(o: Options): RaidRoute {
   );
   if (reached.length > 0) setPerRaid({ ...current, done: [...current.done, ...reached.map((s) => s.id)] });
 
-  const picked = current.picked;
-  const start = useMemo<Point | null>(() => picked ?? (fixes.length > 1 ? centroid(fixes) : fixes[0] ?? null), [picked, fixes]);
-  const startSource: RouteStartSource | null = current.picked ? 'picked' : fixes.length > 1 ? 'party' : fixes.length ? 'self' : null;
+  // The route always leaves from where you are now (your latest screenshot).
+  const { picked, pickedAt } = current;
+  const from = useMemo(() => routeStart(own, picked && { at: picked, ts: pickedAt }, mateFixes), [own, picked, pickedAt, mateFixes]);
+  const start = from?.point ?? null;
+  const startSource = from?.source ?? null;
+  const startTs = from?.ts ?? null;
+  const startAge = startTs === null ? null : Math.max(0, Math.floor((now - startTs) / 60_000));
 
   const { pois, tierOf } = o;
   const exits = useMemo<RouteExit[]>(() => {
@@ -196,7 +209,6 @@ export function useRaidRoute(o: Options): RaidRoute {
     return minutes * 60 - MARGIN_S;
   }, [mapId, raid, now]);
 
-  const own = o.playerPos && fresh(o.playerPos.ts) ? o.playerPos : null;
   const toExit = useMemo(() => (own && exits.length ? nearestExit(own, exits).s : null), [own, exits]);
 
   const plan = useMemo(() => {
@@ -219,14 +231,15 @@ export function useRaidRoute(o: Options): RaidRoute {
     plan,
     start,
     startSource,
+    startAge,
     budget,
     picking: current.picking,
     setPicking: (on) => setPerRaid({ ...current, picking: on }),
-    pickStart: (p) => setPerRaid({ ...current, picked: p, picking: false }),
+    pickStart: (p) => setPerRaid({ ...current, picked: p, pickedAt: Date.now(), picking: false }),
     spawns,
     skip: (id) => setPerRaid({ ...current, done: [...current.done, id] }),
     doneCount: current.done.length,
-    reset: () => setPerRaid({ key: resetKey, picked: null, done: [], picking: false }),
+    reset: () => setPerRaid(emptyRaid(resetKey)),
     toExit,
   };
 }

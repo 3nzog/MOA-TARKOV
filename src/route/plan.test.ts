@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TarkovTask, TaskObjective } from '../api/types';
-import { buildStops, centroid, planRoute, travelSeconds, type RouteExit, type RouteStop } from './plan';
+import { buildStops, centroid, planRoute, routeStart, travelSeconds, type RouteExit, type RouteStop } from './plan';
 
 const MAP = '56f40101d2720b2a4d8b45d6'; // Customs
 
@@ -105,5 +105,26 @@ describe('centroid', () => {
   it('is the middle of the squad, or null without anyone', () => {
     expect(centroid([{ x: 0, z: 0 }, { x: 10, z: 20 }])).toEqual({ x: 5, z: 10 });
     expect(centroid([])).toBeNull();
+  });
+});
+
+describe('routeStart', () => {
+  const me = { x: 10, z: 20, ts: 2_000 };
+  const spawn = { at: { x: -300, z: 50 }, ts: 1_000 };
+  const party = [{ x: 0, z: 0 }, { x: 100, z: 0 }];
+
+  it('always leaves from where you are, over the party and an older pick', () => {
+    expect(routeStart(me, null, party)).toEqual({ point: { x: 10, z: 20 }, source: 'self', ts: 2_000 });
+    expect(routeStart(me, spawn, party)?.source).toBe('self');
+  });
+
+  it('uses a spawn picked after your last screenshot until a newer one', () => {
+    expect(routeStart(me, { ...spawn, ts: 3_000 }, party)).toEqual({ point: spawn.at, source: 'picked', ts: 3_000 });
+    expect(routeStart({ ...me, ts: 4_000 }, { ...spawn, ts: 3_000 }, party)?.source).toBe('self');
+  });
+
+  it("falls back to the party's position, then to nothing", () => {
+    expect(routeStart(null, null, party)).toEqual({ point: { x: 50, z: 0 }, source: 'party', ts: null });
+    expect(routeStart(null, null, [])).toBeNull();
   });
 });

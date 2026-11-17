@@ -1110,7 +1110,7 @@
     "show": "Mostrar la ruta de la incursión",
     "hide": "Ocultar la ruta de la incursión",
     "you": "Tú",
-    "help": "Arma el orden que completa más objetivos antes de que termine la incursión, desde donde apareciste hasta una extracción de tu bando. Para que MoA sepa tu spawn, haz una captura justo al aparecer (o elige el spawn en el mapa). Cada captura nueva ajusta la ruta, y los puntos por donde pasaste tú o el grupo salen de la lista. Con el grupo activado, también cuentan las misiones del escuadrón: un lugar que ambos necesitan es una sola parada. Los tiempos son estimaciones en línea recta, con margen.",
+    "help": "Arma el orden que completa más objetivos antes de que termine la incursión, siempre desde donde estás ahora hasta una extracción de tu bando. MoA sabe dónde estás por tu última captura: haz una al aparecer y otras por el camino, y con cada captura la ruta se rehace desde ahí. Sin captura, puedes elegir el spawn en el mapa (vale hasta la próxima captura). Los puntos por donde pasaste tú o el grupo salen de la lista. Con el grupo activado, también cuentan las misiones del escuadrón: un lugar que ambos necesitan es una sola parada. Los tiempos son estimaciones en línea recta, con margen.",
     "summary_one": "{{count}} objetivo · ~{{min}} min",
     "summary_other": "{{count}} objetivos · ~{{min}} min",
     "budget": "{{min}} min de incursión",
@@ -1118,11 +1118,11 @@
     "pickHint": "Haz clic en un spawn azul del mapa",
     "pickSpawn": "Elegir spawn",
     "from": {
-      "picked": "Desde el spawn elegido",
-      "self": "Desde tu última captura",
-      "party": "Desde el centro del grupo"
+      "picked": "Desde el spawn elegido (hasta tu próxima captura)",
+      "self": "Desde donde estás (tu última captura)",
+      "party": "Desde la posición del grupo"
     },
-    "noStart": "Haz una captura al aparecer, o elige el spawn en el mapa",
+    "noStart": "Haz una captura para que MoA sepa dónde estás, o elige el spawn en el mapa",
     "done": "Hecho (quitar de la ruta)",
     "nothing": "Ningún objetivo cabe en el tiempo que queda: ve directo a la extracción.",
     "none": "No hay misiones activas con lugar marcado en este mapa.",
@@ -1131,7 +1131,10 @@
     "reset_one": "Devolver {{count}} hecho a la ruta",
     "reset_other": "Devolver {{count}} hechos a la ruta",
     "more_one": "+{{count}} objetivo en el mismo lugar",
-    "more_other": "+{{count}} objetivos en el mismo lugar"
+    "more_other": "+{{count}} objetivos en el mismo lugar",
+    "ageNow": "ahora",
+    "age_one": "hace {{count}} min",
+    "age_other": "hace {{count}} min"
   },
   "sounds": {
     "title": "Alertas sonoras",

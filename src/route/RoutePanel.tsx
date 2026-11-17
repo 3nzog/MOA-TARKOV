@@ -53,7 +53,9 @@ export default function RoutePanel({ route, inSquad }: { route: RaidRoute; inSqu
             {route.picking
               ? t('route.pickHint')
               : route.startSource
-                ? t(`route.from.${route.startSource}`)
+                ? `${t(`route.from.${route.startSource}`)}${
+                    route.startAge === null ? '' : ` · ${route.startAge === 0 ? t('route.ageNow') : t('route.age', { count: route.startAge })}`
+                  }`
                 : t('route.noStart')}
           </span>
           <Button size="sm" variant="tertiary" onClick={() => route.setPicking(!route.picking)}>

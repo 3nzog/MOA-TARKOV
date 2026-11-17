@@ -273,3 +273,21 @@ export function centroid(points: Point[]): Point | null {
   const z = points.reduce((s, p) => s + p.z, 0) / points.length;
   return { x, z };
 }
+
+export type RouteStartSource = 'picked' | 'self' | 'party';
+
+/**
+ * Where the route leaves from: always where you are now, your latest
+ * position. A spawn picked on the map stands in for it until a newer position
+ * comes; with neither, the party's (they are likely next to you).
+ */
+export function routeStart(
+  own: (Point & { ts: number }) | null,
+  picked: { at: Point; ts: number } | null,
+  party: Point[],
+): { point: Point; source: RouteStartSource; ts: number | null } | null {
+  if (own && (!picked || own.ts > picked.ts)) return { point: { x: own.x, z: own.z }, source: 'self', ts: own.ts };
+  if (picked) return { point: picked.at, source: 'picked', ts: picked.ts };
+  const mid = centroid(party);
+  return mid ? { point: mid, source: 'party', ts: null } : null;
+}

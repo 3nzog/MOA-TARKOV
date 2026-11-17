@@ -1110,7 +1110,7 @@
     "show": "Show the raid route",
     "hide": "Hide the raid route",
     "you": "You",
-    "help": "Plans the order that finishes the most objectives before the raid ends, from where you spawned to an exit of your side. So MoA knows your spawn, take a screenshot right after spawning (or pick the spawn on the map). Every new screenshot adjusts the route, and spots you or the party walked up to drop off the list. With party on, the squad's quests count too: a place you both need is a single stop. Times are straight-line estimates with a margin.",
+    "help": "Plans the order that finishes the most objectives before the raid ends, always from where you are now to an exit of your side. MoA knows where you are from your last screenshot: take one when you spawn and more along the way, and every screenshot re-plans the route from there. Without one, you can pick the spawn on the map (it holds until your next screenshot). Spots you or the party walked up to drop off the list. With party on, the squad's quests count too: a place you both need is a single stop. Times are straight-line estimates with a margin.",
     "summary_one": "{{count}} objective · ~{{min}} min",
     "summary_other": "{{count}} objectives · ~{{min}} min",
     "budget": "{{min}} min of raid",
@@ -1118,11 +1118,11 @@
     "pickHint": "Click a blue spawn on the map",
     "pickSpawn": "Pick spawn",
     "from": {
-      "picked": "From the spawn you picked",
-      "self": "From your last screenshot",
-      "party": "From the middle of the party"
+      "picked": "From the spawn you picked (until your next screenshot)",
+      "self": "From where you are (your last screenshot)",
+      "party": "From the party's position"
     },
-    "noStart": "Take a screenshot when you spawn, or pick the spawn on the map",
+    "noStart": "Take a screenshot so MoA knows where you are, or pick the spawn on the map",
     "done": "Done (take off the route)",
     "nothing": "No objective fits in the time left: head straight for the exit.",
     "none": "No active quest with a marked place on this map.",
@@ -1131,7 +1131,10 @@
     "reset_one": "Put {{count}} done stop back on the route",
     "reset_other": "Put {{count}} done stops back on the route",
     "more_one": "+{{count}} objective at the same place",
-    "more_other": "+{{count}} objectives at the same place"
+    "more_other": "+{{count}} objectives at the same place",
+    "ageNow": "just now",
+    "age_one": "{{count}} min ago",
+    "age_other": "{{count}} min ago"
   },
   "sounds": {
     "title": "Sound alerts",
