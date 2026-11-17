@@ -36,6 +36,9 @@ import RouteLayer from './route/RouteLayer';
 import RoutePanel from './route/RoutePanel';
 import { useRaidRoute } from './route/useRaidRoute';
 import { questDoneSound, useSoundAlerts } from './sound/useSoundAlerts';
+import { useRoutePrefs } from './route/routePrefs';
+import { hideoutNeedIds } from './route/routeData';
+import { aggregateNeeds } from './progression/needs';
 import { useQuestScreen } from './quests/useQuestScreen';
 import SquadQuestSummary from './components/SquadQuestSummary';
 import { useSettings } from './app/useSettings';
@@ -163,7 +166,11 @@ function App() {
   const compact = useCompactMode();
   // Progression data loads the first time the planner opens (lazy, ~2 MB).
   // Also needed on the map: which quests the player can take now (upcoming pins).
-  const progressionLoad = useProgressionData(railSection === 'planner' || appearance.upcomingQuests);
+  // The raid route's hideout goal needs it too (what the hideout still misses).
+  const routePrefs = useRoutePrefs();
+  const progressionLoad = useProgressionData(
+    railSection === 'planner' || appearance.upcomingQuests || (routePrefs.on && routePrefs.goal === 'hideout'),
+  );
   const tracker = useTracker({
     progress: quests.progress,
     setProgress: quests.setProgress,
@@ -474,6 +481,22 @@ function App() {
   }, [liveRaid, liveRaidMapId, liveRaidSide]);
   // The raid route: the most objectives (yours, and the squad's with party on)
   // from the spawn to an exit before the raid ends.
+  // The items the hideout still needs, for the route's hideout goal.
+  const progressionData = progressionLoad.state === 'ready' ? progressionLoad.data : null;
+  const routeHideoutNeeds = useMemo(() => {
+    if (!routePrefs.on || routePrefs.goal !== 'hideout' || !progressionData) return undefined;
+    const needs = aggregateNeeds({
+      tasks: quests.tasks,
+      meta: progressionData.tasks,
+      statuses: questStatuses,
+      scope: 'active',
+      checkedObjectives: planner.checkedObjectives,
+      includeHideout: true,
+      stations: progressionData.stations,
+      stationLevels: planner.planner.stationLevels,
+    });
+    return hideoutNeedIds(needs, planner.planner.collected);
+  }, [routePrefs.on, routePrefs.goal, progressionData, quests.tasks, questStatuses, planner.checkedObjectives, planner.planner]);
   const route = useRaidRoute({
     mapId: selectedMapId,
     own: questState,
@@ -485,6 +508,7 @@ function App() {
     raid: minimapRaid,
     pois: pois.currentPois,
     tierOf,
+    hideoutNeeds: routeHideoutNeeds,
   });
   useSoundAlerts({ raid: minimapRaid, toExit: route.toExit, routeDone: route.doneCount });
   const [clockNow, setClockNow] = useState(() => Date.now());
