@@ -81,6 +81,41 @@ describe("mapDataToPois — extracts", () => {
   });
 });
 
+describe("mapDataToPois — paid car exits", () => {
+  const pois = mapDataToPois({
+    id: "m9",
+    extracts: [
+      // Localized names need not say "car": the rouble payment does.
+      {
+        id: "v1",
+        name: "V-Ex dos Dormitórios",
+        faction: "pmc",
+        transferItem: { item: { id: "5449016a4bdc2d6f028b456f", name: "Rublos" }, count: 20000 },
+        position: { x: 1, y: 0, z: 1 },
+      },
+      { id: "v2", name: "Carro do Norte", faction: "pmc", transferItem: { item: { id: "5449016a4bdc2d6f028b456f", name: "" }, count: 15000 }, position: { x: 2, y: 0, z: 2 } },
+      // "Cargo" is not a car.
+      { id: "c1", name: "Cargo Container", faction: "pmc", position: { x: 3, y: 0, z: 3 } },
+      // Paid with an item that is not money: not a car.
+      { id: "c2", name: "Secret exit", faction: "pmc", transferItem: { item: { id: "675aaab74bca0b001d02f356", name: "Keycard" }, count: 1 }, position: { x: 4, y: 0, z: 4 } },
+    ],
+  });
+  const byId = (id: string) => pois.find((p) => p.id === `extract:${id}`)!;
+
+  it("treats an exit paid in roubles as the car, with its price", () => {
+    expect(byId("v1").subtype).toBe("car");
+    expect(byId("v1").meta).toMatchObject({ isCar: true, payItem: "5449016a4bdc2d6f028b456f", payCount: 20000 });
+    expect(byId("v2").subtype).toBe("car");
+  });
+
+  it("does not take every name with 'car' in it, nor an item-gated exit, for the car", () => {
+    expect(byId("c1").subtype).toBe("plain");
+    expect(byId("c1").meta?.isCar).toBe(false);
+    expect(byId("c2").subtype).toBe("item");
+    expect(byId("c2").meta?.isCar).toBe(false);
+  });
+});
+
 describe("mapDataToPois — bosses and spawns", () => {
   const fixture: MapPoiData = {
     id: "m2",

@@ -47,6 +47,10 @@ jobs:
       - name: Fetch ballistics data from tarkov.dev
         run: node scripts/fetch-ammo.mjs
         continue-on-error: true
+      # Where the loot is on each map (the raid route's loot goals).
+      - name: Fetch map loot positions from tarkov.dev
+        run: node scripts/fetch-loot.mjs
+        continue-on-error: true
 
       # generatedAt changes on every run, so a naive `git diff` is always dirty.
       # Compare everything EXCEPT that field to decide whether the data moved.

@@ -37,6 +37,9 @@ function pos(p: MapPosition): { x: number; y: number; z: number } {
 }
 
 // ---- Extracts -------------------------------------------------------------
+/** The rouble item: what the car exits are paid with. */
+export const ROUBLES = "5449016a4bdc2d6f028b456f";
+
 // Glyph by special-requirement variant. Color is not set here: the render
 // layer colors every tarkov.dev POI by facet (registry.colorForFacet).
 
@@ -45,7 +48,11 @@ function extractToPoi(mapId: string, e: MapExtractRaw): Poi | null {
   const faction = (e.faction ?? "shared").toLowerCase();
   const requiresSwitch = !!(e.switches && e.switches.length > 0);
   const requiresItem = !!(e.transferItem && e.transferItem.item);
-  const isCar = /car/i.test(e.name ?? "");
+  const payItem = e.transferItem?.item?.id;
+  const payCount = e.transferItem?.count;
+  // The paid car exits (V-Ex and the like) are the ones paid in roubles; the
+  // name alone misses them in languages where it has no "car" in it.
+  const isCar = payItem === ROUBLES || /\bcar\b|v-?ex/i.test(e.name ?? "");
 
   // Visual variant priority: car > switch > item > plain. Drives the glyph.
   const glyph = isCar ? "C" : requiresSwitch ? "S" : requiresItem ? "$" : "E";
@@ -73,7 +80,7 @@ function extractToPoi(mapId: string, e: MapExtractRaw): Poi | null {
     label: e.name ?? "Extract",
     note: notes.join(" · "),
     source: "tarkov-dev",
-    meta: { faction, requiresSwitch, requiresItem, isCar, glyph },
+    meta: { faction, requiresSwitch, requiresItem, isCar, glyph, payItem, payCount },
   };
 }
 
