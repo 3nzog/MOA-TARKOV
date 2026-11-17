@@ -10,6 +10,19 @@
 //             scopes, mounts, handguards, magazines…) or ammunition
 //
 // Kinds are tarkov.dev's container normalizedName (data/snapshot/loot.json).
+//
+// Checked against community descriptions of what each container holds (weapon
+// boxes: guns and parts; wooden crates: military loot; technical supply crates
+// and toolboxes: industrial and electronic barter items; duffle bags can hold
+// tools too) and of the money runs players make (Customs dorms, Interchange's
+// tech stores, Reserve's base buildings, Streets' dealership, Lighthouse's
+// water treatment plant), which the loot areas computed from these weights
+// and the loose-loot prices match. Sources, consulted 2026-11:
+//   https://escapefromtarkov.gamepedia.com/File:Jackets.png (container list)
+//   https://primagames.com/tips/best-places-to-get-technical-loot-in-escape-from-tarkov
+//   https://timesaver.gg/blog/tarkov-best-loot-runs
+//   https://timesaver.gg/blog/tarkov-streets-money-guide
+//   https://diamondlobby.com/escape-from-tarkov/where-to-find-scavs-customs-eft/
 
 export interface ContainerIntel {
   money: number;
@@ -34,7 +47,7 @@ export const CONTAINER_INTEL: Record<string, ContainerIntel> = {
   'weapon-box': { money: 45_000, hideout: 0, guns: 1, parts: 0.8, ammo: 0.3 },
   'wooden-ammo-box': { money: 15_000, hideout: 0, guns: 0, parts: 0, ammo: 1 },
   'grenade-box': { money: 12_000, hideout: 0, guns: 0, parts: 0, ammo: 0.5 },
-  'wooden-crate': { money: 12_000, hideout: 0.3, guns: 0.1, parts: 0.6, ammo: 0.3 },
+  'wooden-crate': { money: 12_000, hideout: 0.3, guns: 0.1, parts: 0.6, ammo: 0.4 },
   'medcase': { money: 30_000, hideout: 0.4, guns: 0, parts: 0, ammo: 0 },
   'medbag': { money: 10_000, hideout: 0.2, guns: 0, parts: 0, ammo: 0 },
   'medical-supply-crate': { money: 25_000, hideout: 0.5, guns: 0, parts: 0, ammo: 0 },

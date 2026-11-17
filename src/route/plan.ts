@@ -61,6 +61,12 @@ export interface StopInfo {
   spawns?: number;
   /** A locked door close by: the key's name. */
   key?: string;
+  /** The named place it is in or near ("Dorms", "Crackhouse"…). */
+  place?: string;
+  /** Estimated roubles there (loot). */
+  roubles?: number;
+  /** A boss can spawn there (Scav goal). */
+  boss?: boolean;
 }
 
 export interface RouteExit extends Point {
