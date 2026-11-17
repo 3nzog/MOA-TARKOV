@@ -278,7 +278,8 @@
         "rose": "Rosa",
         "amber": "Ámbar",
         "red": "Rojo",
-        "white": "Blanco"
+        "white": "Blanco",
+        "heat": "Térmico"
       },
       "symbols": {
         "arrow": "Flecha clásica",

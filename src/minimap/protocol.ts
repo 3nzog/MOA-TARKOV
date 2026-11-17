@@ -209,7 +209,7 @@ export interface MinimapRoute {
 }
 
 /** The colour of the route on every map. */
-export const ROUTE_COLOR = '#4fd1ff';
+export const ROUTE_COLOR = '#8fe9ff';
 const ROUTE_MAX_POINTS = 400;
 
 /**

@@ -1,44 +1,64 @@
 /* ============================================================================
-   FIELD GLASS — design tokens (single source of truth)
-   Concept: premium military optics. Matte graphite surfaces, one brass accent,
-   phosphor green reserved for LIVE signals only. See docs/DESIGN-DIRECTION.md.
+   THERMAL — design tokens (single source of truth)
+   Concept: the app seen through a thermal sight. Cold violet-black surfaces;
+   heat (where players are) is the identity, in the iron-bow scale from cold
+   violet through magenta and orange to white; your route and LIVE signals are
+   the cold cyan line cutting through it. Frosted glass panels, springy motion.
+   The light theme is the sight's "black-hot" mode. See docs/DESIGN-DIRECTION.md.
    Every component in src/ui/ consumes these; never hardcode hex at call sites.
    ========================================================================== */
 
 :root {
-  /* ---- Color: surfaces (warm graphite, hue ~75°) -------------------------- */
-  --bg-sunken: #0a0b09;      /* map gutter, deepest wells */
-  --bg: #121410;             /* app canvas */
-  --surface-1: #1a1c17;      /* rail, panels, cards */
-  --surface-2: #22241e;      /* raised rows, inputs */
-  --surface-3: #2c2e27;      /* hover, pressed rows */
-  --border: #2a2c24;         /* hairlines */
-  --border-strong: #3c3f34;  /* dividers, input borders */
+  /* ---- Color: surfaces (cold violet-black, hue ~260°) ---------------------- */
+  --bg-sunken: #06040d;      /* map gutter, deepest wells */
+  --bg: #0c0916;             /* app canvas */
+  --surface-1: #130f20;      /* rail, panels, cards */
+  --surface-2: #1b1630;      /* raised rows, inputs */
+  --surface-3: #251e3f;      /* hover, pressed rows */
+  --border: #241d38;         /* hairlines */
+  --border-strong: #372c55;  /* dividers, input borders */
 
   /* ---- Color: text -------------------------------------------------------- */
-  --text: #eceee8;           /* primary, warm white */
-  --text-dim: #9ba08f;       /* secondary */
-  --text-faint: #646a58;     /* tertiary, etched labels, placeholders */
+  --text: #f2effa;           /* primary, cool white */
+  --text-dim: #a8a1c4;       /* secondary */
+  --text-faint: #6c6590;     /* tertiary, etched labels, placeholders */
 
-  /* ---- Color: brass accent (CTAs, active, focus) -------------------------- */
+  /* ---- Color: heat accent (CTAs, active, focus) --------------------------- */
   /* The default; Settings → Appearance overrides --accent / --accent-ink on
      <html> (src/appearance), and the rest of the family follows it. */
-  --accent: #c9a86a;
+  --accent: #ff7a2f;
   --accent-hover: color-mix(in srgb, var(--accent) 80%, white);
   --accent-pressed: color-mix(in srgb, var(--accent) 82%, black);
-  --accent-ink: #171307;                    /* text on the accent */
+  --accent-ink: #1a0800;                    /* text on the accent */
   --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent); /* tinted fills */
   --accent-glow: color-mix(in srgb, var(--accent) 45%, transparent); /* focus ring, marker halo */
 
   /* ---- Color: signals ------------------------------------------------------ */
-  --live: #3ddc97;                       /* LIVE only: player, fresh ping, connected */
-  --live-soft: rgba(61, 220, 151, 0.14);
-  --danger: #e5484d;
-  --danger-soft: rgba(229, 72, 77, 0.14);
-  --warn: #e0a336;
-  --warn-soft: rgba(224, 163, 54, 0.14);
-  --info: #6cb6ff;
-  --info-soft: rgba(108, 182, 255, 0.14);
+  --live: #6ff3ff;                       /* LIVE only (cold): player, fresh ping, connected */
+  --live-soft: rgba(111, 243, 255, 0.14);
+  --danger: #ff3d6e;
+  --danger-soft: rgba(255, 61, 110, 0.15);
+  --warn: #ffb23f;
+  --warn-soft: rgba(255, 178, 63, 0.15);
+  --info: #8f8cff;
+  --info-soft: rgba(143, 140, 255, 0.15);
+
+  /* ---- Color: the thermal scale (heat, cold, glows) ------------------------ */
+  --heat-0: #1b0a3a;   /* coldest */
+  --heat-1: #5b1a8c;
+  --heat-2: #c2185b;
+  --heat-3: #ff6f00;
+  --heat-4: #ffd54f;
+  --heat-5: #ffffff;   /* hottest */
+  --heat-scale: linear-gradient(90deg, var(--heat-0), var(--heat-1), var(--heat-2), var(--heat-3), var(--heat-4), var(--heat-5));
+  --cold: #8fe9ff;     /* the route: the cold line through the heat */
+  --glow-hot: 0 0 22px rgba(255, 111, 0, 0.45);
+  --glow-cold: 0 0 18px rgba(111, 243, 255, 0.4);
+  /* The canvas behind everything: faint heat rising from below, cold above. */
+  --ambient:
+    radial-gradient(1100px 620px at 88% 115%, rgba(255, 111, 0, 0.09), transparent 62%),
+    radial-gradient(900px 520px at 12% -12%, rgba(91, 26, 140, 0.26), transparent 62%),
+    var(--bg);
 
   /* ---- Color: on-map ink (drawn over third-party map art, so contrast is
      maximal on purpose, not tuned to the chrome palette) ------------------- */
@@ -47,7 +67,7 @@
 
   /* ---- Typography ---------------------------------------------------------- */
   --font-ui: 'Inter Variable', 'Inter', 'Segoe UI', system-ui, sans-serif;
-  --font-display: 'Barlow Condensed', 'Inter Variable', system-ui, sans-serif;
+  --font-display: 'Big Shoulders Stencil Display', 'Barlow Condensed', 'Inter Variable', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', Consolas, monospace;
 
   /* Sizes follow the "text size" preference (--font-scale, set on <html>). */
@@ -56,8 +76,8 @@
   --fs-body: calc(14px * var(--font-scale, 1));        /* desktop default */
   --fs-body-lg: calc(16px * var(--font-scale, 1));
   --fs-title: calc(18px * var(--font-scale, 1));
-  --fs-display-sm: calc(22px * var(--font-scale, 1));  /* Barlow Condensed */
-  --fs-display: calc(30px * var(--font-scale, 1));     /* Barlow Condensed */
+  --fs-display-sm: calc(22px * var(--font-scale, 1));  /* stencil display */
+  --fs-display: calc(30px * var(--font-scale, 1));     /* stencil display */
 
   --track-label: 0.07em;  /* tracking for etched uppercase labels */
 
@@ -80,19 +100,22 @@
   --r-pill: 9999px;
 
   /* ---- Elevation (panels float over the map; little else floats) ------------ */
-  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.04); /* machined top edge */
-  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --elev-2: 0 4px 16px rgba(0, 0, 0, 0.45);
-  --elev-3: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.05); /* frosted top edge */
+  --elev-1: 0 1px 2px rgba(3, 1, 10, 0.45);
+  --elev-2: 0 6px 20px rgba(3, 1, 10, 0.5);
+  --elev-3: 0 16px 48px rgba(3, 1, 10, 0.6);
 
   /* ---- Motion (see DESIGN-DIRECTION.md — input never blocked) --------------- */
-  --dur-fast: 120ms;   /* hover, press */
-  --dur-base: 180ms;   /* toggles, fades */
-  --dur-slow: 260ms;   /* panels, modals */
-  --dur-grand: 420ms;  /* onboarding scenes only */
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 140ms;   /* hover, press */
+  --dur-base: 220ms;   /* toggles, fades */
+  --dur-slow: 380ms;   /* panels, modals (springs) */
+  --dur-grand: 560ms;  /* onboarding scenes, big reveals */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.45, 0, 0.2, 1);
   --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* A real spring: overshoots a little and settles (panels, cards, the map). */
+  --ease-spring: linear(0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077 21.8%, 1.104 24.2%, 1.11, 1.103 28.4%, 1.042 37.2%, 1.018 41.6%, 0.995 49.4%, 0.993 55.4%, 1 66.6%, 1);
+  --stagger: 38ms;     /* between items entering one after another */
 
   /* ---- Z scale ---------------------------------------------------------------- */
   --z-map-ui: 500;     /* floor switcher, on-map chrome */
@@ -142,37 +165,45 @@
   --glass-shadow:
     inset 0 1px 0 var(--glass-edge-light),
     inset 0 0 0 1px var(--glass-hairline),
-    0 18px 50px -22px rgba(0, 0, 0, 0.75);
+    0 18px 50px -22px rgba(3, 1, 10, 0.8);
 }
 
 /* The accent picked in Settings → Appearance arrives as --accent-base. */
-:root { --accent: var(--accent-base, #c9a86a); }
+:root { --accent: var(--accent-base, #ff7a2f); }
 
-/* ---- Light theme ------------------------------------------------------------ */
+/* ---- Light theme: the sight's "black-hot" mode ------------------------------- */
 :root[data-theme='light'] {
   color-scheme: light;
-  /* Pastel accents wash out on light surfaces: darken for text and fills. */
-  --accent: color-mix(in srgb, var(--accent-base, #c9a86a) 68%, black);
-  --bg-sunken: #dfe2da;
-  --bg: #eceee8;
-  --surface-1: #fbfbf8;
-  --surface-2: #f0f1ec;
-  --surface-3: #e3e6de;
-  --border: #d6d9cf;
-  --border-strong: #bfc3b6;
-  --text: #171a14;
-  --text-dim: #545a4c;
-  --text-faint: #80867a;
-  --accent-soft: color-mix(in srgb, var(--accent) 20%, transparent);
-  --live-soft: rgba(26, 160, 104, 0.16);
-  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  --elev-1: 0 1px 2px rgba(20, 24, 16, 0.12);
-  --elev-2: 0 4px 16px rgba(20, 24, 16, 0.14);
-  --elev-3: 0 12px 40px rgba(20, 24, 16, 0.18);
+  /* Bright accents wash out on light surfaces: darken for text and fills. */
+  --accent: color-mix(in srgb, var(--accent-base, #ff7a2f) 72%, black);
+  --bg-sunken: #e2dfeb;
+  --bg: #efedf5;
+  --surface-1: #fdfcff;
+  --surface-2: #f2f0f8;
+  --surface-3: #e5e1f0;
+  --border: #dbd6e7;
+  --border-strong: #c2bad5;
+  --text: #150e26;
+  --text-dim: #52496d;
+  --text-faint: #847b9e;
+  --accent-soft: color-mix(in srgb, var(--accent) 18%, transparent);
+  --live: #0a8fb3;
+  --live-soft: rgba(10, 143, 179, 0.14);
+  --cold: #0a8fb3;
+  --glow-hot: 0 0 18px rgba(214, 84, 0, 0.25);
+  --glow-cold: 0 0 14px rgba(10, 143, 179, 0.25);
+  --ambient:
+    radial-gradient(1100px 620px at 88% 115%, rgba(255, 111, 0, 0.08), transparent 62%),
+    radial-gradient(900px 520px at 12% -12%, rgba(91, 26, 140, 0.1), transparent 62%),
+    var(--bg);
+  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  --elev-1: 0 1px 2px rgba(21, 14, 38, 0.12);
+  --elev-2: 0 6px 20px rgba(21, 14, 38, 0.14);
+  --elev-3: 0 16px 48px rgba(21, 14, 38, 0.18);
   --glass-shadow:
     inset 0 1px 0 var(--glass-edge-light),
     inset 0 0 0 1px color-mix(in srgb, #000000 calc(var(--glass-edge) * 10%), transparent),
-    0 18px 50px -24px rgba(20, 24, 16, 0.35);
+    0 18px 50px -24px rgba(21, 14, 38, 0.35);
 }
 
 /* ---- Animations off (Settings → Appearance) --------------------------------- */

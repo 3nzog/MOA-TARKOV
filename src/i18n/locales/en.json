@@ -278,7 +278,8 @@
         "rose": "Rose",
         "amber": "Amber",
         "red": "Red",
-        "white": "White"
+        "white": "White",
+        "heat": "Thermal"
       },
       "symbols": {
         "arrow": "Classic arrow",

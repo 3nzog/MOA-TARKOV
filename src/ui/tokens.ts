@@ -5,7 +5,7 @@
 // are mirrored here. tokens.test.ts reads tokens.css and fails if any value
 // drifts, so tokens.css stays the single source of truth.
 export const TOKEN_HEX = {
-  accent: '#c9a86a',
-  textDim: '#9ba08f',
-  bgSunken: '#0a0b09',
+  accent: '#ff7a2f',
+  textDim: '#a8a1c4',
+  bgSunken: '#06040d',
 } as const;

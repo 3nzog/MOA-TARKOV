@@ -59,6 +59,7 @@ export interface Appearance {
 }
 
 export const ACCENTS: { id: string; hex: string }[] = [
+  { id: 'heat', hex: '#ff7a2f' },
   { id: 'mint', hex: '#7fd6ac' },
   { id: 'brass', hex: '#c9a86a' },
   { id: 'ice', hex: '#7cb8f2' },
@@ -145,10 +146,30 @@ export function normalizeAppearance(raw: unknown): Appearance {
   };
 }
 
+/** Set once the saved look has been moved to the thermal design. */
+export const THERMAL_LOOK_KEY = 'tc_look_thermal';
+/** The default accent before the thermal design: a save still on it moves to the new one. */
+const OLD_DEFAULT_ACCENT = '#7fd6ac';
+
+/**
+ * The thermal redesign changed the default accent. A save that still has the
+ * old default (never picked by hand, most likely) moves to the new one, once;
+ * any other choice is kept.
+ */
+export function migrateToThermal(a: Appearance, migrated: boolean): Appearance {
+  return !migrated && a.accent === OLD_DEFAULT_ACCENT ? { ...a, accent: DEFAULT_APPEARANCE.accent } : a;
+}
+
 export function loadAppearance(): Appearance {
   try {
     const v = localStorage.getItem(APPEARANCE_KEY);
-    return normalizeAppearance(v ? JSON.parse(v) : null);
+    const a = normalizeAppearance(v ? JSON.parse(v) : null);
+    if (localStorage.getItem(THERMAL_LOOK_KEY) === '1') return a;
+    // Once: the moved look is saved right away (the app reads the appearance more than once).
+    const moved = migrateToThermal(a, false);
+    if (v && moved !== a) localStorage.setItem(APPEARANCE_KEY, JSON.stringify(moved));
+    localStorage.setItem(THERMAL_LOOK_KEY, '1');
+    return moved;
   } catch {
     return DEFAULT_APPEARANCE;
   }

@@ -1,4 +1,4 @@
-/* Base styles. All variables live in src/ui/tokens.css (FIELD GLASS). */
+/* Base styles. All variables live in src/ui/tokens.css (THERMAL). */
 
 /* Padding and borders count INSIDE declared widths — without this, every
    `width: 100%` input overflows its container by its own padding. */
@@ -20,7 +20,8 @@ html, body, #root {
 }
 
 body {
-  background: var(--bg);
+  background: var(--ambient);
+  background-attachment: fixed;
   color: var(--text);
 }
 
@@ -48,7 +49,7 @@ body {
   color: var(--text);
 }
 
-/* Focus is brass, always visible for keyboard users, never for mouse. */
+/* Focus glows in the accent, always visible for keyboard users, never for mouse. */
 :focus-visible {
   outline: 2px solid var(--accent-glow);
   outline-offset: 1px;

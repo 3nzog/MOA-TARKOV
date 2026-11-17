@@ -14,13 +14,14 @@ import type { Point } from './plan';
 import type { RaidRoute } from './useRaidRoute';
 import { shortNumber, stopDetail, stopHotReason, stopTitle } from './describe';
 
-const LINE = '#4fd1ff';
-const HOT_LINE = '#ff8a3d';
-const LOOT = '#e8c15a';
+// The thermal scale (tokens.css): the route is the cold line, heat is orange, loot the hot yellow.
+const LINE = '#8fe9ff';
+const HOT_LINE = '#ff6f00';
+const LOOT = '#ffd54f';
 
 const iconCache = new Map<string, L.DivIcon>();
-function stopIcon(n: number, colors: string[], hot: boolean): L.DivIcon {
-  const key = `${n}|${colors.join(',')}|${hot}`;
+function stopIcon(n: number, colors: string[], hot: boolean, next = false): L.DivIcon {
+  const key = `${n}|${colors.join(',')}|${hot}|${next}`;
   const hit = iconCache.get(key);
   if (hit) return hit;
   // One ring per person who needs the stop (a conic split for two or more).
@@ -29,7 +30,7 @@ function stopIcon(n: number, colors: string[], hot: boolean): L.DivIcon {
       ? colors[0] ?? LINE
       : `conic-gradient(${colors.map((c, i) => `${c} ${(i * 100) / colors.length}% ${((i + 1) * 100) / colors.length}%`).join(', ')})`;
   const icon = L.divIcon({
-    className: `tc-route-stop${hot ? ' tc-route-stop--hot' : ''}`,
+    className: `tc-route-stop${hot ? ' tc-route-stop--hot' : ''}${next ? ' tc-route-stop--next' : ''}`,
     iconSize: [26, 26],
     iconAnchor: [13, 13],
     html: `<div class="tc-route-stop__ring" style="background:${ring}"><span>${n}</span></div>${hot ? '<i class="tc-route-stop__warn">!</i>' : ''}`,
@@ -97,6 +98,8 @@ export default function RouteLayer({ mapId, route, names }: { mapId: string; rou
       {line.length > 1 && (
         <>
           <Polyline positions={line} interactive={false} pathOptions={{ color: '#000', weight: 7, opacity: 0.45 }} />
+          {/* A soft cold glow under the line. */}
+          <Polyline positions={line} interactive={false} pathOptions={{ color: LINE, weight: 12, opacity: 0.16, className: 'tc-route-glow' }} />
           <Polyline positions={line} interactive={false} pathOptions={{ color: LINE, weight: 3.5, dashArray: '9 7', opacity: 0.95, className: 'tc-route-line' }} />
           {hotRuns.map((run, i) => (
             <Polyline key={i} positions={ll(run)} interactive={false} pathOptions={{ color: HOT_LINE, weight: 4, opacity: 0.95, className: 'tc-route-line tc-route-line--hot' }} />
@@ -117,7 +120,7 @@ export default function RouteLayer({ mapId, route, names }: { mapId: string; rou
           <Marker
             key={s.id}
             position={toLatLng(s.x, s.z)}
-            icon={stopIcon(i + 1, s.who.map((w) => w.color), why !== null)}
+            icon={stopIcon(i + 1, s.who.map((w) => w.color), why !== null, i === 0)}
             keyboard={false}
             zIndexOffset={950}
           >

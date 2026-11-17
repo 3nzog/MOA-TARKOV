@@ -1,10 +1,31 @@
-# Design Direction — "FIELD GLASS"
+# Design Direction — "THERMAL" (was "FIELD GLASS")
 
 > The visual concept behind Tarkov MoA: one idea, carried through every surface.
 > Drafted with an AI design agent on `feat/ui-reimagine` (2026-06-11); direction,
 > vetoes and the feedback round by Moacir. Updated 2026-10-02 to match the code
 > that shipped. Values live in [`src/ui/tokens.css`](../src/ui/tokens.css); the
 > component reference is [`DESIGN-SYSTEM.md`](DESIGN-SYSTEM.md).
+
+## 2026-11-17: THERMAL
+
+The player picked direction C of the redesign plan: **the app seen through a
+thermal sight**. Surfaces are cold violet-black; heat — where players are at
+that moment of the raid — is the identity, in the iron-bow scale (cold violet
+→ magenta → orange → yellow → white, `--heat-0…5`, `--heat-scale`); the route
+and every LIVE signal are the **cold** cyan line through it (`--cold`,
+`--live`). The default accent moved from mint to thermal orange (`#ff7a2f`; a
+save still on the old default moves once, any other choice stays). The light
+theme is the sight's **black-hot** mode. Titles are set in a thin stencil
+(Big Shoulders Stencil Display, bundled); text stays Inter, numbers JetBrains
+Mono.
+
+Motion is generous and springy: `--ease-spring` (a real spring, `linear()`),
+`--stagger` for lists that come in one row after another, panels and modals
+arriving out of a blur, the next route stop pulsing, route numbers counting to
+their new values (`src/ui/useCountUp.ts`), heat drifting slowly behind the
+glass. All of it stops with reduced motion or animations off. The look sits in
+`src/ui/thermal.css`, loaded after every component stylesheet; tokens stay the
+single source of truth.
 
 ## 2026-11 update: liquid glass, and the player decides
 

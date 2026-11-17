@@ -7,7 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { ArrowCounterClockwise, Check, MapPin, Path, SignOut, Warning, X } from '@phosphor-icons/react';
 import { Button, Chip, HelpTip, IconButton, Segmented, Spinner, Toggle } from '../ui';
 import type { RaidRoute } from './useRaidRoute';
-import { ROUTE_STYLES } from './plan';
+import { ROUTE_STYLES, type RoutePlan } from './plan';
+import { useCountUp } from '../ui/useCountUp';
 import { WEAPON_KINDS, type RouteGoal, type WeaponKind } from './targets';
 import { hotShare, planWorth, shortNumber, stopDetail, stopHotReason, stopTitle } from './describe';
 import './route.css';
@@ -17,6 +18,22 @@ const mins = (s: number) => Math.max(1, Math.round(s / 60));
 const MAX_ITEMS = 3;
 
 type GoalTab = 'quests' | 'loot' | 'scavs';
+
+/** A style card's numbers, counting to their new values when the route changes. */
+function StyleNumbers({ plan, goal }: { plan: RoutePlan; goal: RouteGoal }) {
+  const { t, i18n } = useTranslation();
+  const value = useCountUp(plan.value);
+  const minutes = useCountUp(plan.total / 60);
+  const hot = useCountUp(hotShare(plan));
+  return (
+    <>
+      <span>{planWorth({ ...plan, value }, goal, t, i18n.language)}</span>
+      <small>
+        ~{Math.max(1, Math.round(minutes))} min · {t('route.hotShare', { pct: Math.round(hot) })}
+      </small>
+    </>
+  );
+}
 const tabOf = (g: RouteGoal): GoalTab => (g === 'quests' || g === 'scavs' ? g : 'loot');
 
 export default function RoutePanel({ route, inSquad, names }: { route: RaidRoute; inSquad: boolean; names: Record<string, string> }) {
@@ -98,12 +115,7 @@ export default function RoutePanel({ route, inSquad, names }: { route: RaidRoute
               >
                 <strong>{t(`route.style.${s}`)}</strong>
                 {p ? (
-                  <>
-                    <span>{planWorth(p, goal, t, lang)}</span>
-                    <small>
-                      ~{mins(p.total)} min · {t('route.hotShare', { pct: hotShare(p) })}
-                    </small>
-                  </>
+                  <StyleNumbers plan={p} goal={goal} />
                 ) : (
                   <small>{route.computing ? '…' : '—'}</small>
                 )}
