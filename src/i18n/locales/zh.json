@@ -55,7 +55,8 @@
     "compactMode": "紧凑模式(仅地图,置顶)",
     "exitCompact": "退出紧凑模式",
     "gunsmith": "改枪台",
-    "ballistics": "弹道"
+    "ballistics": "弹道",
+    "phone": "手机地图"
   },
   "settings": {
     "title": "设置",
@@ -1054,6 +1055,38 @@
       "pmc": "PMC",
       "scav": "Scav",
       "shared": "合作"
+    }
+  },
+  "phone": {
+    "title": "手机地图",
+    "toggle": "在手机上显示地图",
+    "help": "手机需要连接与这台电脑相同的 Wi‑Fi。用相机扫描二维码：地图会在浏览器中打开，实时显示你的位置、撤离点、任务和小队。仅显示——手机无法更改这里的任何内容。在外面（移动数据）无法使用。",
+    "scan": "用手机相机对准二维码。",
+    "copy": "复制链接",
+    "copied": "已复制！",
+    "noWifi": "这台电脑不在家庭网络（Wi‑Fi/有线）中：手机无法连接。",
+    "clients_one": "{{count}} 台手机正在查看地图",
+    "clients_other": "{{count}} 台手机正在查看地图",
+    "noClients": "还没有手机连接。",
+    "firewall": "Windows 防火墙可能会阻止手机。",
+    "fixFirewall": "允许",
+    "newKey": "新二维码",
+    "newKeyHelp": "扫描过旧二维码的人会立即无法查看地图。如果有不该看的人扫描了，请使用。",
+    "noMap": "Tarkov MoA",
+    "nokey": "请通过电脑上显示的二维码打开（Tarkov MoA → 手机地图）。",
+    "waitingPc": "正在连接电脑… 请确认手机在同一 Wi‑Fi 且 Tarkov MoA 已打开。",
+    "waitingMap": "已连接。等待电脑选择地图（在游戏中截图）。",
+    "ago": "{{min}} 分钟前的位置",
+    "follow": "跟随",
+    "err": {
+      "port_busy": "端口 8791 被其他程序占用。",
+      "other": "无法开启手机地图。"
+    },
+    "conn": {
+      "connecting": "连接中…",
+      "live": "实时",
+      "down": "重新连接中…",
+      "nokey": "没有密钥"
     }
   }
 }

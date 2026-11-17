@@ -55,7 +55,8 @@
     "compactMode": "Compact mode (map only, on top)",
     "exitCompact": "Exit compact mode",
     "gunsmith": "Weapon bench",
-    "ballistics": "Ballistics"
+    "ballistics": "Ballistics",
+    "phone": "Map on phone"
   },
   "settings": {
     "title": "Settings",
@@ -1054,6 +1055,38 @@
       "pmc": "PMC",
       "scav": "Scav",
       "shared": "Co-op"
+    }
+  },
+  "phone": {
+    "title": "Map on your phone",
+    "toggle": "Show the map on a phone",
+    "help": "The phone must be on the same Wi‑Fi as this PC. Scan the QR code with the camera: the map opens in the browser and follows your position, exits, quests and squad live. It only shows — the phone changes nothing here. It doesn't work away from home (mobile data).",
+    "scan": "Point the phone's camera at the code.",
+    "copy": "Copy link",
+    "copied": "Copied!",
+    "noWifi": "This PC is not on a home network (Wi‑Fi/cable): the phone can't reach it.",
+    "clients_one": "{{count}} phone watching the map now",
+    "clients_other": "{{count}} phones watching the map now",
+    "noClients": "No phone connected yet.",
+    "firewall": "Windows Firewall may block the phone.",
+    "fixFirewall": "Allow",
+    "newKey": "New code",
+    "newKeyHelp": "Anyone who scanned the old code stops seeing the map at once. Use it if someone who shouldn't scanned it.",
+    "noMap": "Tarkov MoA",
+    "nokey": "Open this map from the QR code shown on the PC (Tarkov MoA → Map on phone).",
+    "waitingPc": "Connecting to the PC… Check the phone is on the same Wi‑Fi and Tarkov MoA is open.",
+    "waitingMap": "Connected. Waiting for the PC to pick a map (take a screenshot in game).",
+    "ago": "position from {{min}} min ago",
+    "follow": "Follow",
+    "err": {
+      "port_busy": "Another program is using port 8791.",
+      "other": "Couldn't turn the phone map on."
+    },
+    "conn": {
+      "connecting": "Connecting…",
+      "live": "Live",
+      "down": "Reconnecting…",
+      "nokey": "No code"
     }
   }
 }

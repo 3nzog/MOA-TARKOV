@@ -18,6 +18,7 @@ import {
   ArrowsInSimple,
   Wrench,
   Target,
+  DeviceMobile,
 } from '@phosphor-icons/react';
 import { Tooltip } from '../ui';
 
@@ -45,6 +46,8 @@ export interface SpineProps {
   onGunsmith?: () => void;
   /** Opens the ballistics table. */
   onBallistics?: () => void;
+  /** Opens "map on the phone" (QR code). */
+  onPhone?: () => void;
   /** Hotkey hints shown in tooltips, keyed by section / tool. */
   hints?: Partial<Record<RailSection | 'compact', string | null>>;
   onCompact?: () => void;
@@ -101,6 +104,7 @@ export default function Spine({
   onSettings,
   onGunsmith,
   onBallistics,
+  onPhone,
   hints,
   onCompact,
 }: SpineProps) {
@@ -154,6 +158,11 @@ export default function Spine({
       {onBallistics && (
         <SpineButton label={t('rail.ballistics')} side={side} onClick={onBallistics}>
           <Target weight="regular" />
+        </SpineButton>
+      )}
+      {onPhone && (
+        <SpineButton label={t('rail.phone')} side={side} onClick={onPhone}>
+          <DeviceMobile weight="regular" />
         </SpineButton>
       )}
 

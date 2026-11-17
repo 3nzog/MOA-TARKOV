@@ -448,11 +448,12 @@ async fn discovery_responder(
     }
 }
 
-const FIREWALL_RULES: [&str; 4] = [
+const FIREWALL_RULES: [&str; 5] = [
     "Tarkov MoA party",
     "Tarkov MoA party (busca)",
     "Tarkov MoA rede de casa",
     "Tarkov MoA rede de casa (busca)",
+    "Tarkov MoA celular",
 ];
 
 pub fn firewall_rules_present() -> bool {

@@ -86,12 +86,15 @@ import { clock, raidMinutes } from './map/raidDuration';
 import { collectObjectiveMaps } from './quests/derive';
 import type { TarkovTask, TaskObjective } from './api/types';
 import type { MapCard } from './map/MapInfoCard';
+import { usePhoneShare } from './phone/usePhoneShare';
+import type { PhoneState } from './phone/phoneApi';
 import { effectiveStatus } from './state/localProgress';
 
 // The weapon bench and its ~2 MB of data load only when it is first opened.
 const GunsmithBench = lazy(() => import('./gunsmith/GunsmithBench'));
 const BallisticsPanel = lazy(() => import('./ballistics/BallisticsPanel'));
 const MapInfoCard = lazy(() => import('./map/MapInfoCard'));
+const PhoneModal = lazy(() => import('./phone/PhoneModal'));
 import { knownSymbol, setSelfSymbol, useSelfSymbol } from './squad/symbols';
 import { hexForColorId } from '../shared/squadProtocol';
 
@@ -120,6 +123,7 @@ function App() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [gunsmithOpen, setGunsmithOpen] = useState(false);
   const [ballisticsOpen, setBallisticsOpen] = useState(false);
+  const [phoneOpen, setPhoneOpen] = useState(false);
   // The card over the map for a clicked quest pin or extraction.
   const [mapCard, setMapCard] = useState<MapCard | null>(null);
   // Cartridges read from the last flea-market screenshot; opening on them.
@@ -492,6 +496,22 @@ function App() {
     inRaid: !!liveRaid,
     raidClock: minimapRaid,
   });
+  // The same map state goes to a phone on the home Wi-Fi (QR code), when on.
+  const phoneState = useMemo<PhoneState>(
+    () => ({
+      mapId: selectedMapId,
+      mapName: selectedMapId ? (SUPPORTED_MAP_NAMES[canonicalMapId(selectedMapId)] ?? null) : null,
+      pos: playerPos,
+      activeFloorId: floors.activeFloorId ?? null,
+      points: minimapFeedPoints,
+      self: minimapSelf,
+      mates: minimapMates,
+      raidClock: minimapRaid,
+      sentAt: 0,
+    }),
+    [selectedMapId, playerPos, floors.activeFloorId, minimapFeedPoints, minimapSelf, minimapMates, minimapRaid],
+  );
+  const phone = usePhoneShare(phoneState);
   // Quests the player can take now (prerequisites and level met) but the logs
   // never saw accepted: pinned dimmer on the map, so the places of "my" quests
   // show even before the game says they were picked up.
@@ -645,6 +665,7 @@ function App() {
           }}
           onGunsmith={() => setGunsmithOpen(true)}
           onBallistics={() => setBallisticsOpen(true)}
+          onPhone={phone.available ? () => setPhoneOpen(true) : undefined}
           onCompact={toggleCompact}
           hints={{
             quests: hotkeys.map.quests,
@@ -1015,6 +1036,11 @@ function App() {
             }}
             fromScreen={screenAmmo}
           />
+        </Suspense>
+      )}
+      {phoneOpen && (
+        <Suspense fallback={null}>
+          <PhoneModal share={phone} onClose={() => setPhoneOpen(false)} />
         </Suspense>
       )}
       {patchNotesOpen && (

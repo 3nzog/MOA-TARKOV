@@ -55,7 +55,8 @@
     "compactMode": "Modo compacto (só o mapa, sempre no topo)",
     "exitCompact": "Sair do modo compacto",
     "gunsmith": "Mesa de armas",
-    "ballistics": "Balística"
+    "ballistics": "Balística",
+    "phone": "Mapa no celular"
   },
   "settings": {
     "title": "Configurações",
@@ -1054,6 +1055,38 @@
       "pmc": "PMC",
       "scav": "Scav",
       "shared": "Co-op"
+    }
+  },
+  "phone": {
+    "title": "Mapa no celular",
+    "toggle": "Mostrar o mapa no celular",
+    "help": "O celular precisa estar na mesma Wi‑Fi deste PC. Escaneie o QR com a câmera: o mapa abre no navegador e acompanha sua posição, extrações, missões e a party ao vivo. Só mostra — o celular não mexe em nada aqui. Fora de casa (4G) não funciona.",
+    "scan": "Aponte a câmera do celular para o código.",
+    "copy": "Copiar link",
+    "copied": "Copiado!",
+    "noWifi": "Este PC não está numa rede de casa (Wi‑Fi/cabo): o celular não tem como chegar.",
+    "clients_one": "{{count}} celular vendo o mapa agora",
+    "clients_other": "{{count}} celulares vendo o mapa agora",
+    "noClients": "Nenhum celular conectado ainda.",
+    "firewall": "O firewall do Windows pode bloquear o celular.",
+    "fixFirewall": "Liberar",
+    "newKey": "Gerar novo código",
+    "newKeyHelp": "Quem escaneou o código antigo deixa de ver o mapa na hora. Use se alguém que não devia escaneou.",
+    "noMap": "Tarkov MoA",
+    "nokey": "Abra este mapa pelo QR code que aparece no PC (Tarkov MoA → Mapa no celular).",
+    "waitingPc": "Conectando ao PC… Confira se o celular está na mesma Wi‑Fi e se o Tarkov MoA está aberto.",
+    "waitingMap": "Conectado. Esperando o PC escolher um mapa (tire uma print no jogo).",
+    "ago": "posição de {{min}} min atrás",
+    "follow": "Seguir",
+    "err": {
+      "port_busy": "Outro programa está usando a porta 8791.",
+      "other": "Não deu para ligar o mapa no celular."
+    },
+    "conn": {
+      "connecting": "Conectando…",
+      "live": "Ao vivo",
+      "down": "Reconectando…",
+      "nokey": "Sem código"
     }
   }
 }

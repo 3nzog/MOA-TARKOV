@@ -12,6 +12,7 @@ import { SquadProvider } from './squad/SquadContext'
 import { LinkProvider } from './link/LinkProvider'
 import { setupI18n } from './i18n'
 import MinimapApp from './minimap/MinimapApp'
+import PhoneApp from './phone/PhoneApp'
 import { initAppearance } from './appearance/useAppearance'
 import { installExternalLinks } from './services/openExternal'
 
@@ -24,7 +25,10 @@ installExternalLinks()
 // The same bundle serves the minimap overlay window (opened by the main window
 // with ?view=minimap). It renders only the minimap — no squad connection, no
 // watchers of its own; the main window feeds it over Tauri events.
-const isMinimap = new URLSearchParams(window.location.search).get('view') === 'minimap'
+const view = new URLSearchParams(window.location.search).get('view')
+const isMinimap = view === 'minimap'
+// A phone on the home Wi-Fi (QR code): the map only, fed by the PC over a socket.
+const isPhone = view === 'phone'
 
 // Resolve the language (user choice → EFT game language → system → English)
 // and init i18next before first render so the UI never flashes the wrong locale.
@@ -33,6 +37,8 @@ void setupI18n().finally(() => {
     <StrictMode>
       {isMinimap ? (
         <MinimapApp />
+      ) : isPhone ? (
+        <PhoneApp />
       ) : (
         <LinkProvider>
           <SquadProvider>

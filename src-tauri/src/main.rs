@@ -9,6 +9,7 @@ mod diag;
 mod link;
 mod net;
 mod party;
+mod phone;
 mod screenshots;
 mod tracker;
 mod weblinks;
@@ -98,6 +99,11 @@ fn main() {
             link::link_host_status,
             link::link_answer,
             link::link_publish,
+            phone::phone_start,
+            phone::phone_stop,
+            phone::phone_status,
+            phone::phone_new_key,
+            phone::phone_publish,
             link::link_set_auto_accept,
             link::link_forget,
             link::link_find,
