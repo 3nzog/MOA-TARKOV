@@ -681,7 +681,15 @@
       "squad": "Squad",
       "squadNote": "Derived from the quests each teammate shares — the same data your own list uses.",
       "copy": "Copy",
-      "copied": "Copied"
+      "copied": "Copied",
+      "best": {
+        "title": "Which map pays off",
+        "help": "For the goal picked in the raid route (and the party's quests, when on), plans the route in the Balanced style from several PMC spawns of each map and averages it. Click a map to open it.",
+        "computing": "Comparing the maps…",
+        "none": "No map has anything for this goal right now."
+      },
+      "onlyRoute": "Only what the route needs",
+      "onlyRouteHint": "Shows only the keys and items of the quests on the raid route's stops on this map."
     },
     "stats": {
       "title": "Raid history",

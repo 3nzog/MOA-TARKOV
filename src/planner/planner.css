@@ -193,3 +193,33 @@
 .hotkey-list .hotkey-actions { display: inline-flex; gap: var(--sp-1); align-items: center; }
 
 .planner-craft--unsure { background: var(--warn-soft); }
+
+/* Which map pays off today (the raid route's goal) */
+.best-maps { display: flex; flex-direction: column; gap: var(--sp-2); padding-bottom: var(--sp-2); border-bottom: 1px solid var(--border); }
+.best-maps__goal { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-caption); color: var(--text-dim); }
+.best-maps__busy { display: flex; align-items: center; gap: 6px; }
+.best-maps__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.best-maps__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: var(--bg-sunken);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast, 120ms) var(--ease-out), transform var(--dur-fast, 120ms) var(--ease-out);
+}
+.best-maps__row:hover { border-color: color-mix(in srgb, #4fd1ff 45%, var(--border)); transform: translateX(2px); }
+.best-maps__row:focus-visible { outline: 2px solid #4fd1ff; outline-offset: 2px; }
+.best-maps__row--on { border-color: #4fd1ff; background: rgba(79, 209, 255, 0.08); }
+.best-maps__n { flex: none; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 50%; background: #4fd1ff; color: #04121a; font-size: 11px; font-weight: 800; }
+.best-maps__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.best-maps__text strong { font-size: var(--fs-caption); }
+.best-maps__text small { font-size: var(--fs-micro); color: var(--text-faint); }
+.best-maps__bar { display: block; height: 3px; border-radius: 2px; background: linear-gradient(90deg, #4fd1ff, #8be9ff); transition: width 400ms var(--ease-out); }
+.best-maps__worth { flex: none; font-size: var(--fs-caption); color: var(--text-dim); }

@@ -512,6 +512,34 @@ function App() {
     tierOf,
     hideoutNeeds: routeHideoutNeeds,
   });
+  // "Which map pays off" in Planner → Raid: the route's goal, you and (party on) the squad.
+  const rankSelf = useMemo(
+    () => ({ id: squad.selfId ?? 'self', name: squad.members.find((m) => m.id === squad.selfId)?.name ?? t('route.you'), color: selfColor ?? '#4fd1ff' }),
+    [squad.selfId, squad.members, selfColor, t],
+  );
+  const rankPeople = useMemo(
+    () => [{ who: rankSelf, state: questState }, ...route.mates.map((m) => ({ who: m, state: squadSync.squadQuestStates[m.id] }))],
+    [rankSelf, questState, route.mates, squadSync.squadQuestStates],
+  );
+  const mapRanking = useMemo(
+    () => ({
+      goal: route.goal,
+      people: rankPeople,
+      poisByMapId: pois.poisByMapId,
+      hideoutNeeds: routeHideoutNeeds,
+      weaponKinds: route.weaponKinds,
+      onPickMap: setSelectedMapId,
+    }),
+    [route.goal, rankPeople, pois.poisByMapId, routeHideoutNeeds, route.weaponKinds, setSelectedMapId],
+  );
+  // The route's objectives on this map, for "only what the route needs" (quests goal).
+  const routeObjectives = useMemo(
+    () =>
+      route.on && route.goal === 'quests' && route.plan
+        ? new Set(route.plan.stops.flatMap((s) => s.items.map((it) => it.objective.id)))
+        : null,
+    [route.on, route.goal, route.plan],
+  );
   // Item names for the loot route's stops (loaded once a loot goal or "loot on the way" is on).
   const routeItemNames = useItemNames(route.on && (route.goal !== 'quests' || route.lootOnWay));
   useSoundAlerts({ raid: minimapRaid, toExit: route.toExit, routeDone: route.doneCount, hotKey: route.selfHeat?.key ?? null });
@@ -834,6 +862,8 @@ function App() {
                   questState={questState}
                   selectedMapId={selectedMapId}
                   selectedMapName={selectedMapName}
+                  ranking={mapRanking}
+                  routeObjectives={routeObjectives}
                   mapPois={pois.currentPois}
                   squadQuestStates={squadSync.squadQuestStates}
                   raidSide={liveRaidSide}

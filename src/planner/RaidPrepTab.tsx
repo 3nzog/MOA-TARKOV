@@ -11,7 +11,11 @@ import type { RaidSide } from '../state/raidHistory';
 import { buildRaidPrep, type RaidPrep } from '../progression/raidPrep';
 import { useSquad } from '../squad/useSquad';
 import { hexForColorId } from '../../shared/squadProtocol';
-import { Button, Chip, HelpTip, SectionLabel } from '../ui';
+import { Button, Chip, HelpTip, SectionLabel, Toggle } from '../ui';
+import BestMaps, { type BestMapsProps } from './BestMaps';
+import { useMapRanking } from '../route/rankMaps';
+import type { RouteGoal, WeaponKind } from '../route/targets';
+import type { RouteWho } from '../route/plan';
 import type { Names } from './names';
 import type { PlannerCtx } from './PlannerPanel';
 
@@ -30,6 +34,24 @@ interface Props {
   /** Exit names read from the O+O list this raid; null = not read. */
   panelExits: string[] | null;
   onOpenQuest: (id: string) => void;
+  /** "Which map pays off": what to rank by and who counts (the raid route's choices). */
+  ranking?: {
+    goal: RouteGoal;
+    people: { who: RouteWho; state: DerivedQuestState | null | undefined }[];
+    poisByMapId: Record<string, Poi[]>;
+    hideoutNeeds?: ReadonlySet<string>;
+    weaponKinds: WeaponKind[];
+    onPickMap: (mapId: string) => void;
+  };
+  /** The raid route's objectives on this map (quests goal), for "only what the route needs". */
+  routeObjectives?: ReadonlySet<string> | null;
+}
+
+/** The ranking, computed only while the tab is open (it mounts this). */
+function Ranking({ r, selectedMapId }: { r: NonNullable<Props['ranking']>; selectedMapId: string | null }) {
+  const { ranks, computing } = useMapRanking({ enabled: true, ...r });
+  const props: BestMapsProps = { ranks, computing, goal: r.goal, selectedMapId, onPick: r.onPickMap };
+  return <BestMaps {...props} />;
 }
 
 function checklistText(prep: RaidPrep, mapName: string, names: Names, t: (k: string, o?: Record<string, unknown>) => string): string {
@@ -67,11 +89,15 @@ export default function RaidPrepTab({
   onSetRaidSide,
   panelExits,
   onOpenQuest,
+  ranking,
+  routeObjectives,
 }: Props) {
   const { t } = useTranslation();
   const { data, names, planner, tasks, statuses } = ctx;
   const squad = useSquad();
   const [copied, setCopied] = useState(false);
+  const [onlyRoute, setOnlyRoute] = useState(true);
+  const only = onlyRoute && routeObjectives && routeObjectives.size > 0 ? routeObjectives : undefined;
 
   const mapTasks = useMemo(
     () => (selectedMapId && questState ? questState.availableTasksByMap[selectedMapId] ?? [] : []),
@@ -81,9 +107,16 @@ export default function RaidPrepTab({
   const prep = useMemo(
     () =>
       selectedMapId
-        ? buildRaidPrep({ mapId: selectedMapId, tasks: mapTasks, meta: data.tasks, checkedObjectives: planner.checkedObjectives, pois: mapPois })
+        ? buildRaidPrep({
+            mapId: selectedMapId,
+            tasks: mapTasks,
+            meta: data.tasks,
+            checkedObjectives: planner.checkedObjectives,
+            pois: mapPois,
+            onlyObjectives: only,
+          })
         : null,
-    [selectedMapId, mapTasks, data, planner.checkedObjectives, mapPois],
+    [selectedMapId, mapTasks, data, planner.checkedObjectives, mapPois, only],
   );
 
   // FIR hand-ins for ACTIVE quests: what to keep an eye out for in any raid.
@@ -133,8 +166,14 @@ export default function RaidPrepTab({
       });
   }, [squad.inSquad, squad.members, squad.selfId, squadQuestStates, selectedMapId, data]);
 
+  const rankingCard = ranking ? <Ranking r={ranking} selectedMapId={selectedMapId} /> : null;
   if (!selectedMapId || !prep) {
-    return <p className="muted">{t('planner.raid.pickMap')}</p>;
+    return (
+      <div className="planner-stack">
+        {rankingCard}
+        <p className="muted">{t('planner.raid.pickMap')}</p>
+      </div>
+    );
   }
 
   // The shell's resolver only knows maps that have an active quest; the static
@@ -163,12 +202,21 @@ export default function RaidPrepTab({
 
   return (
     <div className="planner-stack">
+      {rankingCard}
       <div className="planner-row">
         <strong>{mapName}</strong>
         <Button size="sm" variant="tertiary" icon={<Copy />} onClick={() => void copy()}>
           {copied ? t('planner.raid.copied') : t('planner.raid.copy')}
         </Button>
       </div>
+      {routeObjectives && routeObjectives.size > 0 && (
+        <div className="planner-row">
+          <span className="planner-row__label">
+            {t('planner.raid.onlyRoute')} <HelpTip>{t('planner.raid.onlyRouteHint')}</HelpTip>
+          </span>
+          <Toggle size="sm" checked={onlyRoute} onChange={setOnlyRoute} label={t('planner.raid.onlyRoute')} />
+        </div>
+      )}
       {raidInProgress && (
         <div className="planner-callout planner-callout--info">
           <p>

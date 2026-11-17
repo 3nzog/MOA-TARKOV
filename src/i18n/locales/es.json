@@ -681,7 +681,15 @@
       "squad": "Escuadrón",
       "squadNote": "Derivado de las misiones que comparte cada compañero — los mismos datos que tu propia lista.",
       "copy": "Copiar",
-      "copied": "Copiado"
+      "copied": "Copiado",
+      "best": {
+        "title": "Qué mapa compensa",
+        "help": "Para el objetivo elegido en la ruta (y las misiones del grupo, si está activado), planifica la ruta en estilo Equilibrado desde varios spawns de PMC de cada mapa y saca la media. Haz clic en un mapa para abrirlo.",
+        "computing": "Comparando los mapas…",
+        "none": "Ningún mapa tiene nada para este objetivo ahora."
+      },
+      "onlyRoute": "Solo lo que necesita la ruta",
+      "onlyRouteHint": "Muestra solo las llaves y objetos de las misiones que están en las paradas de la ruta de este mapa."
     },
     "stats": {
       "title": "Historial de incursiones",

@@ -1,6 +1,6 @@
 // The planner: progression and raid prep in one rail section. Tabs share one
 // context object; each tab is a pure view over it.
-import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
+import { useMemo, useState, type ComponentProps, type Dispatch, type SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TarkovTask } from '../api/types';
 import type { ProgressionLoad } from '../app/useProgression';
@@ -49,6 +49,10 @@ interface Props {
   questState: DerivedQuestState | null;
   selectedMapId: string | null;
   selectedMapName: string;
+  /** "Which map pays off" in the raid tab (the raid route's goal and party). */
+  ranking?: ComponentProps<typeof RaidPrepTab>['ranking'];
+  /** The raid route's objectives on the selected map (quests goal). */
+  routeObjectives?: ReadonlySet<string> | null;
   mapPois: Poi[];
   squadQuestStates: Record<string, DerivedQuestState>;
   raidSide: RaidSide | null;
@@ -141,6 +145,8 @@ export default function PlannerPanel(props: Props) {
             onSetRaidSide={props.onSetRaidSide}
             panelExits={props.panelExits}
             onOpenQuest={openQuest}
+            ranking={props.ranking}
+            routeObjectives={props.routeObjectives}
           />
         )}
         {tab === 'market' && <MarketTab ctx={ctx} scanned={props.scanned} onClearScan={props.onClearScan} />}

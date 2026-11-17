@@ -681,7 +681,15 @@
       "squad": "Squad",
       "squadNote": "Derivado das quests que cada colega compartilha — os mesmos dados da sua lista.",
       "copy": "Copiar",
-      "copied": "Copiado"
+      "copied": "Copiado",
+      "best": {
+        "title": "Qual mapa compensa",
+        "help": "Para o objetivo escolhido na rota da raid (e com as missões da party, se ligada), simula a rota no estilo Equilibrado saindo de vários spawns de PMC de cada mapa e tira a média. Clique num mapa para abri-lo.",
+        "computing": "Comparando os mapas…",
+        "none": "Nenhum mapa tem algo para esse objetivo agora."
+      },
+      "onlyRoute": "Só o que a rota precisa",
+      "onlyRouteHint": "Mostra só as chaves e os itens das missões que estão nas paradas da rota da raid deste mapa."
     },
     "stats": {
       "title": "Histórico de raids",

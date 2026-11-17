@@ -55,6 +55,11 @@ export interface RaidPrepInput {
   checkedObjectives: ReadonlySet<string>;
   /** POIs of this map (extracts / transits). Empty when they could not be loaded. */
   pois: Poi[];
+  /**
+   * Only these objectives (the raid route's stops): keys, items to carry and to
+   * pick up for the others are left out. Undefined: every active objective.
+   */
+  onlyObjectives?: ReadonlySet<string>;
 }
 
 const onMap = (mapIds: string[], mapId: string): boolean =>
@@ -77,9 +82,12 @@ export function buildRaidPrep(input: RaidPrepInput): RaidPrep {
     }
   };
 
+  const only = input.onlyObjectives;
   for (const task of input.tasks) {
     const meta = input.meta[task.id];
     if (!meta) continue;
+    // With the route's objectives only: a quest none of whose objectives is on the route needs nothing.
+    if (only && !(task.objectives ?? []).some((o) => only.has(o.id))) continue;
     for (const nk of meta.neededKeys) {
       if (nk.mapId === null || canonicalMapId(nk.mapId) === mapId) {
         // neededKeys lists alternatives for one door per entry.
@@ -88,6 +96,7 @@ export function buildRaidPrep(input: RaidPrepInput): RaidPrep {
     }
     for (const objective of task.objectives ?? []) {
       if (input.checkedObjectives.has(objective.id)) continue;
+      if (only && !only.has(objective.id)) continue;
       const o = meta.objectives[objective.id];
       if (!o) continue;
       if (!onMap(collectObjectiveMaps(objective), mapId)) continue;

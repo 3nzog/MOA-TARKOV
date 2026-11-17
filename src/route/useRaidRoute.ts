@@ -13,7 +13,6 @@ import type { PlayerPos } from '../app/useGameEvents';
 import { raidMinutes } from '../map/raidDuration';
 import { canonicalMapId } from '../map/canonicalMap';
 import { hexForColorId } from '../../shared/squadProtocol';
-import { ROUBLES } from '../poi/fromTarkovDev';
 import { heatAt, heatSources, hotReason, phaseOf, HOT, type HeatKind, type HeatSource, type RaidPhase } from './heat';
 import { itemKinds, lootForMap } from './lootData';
 import {
@@ -34,6 +33,7 @@ import {
 import { lootStops, scavStops, type LootContext, type RouteGoal, type WeaponKind } from './targets';
 import { loadRouteData, type RouteData } from './routeData';
 import { setRoutePrefs, useRoutePrefs } from './routePrefs';
+import { exitOf, factionOf } from './exits';
 import { computeInBackground } from './routeClient';
 import { rehydrate, type ComputeInput } from './compute';
 
@@ -44,7 +44,7 @@ const MARGIN_S = 90;
 /** Outside a raid, a position this old is not where you are any more. */
 const STALE_OUT_OF_RAID_MS = 15 * 60_000;
 /** A loot run fills the bag long before the time runs out; Scav hunts tire too. */
-const MAX_STOPS: Record<RouteGoal, number | undefined> = { quests: undefined, money: 10, hideout: 10, weapons: 10, scavs: 8 };
+export const MAX_STOPS: Record<RouteGoal, number | undefined> = { quests: undefined, money: 10, hideout: 10, weapons: 10, scavs: 8 };
 /** "Loot on the way": worth at most this many extra seconds of walking. */
 const ON_WAY_S = 25;
 const ON_WAY_MAX = 12;
@@ -151,23 +151,6 @@ interface PerRaid {
   picking: boolean;
 }
 const emptyRaid = (key: string): PerRaid => ({ key, picked: null, pickedAt: 0, done: [], picking: false });
-
-function exitOf(p: Poi): RouteExit {
-  const m = (p.meta ?? {}) as { isCar?: boolean; requiresSwitch?: boolean; requiresItem?: boolean; payItem?: string; payCount?: number };
-  const car = m.isCar === true;
-  return {
-    id: p.id,
-    label: p.label,
-    x: p.position.x,
-    z: p.position.z,
-    // The car leaves about a minute after you pay; a switch or an item takes a while too
-    // (V-Ex on Customs needs both the power switch and the payment).
-    penalty: (car ? 60 : 0) + (m.requiresSwitch ? 90 : 0) + (m.requiresItem && !car ? 60 : 0),
-    note: p.note,
-    car,
-    price: m.payItem === ROUBLES && typeof m.payCount === 'number' ? m.payCount : undefined,
-  };
-}
 
 /** Extra seconds to walk via `p` on the way from a to b. */
 function detourVia(a: Point, p: Point, b: Point): number {
@@ -287,12 +270,11 @@ export function useRaidRoute(o: Options): RaidRoute {
   const inRaid = !!o.raid;
   const exits = useMemo<RouteExit[]>(() => {
     const extracts = pois.filter((p) => p.category === 'extract');
-    const faction = (p: Poi) => String((p.meta as { faction?: string } | undefined)?.faction ?? 'shared').toLowerCase();
     // Planning outside a raid: a PMC raid (every exit counts as yours on the map then,
     // Scav-only ones included). In a raid, the side and the O+O list decide.
-    let mine = extracts.filter((p) => tierOf(p) === 'mine' && (inRaid || faction(p) !== 'scav'));
+    let mine = extracts.filter((p) => tierOf(p) === 'mine' && (inRaid || factionOf(p) !== 'scav'));
     // In a raid with the side not known yet: a PMC's exits.
-    if (mine.length === 0) mine = extracts.filter((p) => faction(p) !== 'scav');
+    if (mine.length === 0) mine = extracts.filter((p) => factionOf(p) !== 'scav');
     return mine.map(exitOf);
   }, [pois, tierOf, inRaid]);
 

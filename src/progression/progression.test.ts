@@ -241,6 +241,16 @@ describe('buildRaidPrep', () => {
     expect(prep.carry).toEqual([]);
     expect(prep.keys.map((k) => k.itemIds)).toEqual([['dorm-314']]);
   });
+
+  it("with the route's objectives only, leaves out what the other objectives need", () => {
+    const onlyPick = buildRaidPrep({ mapId: CUSTOMS, tasks, meta: m, checkedObjectives: new Set(), pois: [], onlyObjectives: new Set(['pick']) });
+    expect(onlyPick.carry).toEqual([]);
+    expect(onlyPick.pickups.map((p) => p.objectiveId)).toEqual(['pick']);
+    const nothing = buildRaidPrep({ mapId: CUSTOMS, tasks, meta: m, checkedObjectives: new Set(), pois: [], onlyObjectives: new Set(['not-on-this-map']) });
+    expect(nothing.keys).toEqual([]);
+    expect(nothing.carry).toEqual([]);
+    expect(nothing.pickups).toEqual([]);
+  });
 });
 
 describe('economy', () => {
