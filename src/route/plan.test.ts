@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TarkovTask, TaskObjective } from '../api/types';
-import { buildStops, centroid, planRoute, routeStart, travelSeconds, type RouteExit, type RouteStop } from './plan';
+import { buildStops, centroid, planRoute, routeStart, STRAIGHT, travelSeconds, type LegModel, type RouteExit, type RouteStop } from './plan';
 
 const MAP = '56f40101d2720b2a4d8b45d6'; // Customs
 
@@ -126,5 +126,79 @@ describe('routeStart', () => {
   it("falls back to the party's position, then to nothing", () => {
     expect(routeStart(null, null, party)).toEqual({ point: { x: 50, z: 0 }, source: 'party', ts: null });
     expect(routeStart(null, null, [])).toBeNull();
+  });
+});
+
+describe('planRoute — goals, styles and the raid clock', () => {
+  const start = { x: 0, z: 0 };
+  const valued = (id: string, x: number, z: number, value: number, work = 0): RouteStop => ({ ...stop(id, x, z, work), value });
+
+  it('with a budget for one of two stops, takes the one worth more', () => {
+    // Opposite ways from the start: time for one of them only.
+    const stops = [valued('small', -60, 0, 1), valued('big', 120, 0, 10)];
+    const budget = travelSeconds(start, { x: 120, z: 0 }) * 2 + 5;
+    const plan = planRoute(start, stops, [exit('home', 0, 0)], budget);
+    expect(plan.stops.map((s) => s.id)).toEqual(['big']);
+    expect(plan.value).toBe(10);
+  });
+
+  it('stops at maxStops, the best ones first', () => {
+    const stops = [valued('a', 50, 0, 1), valued('b', 60, 0, 5), valued('c', 70, 0, 3), valued('d', 80, 0, 4)];
+    const plan = planRoute(start, stops, [exit('e', 100, 0)], 3600, { maxStops: 2 });
+    expect(plan.stops.map((s) => s.id).sort()).toEqual(['b', 'd']);
+  });
+
+  it('ends at the car when asked and it fits, else at the nearest exit', () => {
+    const exits: RouteExit[] = [exit('gate', 50, 0), { ...exit('car', 250, 0, 60), car: true, price: 20000 }];
+    expect(planRoute(start, [], exits, 3600).exit?.id).toBe('gate');
+    expect(planRoute(start, [], exits, 3600, { preferCar: true }).exit?.id).toBe('car');
+    // Not enough time for the car: the gate after all.
+    const tight = travelSeconds(start, { x: 250, z: 0 }) + 30;
+    expect(planRoute(start, [], exits, tight, { preferCar: true }).exit?.id).toBe('gate');
+  });
+
+  // A place busy at the start of the raid (a spawn) and one busy at its end (an exit).
+  const SPAWNISH = 'spawnish';
+  const EXITISH = 'exitish';
+  const model: LegModel = {
+    leg: STRAIGHT.leg,
+    heatAt: (p, phase) => {
+      if (p.x > 50) return { traffic: phase === 0 ? 1 : 0, hazard: 0 };
+      if (p.x < -50) return { traffic: phase === 2 ? 1 : 0, hazard: 0 };
+      return { traffic: 0, hazard: 0 };
+    },
+  };
+  const both = [stop(SPAWNISH, 100, 0, 100), stop(EXITISH, -100, 0, 100)];
+  const RAID = 600;
+
+  it('the discreet style goes where it is quiet first and to the spawn once everyone has left it', () => {
+    const plan = planRoute(start, both, [exit('home', 0, 0)], 3600, { style: 'stealth', model, raid: RAID });
+    expect(plan.stops.map((s) => s.id)).toEqual([EXITISH, SPAWNISH]);
+    expect(plan.stopHeat.every((h) => h < 0.5)).toBe(true);
+  });
+
+  it('the aggressive style goes where the players are while they are there', () => {
+    const plan = planRoute(start, both, [exit('home', 0, 0)], 3600, { style: 'aggressive', model, raid: RAID });
+    expect(plan.stops[0].id).toBe(SPAWNISH);
+    expect(plan.hot).toBeGreaterThan(0);
+  });
+
+  it('the discreet style leaves out a stop that is very hot whenever it would get there', () => {
+    const boiling: LegModel = { leg: STRAIGHT.leg, heatAt: (p) => ({ traffic: p.x > 50 ? 1.2 : 0, hazard: 0 }) };
+    const stops = [stop('quiet', -100, 0), stop('boiling', 100, 0)];
+    const discreet = planRoute(start, stops, [exit('home', 0, 0)], 3600, { style: 'stealth', model: boiling, raid: RAID });
+    expect(discreet.stops.map((s) => s.id)).toEqual(['quiet']);
+    expect(discreet.leftHot).toEqual(['boiling']);
+    const direct = planRoute(start, stops, [exit('home', 0, 0)], 3600, { style: 'direct', model: boiling, raid: RAID });
+    expect(direct.stops).toHaveLength(2);
+    expect(direct.leftHot).toEqual([]);
+  });
+
+  it('counts the seconds spent in hot places and when each stop is reached', () => {
+    const plan = planRoute(start, both, [exit('home', 0, 0)], 3600, { style: 'direct', model, raid: RAID, elapsed: 30 });
+    expect(plan.arrivals).toHaveLength(2);
+    expect(plan.arrivals[0]).toBeGreaterThan(30);
+    expect(plan.arrivals[1]).toBeGreaterThan(plan.arrivals[0]);
+    expect(plan.hot).toBeGreaterThanOrEqual(0);
   });
 });
