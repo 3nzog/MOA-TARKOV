@@ -19,6 +19,7 @@ import { MARKER_COLORS } from '../poi/registry';
 import { headingAngle, ROUTE_COLOR, type MinimapPoint } from '../minimap/protocol';
 import type { PhoneState } from './phoneApi';
 import { usePhoneFeed, type LinkStats } from './usePhoneFeed';
+import PhoneMapLayers from './PhoneMapLayers';
 import '../App.css';
 import './phone.css';
 
@@ -140,7 +141,7 @@ function RaidClock({ c }: { c: NonNullable<PhoneState['raidClock']> }) {
 
 export default function PhoneApp() {
   const { t } = useTranslation();
-  const { state, conn, link } = usePhoneFeed();
+  const { state, layers: allLayers, conn, link } = usePhoneFeed();
   const [follow, setFollow] = useState(true);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -157,6 +158,10 @@ export default function PhoneApp() {
   const pos = state?.pos ?? null;
   const age = pos ? now - pos.ts : Infinity;
   const mapRot = mapId ? (getMapDef(mapId)?.rotation ?? 0) : 0;
+  // Everything the PC's map draws, for the map shown (an older PC sends none:
+  // then the few dots of the state stand in).
+  const layers = allLayers && mapId && canonicalMapId(allLayers.mapId) === mapId ? allLayers : null;
+  const floor = state?.activeFloorId ?? ALL_FLOORS;
 
   return (
     <div className="phone">
@@ -192,7 +197,7 @@ export default function PhoneApp() {
               svgUrl={def.svgUrl}
               bounds={leafletBounds(def)}
               floors={def.floors}
-              activeFloorId={state?.activeFloorId ?? ALL_FLOORS}
+              activeFloorId={floor}
               extraSvgUrls={def.extraSvgUrls}
             />
           ) : (
@@ -217,8 +222,9 @@ export default function PhoneApp() {
               ))}
             </>
           )}
+          {layers && <PhoneMapLayers layers={layers} floors={def.floors} activeFloorId={floor} />}
           {toLatLng &&
-            state!.points.map((p, i) => (
+            state!.points.filter((p) => !layers || p.kind === 'route').map((p, i) => (
               <CircleMarker
                 key={`${p.kind}-${i}-${p.x}-${p.z}`}
                 center={toLatLng(p.x, p.z)}

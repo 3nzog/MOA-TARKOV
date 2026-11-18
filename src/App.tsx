@@ -94,6 +94,7 @@ import type { TarkovTask, TaskObjective } from './api/types';
 import type { MapCard } from './map/MapInfoCard';
 import { usePhoneShare } from './phone/usePhoneShare';
 import type { PhoneState } from './phone/phoneApi';
+import { slimObjective, type PhoneLayers, type PhoneObjective } from './phone/phoneLayers';
 import { effectiveStatus } from './state/localProgress';
 
 // The weapon bench and its ~2 MB of data load only when it is first opened.
@@ -620,7 +621,6 @@ function App() {
     }),
     [selectedMapId, playerPos, floors.activeFloorId, smallMapPoints, minimapSelf, minimapMates, minimapRaid, smallRoute],
   );
-  const phone = usePhoneShare(phoneState);
   // Quests the player can take now (prerequisites and level met) but the logs
   // never saw accepted: pinned dimmer on the map, so the places of "my" quests
   // show even before the game says they were picked up.
@@ -641,6 +641,76 @@ function App() {
     }
     return out;
   }, [selectedMapId, questState, questTasks, questStatuses]);
+  // Everything else the map draws goes to the phone too, as a map only: no
+  // location pictures, no wiki links. Sent apart from the state above, and only
+  // when it changes (the party's positions already go in the state, as mates).
+  const heatOn = route.on && route.heat.on;
+  const { sources: heatSources, phase: heatPhase } = route.heat;
+  const raidLength = route.raidSeconds;
+  const phoneLayers = useMemo<PhoneLayers | null>(() => {
+    if (!selectedMapId) return null;
+    const slim = (list: { task: TarkovTask; objective: TaskObjective }[]) => list.map((o) => slimObjective(o.task, o.objective, selectedMapId));
+    const showOwn = squadSync.showOwnOnMap;
+    const squadQuests: Record<string, PhoneObjective[]> = {};
+    for (const [id, qs] of Object.entries(squadSync.squadQuestStates)) {
+      const list = qs.availableObjectivesByMap[selectedMapId];
+      if (list?.length) squadQuests[id] = slim(list);
+    }
+    return {
+      mapId: selectedMapId,
+      pois: pois.currentPois.filter(isPoiVisible),
+      dimmed: pois.currentPois.filter((p) => isPoiVisible(p) && isPoiDimmed(p)).map((p) => p.id),
+      selected: [...pois.selectedPoiIds],
+      sniperRange: appearance.sniperRange,
+      sniperCone: appearance.sniperCone,
+      objectives: showOwn && questState ? slim(questState.availableObjectivesByMap[selectedMapId] ?? []) : [],
+      upcoming: showOwn && appearance.upcomingQuests ? slim(upcomingObjectives) : null,
+      shared: [...squadSync.sharedQuestIds],
+      questNames: appearance.questNames,
+      placeLabels: appearance.placeLabels,
+      grid: pois.filterState.gridVisible,
+      custom: pois.customEnabled && showOwn ? pois.currentCustomPois : [],
+      ownDraws: drawing.ownDraws.filter((d) => d.mapId === selectedMapId),
+      drawHex: drawing.myDrawHex,
+      squad: squad.inSquad
+        ? { selfId: squad.selfId, members: squad.members, positions: {}, markers: squad.markers, draws: squad.draws, hiddenQuests: squad.hiddenQuests }
+        : null,
+      squadQuests,
+      heat: heatOn ? { sources: heatSources, phase: heatPhase, raid: raidLength } : null,
+    };
+  }, [
+    selectedMapId,
+    squadSync.showOwnOnMap,
+    squadSync.squadQuestStates,
+    squadSync.sharedQuestIds,
+    pois.currentPois,
+    pois.selectedPoiIds,
+    pois.filterState.gridVisible,
+    pois.customEnabled,
+    pois.currentCustomPois,
+    isPoiVisible,
+    isPoiDimmed,
+    appearance.sniperRange,
+    appearance.sniperCone,
+    appearance.upcomingQuests,
+    appearance.questNames,
+    appearance.placeLabels,
+    questState,
+    upcomingObjectives,
+    drawing.ownDraws,
+    drawing.myDrawHex,
+    squad.inSquad,
+    squad.selfId,
+    squad.members,
+    squad.markers,
+    squad.draws,
+    squad.hiddenQuests,
+    heatOn,
+    heatSources,
+    heatPhase,
+    raidLength,
+  ]);
+  const phone = usePhoneShare(phoneState, phoneLayers);
   const relativeSynced = useRelativeTime(quests.lastSynced);
   // On the planner's market tab, an inventory screenshot fills that tab's price list instead of the card.
   const onMarketTab = railSection === 'planner' && plannerTab === 'market' && !compact.compact;

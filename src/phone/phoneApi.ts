@@ -28,6 +28,8 @@ export const phoneStop = () => invoke<void>('phone_stop');
 export const phoneStatus = () => invoke<PhoneStatus>('phone_status');
 export const phoneNewKey = () => invoke<PhoneStatus>('phone_new_key');
 export const phonePublish = (state: PhoneState) => invoke<boolean>('phone_publish', { state: JSON.stringify(state) });
+/** The map's layers, already as the `{"layers":…}` frame. */
+export const phonePublishLayers = (frame: string) => invoke<boolean>('phone_publish_layers', { layers: frame });
 
 const KEY = 'tc_phone_v1';
 

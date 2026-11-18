@@ -91,7 +91,8 @@ export function MapClickPlacer({
 interface CustomMarkerLayerProps {
   mapId: string;
   pois: Poi[]; // custom POIs (source: "user") for the current map
-  onRemove: (id: string) => void;
+  /** Click removes; absent = only shown (the phone). */
+  onRemove?: (id: string) => void;
 }
 
 // Renders the user's custom markers and handles click-to-remove. Placement lives
@@ -114,11 +115,11 @@ export default function CustomMarkerLayer({
             key={poi.id}
             position={toLatLng(poi.position.x, poi.position.z) as L.LatLngExpression}
             icon={customIcon()}
-            eventHandlers={{ click: () => onRemove(poi.id) }}
+            eventHandlers={onRemove ? { click: () => onRemove(poi.id) } : undefined}
           >
             <Tooltip direction="top" className="tc-poi-tip" opacity={1}>
               <span>{poi.label}</span>
-              {gridRef && (
+              {gridRef && onRemove && (
                 <>
                   <br />
                   <small>{t('map.cellClickToRemove', { grid: gridRef })}</small>

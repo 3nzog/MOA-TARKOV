@@ -112,6 +112,7 @@ fn main() {
             self_update::source_update_apply,
             phone::phone_new_key,
             phone::phone_publish,
+            phone::phone_publish_layers,
             link::link_set_auto_accept,
             link::link_forget,
             link::link_find,

@@ -12,6 +12,7 @@
 //   at once, so a page on screen that stops hearing back connects again.
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { parsePhoneState, parsePosFrame, phoneSocketUrl, type PhoneState } from './phoneApi';
+import { parsePhoneLayers, type PhoneLayers } from './phoneLayers';
 
 export const RETRY_MS = 2500;
 export const PING_MS = 200;
@@ -44,16 +45,23 @@ function drop(ws: WebSocket): void {
 const onScreen = () => document.visibilityState !== 'hidden';
 
 /** The PC's state over the socket, reconnecting on its own. */
-export function usePhoneFeed(): { state: PhoneState | null; conn: Conn; link: RefObject<LinkStats> } {
+export function usePhoneFeed(): { state: PhoneState | null; layers: PhoneLayers | null; conn: Conn; link: RefObject<LinkStats> } {
   const [state, setState] = useState<PhoneState | null>(null);
+  const [layers, setLayers] = useState<PhoneLayers | null>(null);
   const [conn, setConn] = useState<Conn>(() => (phoneSocketUrl(window.location) ? 'connecting' : 'nokey'));
   const link = useRef<LinkStats>({ rtt: null, lag: null, lagAt: 0 });
   useEffect(() => {
     const url = phoneSocketUrl(window.location);
     // In development a page can feed a state by hand
-    // (window.dispatchEvent(new CustomEvent('phone-demo', { detail: JSON.stringify(state) }))).
+    // (window.dispatchEvent(new CustomEvent('phone-demo', { detail: JSON.stringify(state) }))),
+    // or the map's layers (detail: JSON.stringify({ layers })).
     const onDemo = (e: Event) => {
-      const s = parsePhoneState((e as CustomEvent<string>).detail);
+      const raw = (e as CustomEvent<string>).detail;
+      if (typeof raw === 'string' && raw.startsWith('{"layers"')) {
+        setLayers(parsePhoneLayers(raw));
+        return;
+      }
+      const s = parsePhoneState(raw);
       if (s) {
         setState(s);
         setConn('live');
@@ -132,6 +140,10 @@ export function usePhoneFeed(): { state: PhoneState | null; conn: Conn; link: Re
         if (typeof raw !== 'string') return;
         if (raw.startsWith('{"pong"')) onPong(raw);
         else if (raw.startsWith('{"pos"')) onPos(raw);
+        else if (raw.startsWith('{"layers"')) {
+          const l = parsePhoneLayers(raw);
+          if (l && alive) setLayers(l);
+        }
         else onState(raw);
       };
       sock.onclose = () => {
@@ -178,5 +190,5 @@ export function usePhoneFeed(): { state: PhoneState | null; conn: Conn; link: Re
       if (ws) drop(ws);
     };
   }, []);
-  return { state, conn, link };
+  return { state, layers, conn, link };
 }

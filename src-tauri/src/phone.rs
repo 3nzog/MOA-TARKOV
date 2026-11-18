@@ -10,6 +10,9 @@
 //   at once with the PC's clock: the page measures the delay with it, and the
 //   steady trickle keeps the phone's Wi-Fi from dozing between screenshots
 //   (a dozing phone gets each packet up to a few hundred ms late).
+// - Everything else the PC's map draws (map intel, quest pins, markers,
+//   drawings, the party's, hot zones) comes on its own frame, `{"layers":…}`,
+//   only when it changes and to each phone that connects.
 // - A screenshot's position also comes straight from the screenshot watcher
 //   (`publish_pos`), not only inside the app's next map state: the app's window
 //   sits behind the game, where its page runs slowly, and that cost the phone
@@ -34,6 +37,8 @@ use crate::net::{self, LocalNet, NetKind};
 pub const PHONE_PORT: u16 = 8791;
 /// Biggest state frame accepted from the app.
 const STATE_MAX: usize = 512 * 1024;
+/// Biggest layers frame (every marker of the map) accepted from the app.
+const LAYERS_MAX: usize = 4 * 1024 * 1024;
 const MAX_CLIENTS: usize = 8;
 const HEAD_MAX: usize = 8 * 1024;
 const HEAD_WAIT: Duration = Duration::from_secs(5);
@@ -66,6 +71,7 @@ pub struct Handle {
     stop: watch::Sender<bool>,
     state: watch::Sender<Arc<String>>,
     pos: watch::Sender<Arc<String>>,
+    layers: watch::Sender<Arc<String>>,
     clients: Arc<AtomicUsize>,
     #[cfg_attr(not(test), allow(dead_code))]
     pub port: u16,
@@ -81,6 +87,10 @@ impl Handle {
     /// A position frame (`{"pos":{…}}`), sent to the phones ahead of the next map state.
     pub fn publish_pos(&self, json: String) {
         let _ = self.pos.send(Arc::new(json));
+    }
+    /// Everything the map draws (`{"layers":{…}}`), sent when it changes and to each new phone.
+    pub fn publish_layers(&self, json: String) {
+        let _ = self.layers.send(Arc::new(json));
     }
     pub fn clients(&self) -> usize {
         self.clients.load(Ordering::Relaxed)
@@ -108,6 +118,7 @@ pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, all
     let (stop, stop_rx) = watch::channel(false);
     let (state, state_rx) = watch::channel(Arc::new(String::new()));
     let (pos, pos_rx) = watch::channel(Arc::new(String::new()));
+    let (layers, layers_rx) = watch::channel(Arc::new(String::new()));
     let clients = Arc::new(AtomicUsize::new(0));
     let key = Arc::new(key);
     let c2 = clients.clone();
@@ -121,19 +132,20 @@ pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, all
                     if !allow(&peer.ip()) {
                         continue;
                     }
-                    let feeds = Feeds { state: state_rx.clone(), pos: pos_rx.clone(), stop: stop_rx.clone() };
+                    let feeds = Feeds { state: state_rx.clone(), pos: pos_rx.clone(), layers: layers_rx.clone(), stop: stop_rx.clone() };
                     tauri::async_runtime::spawn(serve(stream, assets.clone(), key.clone(), feeds, c2.clone()));
                 }
             }
         }
     });
-    Ok(Handle { stop, state, pos, clients, port })
+    Ok(Handle { stop, state, pos, layers, clients, port })
 }
 
-/// What a phone's link listens to: map states, positions, and the stop.
+/// What a phone's link listens to: map states, positions, the map's layers, and the stop.
 struct Feeds {
     state: watch::Receiver<Arc<String>>,
     pos: watch::Receiver<Arc<String>>,
+    layers: watch::Receiver<Arc<String>>,
     stop: watch::Receiver<bool>,
 }
 
@@ -248,7 +260,7 @@ async fn serve_ws(
     feeds: Feeds,
     clients: Arc<AtomicUsize>,
 ) {
-    let Feeds { state: mut state_rx, pos: mut pos_rx, stop: mut stop_rx } = feeds;
+    let Feeds { state: mut state_rx, pos: mut pos_rx, layers: mut layers_rx, stop: mut stop_rx } = feeds;
     let check = |req: &Request, resp: Response| -> Result<Response, ErrorResponse> {
         if ws_key_ok(req.uri(), &key) && clients.load(Ordering::Relaxed) < MAX_CLIENTS {
             Ok(resp)
@@ -266,6 +278,10 @@ async fn serve_ws(
     // The first state already holds the latest position.
     pos_rx.borrow_and_update();
     let mut ok = first.is_empty() || send_within(&mut sink, Message::text(first.as_str())).await;
+    let layers = layers_rx.borrow_and_update().clone();
+    if ok && !layers.is_empty() {
+        ok = send_within(&mut sink, Message::text(layers.as_str())).await;
+    }
     while ok {
         tokio::select! {
             _ = stop_rx.changed() => break,
@@ -275,6 +291,13 @@ async fn serve_ws(
                 }
                 let s = state_rx.borrow_and_update().clone();
                 ok = send_within(&mut sink, Message::text(s.as_str())).await;
+            }
+            r = layers_rx.changed() => {
+                if r.is_err() {
+                    break;
+                }
+                let l = layers_rx.borrow_and_update().clone();
+                ok = send_within(&mut sink, Message::text(l.as_str())).await;
             }
             r = pos_rx.changed() => {
                 if r.is_err() {
@@ -474,6 +497,21 @@ pub fn phone_publish(state: String) -> bool {
     }
 }
 
+/// Everything the map draws, for the phones (JSON from the app). False when off or refused.
+#[tauri::command]
+pub fn phone_publish_layers(layers: String) -> bool {
+    if layers.len() > LAYERS_MAX || serde_json::from_str::<serde::de::IgnoredAny>(&layers).is_err() {
+        return false;
+    }
+    match cell().lock().unwrap().as_ref() {
+        Some(h) => {
+            h.publish_layers(layers);
+            true
+        }
+        None => false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -563,6 +601,22 @@ mod tests {
             h.publish_pos(r#"{"pos":{"x":1}}"#.into());
             assert_eq!(next_state(&mut ws).await, r#"{"pos":{"x":1}}"#);
             assert!(t0.elapsed() < Duration::from_millis(100), "{:?}", t0.elapsed());
+            h.stop();
+        });
+    }
+
+    /// The map's layers reach a phone that connects later (after its state) and every phone when they change.
+    #[test]
+    fn the_layers_go_to_new_phones_and_on_change() {
+        tauri::async_runtime::block_on(async {
+            let h = start(Ipv4Addr::LOCALHOST, 0, "abcdef0123456789".into(), assets(), Arc::new(|_: &IpAddr| true)).await.unwrap();
+            h.publish(r#"{"points":[]}"#.into());
+            h.publish_layers(r#"{"layers":{"mapId":"a"}}"#.into());
+            let mut ws = ws(h.port, "/ws?k=abcdef0123456789").await.unwrap();
+            assert_eq!(next_state(&mut ws).await, r#"{"points":[]}"#);
+            assert_eq!(next_state(&mut ws).await, r#"{"layers":{"mapId":"a"}}"#);
+            h.publish_layers(r#"{"layers":{"mapId":"b"}}"#.into());
+            assert_eq!(next_state(&mut ws).await, r#"{"layers":{"mapId":"b"}}"#);
             h.stop();
         });
     }
