@@ -1286,5 +1286,16 @@
     "left": "Scav {{time}}",
     "ready": "Scav ready",
     "readyToast": "The Scav is ready: you can go in as Scav again."
+  },
+  "hideoutTimers": {
+    "none": "Nothing running in the hideout. Open a station and tap ▶ when you start an upgrade or a craft: the app rings when it is done.",
+    "running": "Running",
+    "adjust": "Set the time left (as the game shows it, e.g. 1:30)",
+    "remove": "Remove",
+    "startUpgrade": "Started level {{level}} ({{time}})",
+    "upgradeLabel": "{{station}} level {{level}}",
+    "crafts": "Crafts (▶ when you start one)",
+    "startCraft": "Started this craft",
+    "done": "Hideout: {{label}} is done."
   }
 }

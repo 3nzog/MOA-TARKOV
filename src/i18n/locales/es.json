@@ -1286,5 +1286,16 @@
     "left": "Scav {{time}}",
     "ready": "Scav listo",
     "readyToast": "El Scav está listo: puedes volver a entrar como Scav."
+  },
+  "hideoutTimers": {
+    "none": "Nada en marcha en el refugio. Abre una estación y toca ▶ al empezar una mejora o fabricación: la app avisa al terminar.",
+    "running": "En marcha",
+    "adjust": "Ajustar el tiempo restante (como lo muestra el juego, p. ej. 1:30)",
+    "remove": "Quitar",
+    "startUpgrade": "Empecé el nivel {{level}} ({{time}})",
+    "upgradeLabel": "{{station}} nivel {{level}}",
+    "crafts": "Fabricaciones (▶ al empezar una)",
+    "startCraft": "Empecé esta fabricación",
+    "done": "Refugio: {{label}} terminó."
   }
 }

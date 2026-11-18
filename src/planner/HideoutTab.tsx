@@ -6,6 +6,7 @@ import { stationStatus } from '../progression/needs';
 import { Button, HelpTip, Select } from '../ui';
 import { formatSeconds } from './names';
 import type { PlannerCtx } from './PlannerPanel';
+import { RunningTimers, StationStarters } from '../hideout/HideoutTimers';
 
 export default function HideoutTab({ ctx }: { ctx: PlannerCtx }) {
   const { t } = useTranslation();
@@ -29,6 +30,7 @@ export default function HideoutTab({ ctx }: { ctx: PlannerCtx }) {
       <p className="planner-hint">
         {t('planner.hideout.progress', { done, total: stations.length })} <HelpTip>{t('planner.hideout.hint')}</HelpTip>
       </p>
+      <RunningTimers />
       <ul className="planner-quests">
         {stations.map(({ station, st }) => {
           const next = station.levels.find((l) => l.level === st.built + 1);
@@ -60,8 +62,11 @@ export default function HideoutTab({ ctx }: { ctx: PlannerCtx }) {
                   ))}
                 </Select>
               </div>
-              {isOpen && next && (
+              {isOpen && (
                 <div className="planner-quest__body">
+                  <StationStarters station={station} built={st.built} crafts={data.crafts} names={names} />
+                  {next && (
+                  <>
                   <h4 className="planner-subhead">
                     {t('planner.hideout.requirementsFor', { level: next.level })}
                     {next.time > 0 && <span className="planner-hint"> · {formatSeconds(next.time)}</span>}
@@ -99,6 +104,8 @@ export default function HideoutTab({ ctx }: { ctx: PlannerCtx }) {
                   <Button size="sm" onClick={() => planner.setStationLevel(station.id, next.level)} disabled={st.blockedBy.length > 0}>
                     {t('planner.hideout.markBuilt', { level: next.level })}
                   </Button>
+                  </>
+                  )}
                 </div>
               )}
             </li>

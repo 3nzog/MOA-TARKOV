@@ -1286,5 +1286,16 @@
     "left": "Scav {{time}}",
     "ready": "Scav liberado",
     "readyToast": "O Scav está liberado: dá pra entrar de Scav de novo."
+  },
+  "hideoutTimers": {
+    "none": "Nada rodando no esconderijo. Abra uma estação e toque em ▶ quando começar uma melhoria ou fabricação: o app toca quando terminar.",
+    "running": "Em andamento",
+    "adjust": "Ajustar o tempo que falta (como o jogo mostra, ex.: 1:30)",
+    "remove": "Remover",
+    "startUpgrade": "Comecei o nível {{level}} ({{time}})",
+    "upgradeLabel": "{{station}} nível {{level}}",
+    "crafts": "Fabricações (▶ quando começar uma)",
+    "startCraft": "Comecei esta fabricação",
+    "done": "Esconderijo: {{label}} terminou."
   }
 }

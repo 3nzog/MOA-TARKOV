@@ -223,3 +223,15 @@
 .best-maps__text small { font-size: var(--fs-micro); color: var(--text-faint); }
 .best-maps__bar { display: block; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--cold), var(--heat-4)); transition: width 400ms var(--ease-out); }
 .best-maps__worth { flex: none; font-size: var(--fs-caption); color: var(--text-dim); }
+
+/* Hideout timers */
+.hideout-timers { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; }
+.hideout-timer { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-2); }
+.hideout-timer__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hideout-timer__left { border: none; background: none; color: var(--text); font-weight: 700; cursor: pointer; padding: 2px 4px; border-radius: var(--r-sm); }
+.hideout-timer__left:hover { background: var(--surface-3); }
+.hideout-timer__edit { width: 90px; }
+.hideout-starters { display: grid; gap: 6px; margin-bottom: 8px; justify-items: start; }
+.hideout-starters .planner-list { width: 100%; }
+.hideout-craft { display: flex; align-items: center; gap: 8px; }
+.hideout-craft > span:first-child { flex: 1; min-width: 0; }

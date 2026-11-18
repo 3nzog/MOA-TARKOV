@@ -1286,5 +1286,16 @@
     "left": "Scav {{time}}",
     "ready": "Scav 就绪",
     "readyToast": "Scav 已就绪：可以再次以 Scav 进入。"
+  },
+  "hideoutTimers": {
+    "none": "藏身处没有进行中的项目。打开一个设施，开始升级或制作时点 ▶，完成时会提醒。",
+    "running": "进行中",
+    "adjust": "设置剩余时间（按游戏显示，如 1:30）",
+    "remove": "移除",
+    "startUpgrade": "已开始 {{level}} 级（{{time}}）",
+    "upgradeLabel": "{{station}} {{level}} 级",
+    "crafts": "制作（开始时点 ▶）",
+    "startCraft": "已开始此制作",
+    "done": "藏身处：{{label}} 已完成。"
   }
 }

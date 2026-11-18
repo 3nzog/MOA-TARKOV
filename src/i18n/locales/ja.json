@@ -1286,5 +1286,16 @@
     "left": "Scav {{time}}",
     "ready": "Scav 準備完了",
     "readyToast": "Scav の準備ができました。再び Scav で出撃できます。"
+  },
+  "hideoutTimers": {
+    "none": "隠れ家で進行中のものはありません。設備を開き、強化や製作を始めたら ▶ を押すと、完了時に知らせます。",
+    "running": "進行中",
+    "adjust": "残り時間を設定（ゲームの表示どおり、例 1:30）",
+    "remove": "削除",
+    "startUpgrade": "レベル {{level}} を開始 ({{time}})",
+    "upgradeLabel": "{{station}} レベル {{level}}",
+    "crafts": "製作（始めたら ▶）",
+    "startCraft": "この製作を開始",
+    "done": "隠れ家：{{label}} が完了しました。"
   }
 }
