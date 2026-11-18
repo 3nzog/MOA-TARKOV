@@ -10,15 +10,43 @@ const bats = readdirSync('.').filter((f) => /\.(bat|cmd)$/i.test(f));
 const read = (f: string) => readFileSync(f).toString('utf8');
 
 describe('the .bat launchers', () => {
-  it('exist', () => {
-    expect(bats).toContain('Abrir Tarkov MoA.bat');
-    expect(bats).toContain('Instalar Tarkov MoA.bat');
+  it('is one launcher: it installs, updates and opens', () => {
+    expect(bats).toEqual(['Abrir Tarkov MoA.bat']);
   });
 
   it.each(bats)('%s keeps Windows (CRLF) line endings on every line', (f) => {
     const text = read(f);
     const lfOnly = text.split('\r\n').filter((chunk) => chunk.includes('\n')).length;
     expect(lfOnly, `${f} has lines ending in LF only`).toBe(0);
+  });
+
+  describe('Abrir Tarkov MoA.bat installs when it is not in the program folder', () => {
+    const text = read('Abrir Tarkov MoA.bat');
+
+    it('picks installing or opening before anything else', () => {
+      const pick = text.indexOf('if /i "%~1"=="--instalar" goto :install');
+      expect(pick).toBeGreaterThan(0);
+      expect(text.indexOf('if not exist "%~dp0package.json" goto :install')).toBeGreaterThan(pick);
+      expect(text.indexOf(':install\r\n')).toBeGreaterThan(pick);
+      expect(text.indexOf(':open\r\n')).toBeGreaterThan(text.indexOf(':install\r\n'));
+    });
+
+    it('installs into Documents and hands over to the installed copy, which then opens', () => {
+      expect(text).toContain('set "DEST=%DOCS%\\Tarkov MoA"');
+      expect(text).toContain('call "%DEST%\\Abrir Tarkov MoA.bat" --atualizado');
+    });
+
+    it('a program folder without Git installs a copy that updates itself, from a copy of this file', () => {
+      expect(text).toMatch(/copy \/y "%~f0" "%ICOPY%"[^\r\n]*\r\n(?:[^\r\n]*\r\n)*?\(\r\n\s*call "%ICOPY%" --instalar\r\n\s*del "%ICOPY%"[^\r\n]*\r\n\s*exit \/b\r\n\)/);
+    });
+
+    it('every label is there once, and every jump has its label', () => {
+      const labels = [...text.matchAll(/^:([A-Za-z_0-9]+)\r$/gm)].map((m) => m[1]);
+      expect(labels.length).toBeGreaterThan(40);
+      expect(new Set(labels).size).toBe(labels.length);
+      const jumps = new Set([...text.matchAll(/(?:goto|call) :([A-Za-z_0-9]+)/g)].map((m) => m[1]));
+      for (const j of jumps) if (j !== 'eof') expect(labels, `:${j}`).toContain(j);
+    });
   });
 
   describe('Abrir Tarkov MoA.bat hands over to the newest launcher first', () => {
