@@ -1,10 +1,10 @@
 // "Map on the phone": turn it on, scan the QR code with the phone's camera.
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowsClockwise, Copy, ShieldCheck } from '@phosphor-icons/react';
+import { ArrowsClockwise, Copy, Globe, ShieldCheck } from '@phosphor-icons/react';
 import { Button, HelpTip, Modal, Toggle } from '../ui';
 import { partyFirewallRequest } from '../net/netApi';
-import type { PhoneQr } from './phoneApi';
+import { phoneRemoteFirewall, type PhoneQr, type PhoneStatus } from './phoneApi';
 import type { PhoneShare } from './usePhoneShare';
 import './phone.css';
 
@@ -97,6 +97,7 @@ export default function PhoneModal({ share, onClose }: { share: PhoneShare; onCl
                 </Button>
               </div>
             )}
+            <RemoteSection status={status} refresh={refresh} />
             <div className="phone-modal__actions">
               <Button size="sm" variant="tertiary" icon={<ArrowsClockwise />} onClick={() => void share.newKey()}>
                 {t('phone.newKey')}
@@ -107,5 +108,48 @@ export default function PhoneModal({ share, onClose }: { share: PhoneShare; onCl
         )}
       </div>
     </Modal>
+  );
+}
+
+/** Away from home (4G/5G): the map over Tailscale, or how to get it. */
+function RemoteSection({ status, refresh }: { status: PhoneStatus; refresh: () => Promise<void> }) {
+  const { t } = useTranslation();
+  const [fixing, setFixing] = useState(false);
+  const [open, setOpen] = useState(false);
+  const fix = async () => {
+    setFixing(true);
+    await phoneRemoteFirewall().catch(() => false);
+    await refresh();
+    setFixing(false);
+  };
+  return (
+    <div className="phone-modal__remote">
+      <button type="button" className="phone-modal__remote-head" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <Globe weight="bold" />
+        <span>{t('phone.remote.title')}</span>
+        <span className="phone-modal__muted">{status.remoteUrl ? t('phone.remote.on') : t('phone.remote.off')}</span>
+      </button>
+      {open &&
+        (status.remoteUrl && status.remoteQr ? (
+          <>
+            <QrCode qr={status.remoteQr} />
+            <p className="phone-modal__scan">{t('phone.remote.scan')}</p>
+            {!status.remoteFirewall && (
+              <div className="phone-modal__warn">
+                <span>{t('phone.remote.firewall')}</span>
+                <Button size="sm" icon={<ShieldCheck />} loading={fixing} onClick={() => void fix()}>
+                  {t('phone.fixFirewall')}
+                </Button>
+              </div>
+            )}
+          </>
+        ) : (
+          <ol className="phone-modal__steps">
+            <li>{t('phone.remote.step1')}</li>
+            <li>{t('phone.remote.step2')}</li>
+            <li>{t('phone.remote.step3')}</li>
+          </ol>
+        ))}
+    </div>
   );
 }

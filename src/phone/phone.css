@@ -169,3 +169,9 @@ html.phone-root #root {
 }
 .phone-modal__warn span { flex: 1; }
 .phone-modal__actions { display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+/* The phone window: away from home (Tailscale) */
+.phone-modal__remote { display: grid; gap: 8px; justify-items: center; border-top: 1px solid var(--border); padding-top: 10px; }
+.phone-modal__remote-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px 0; border: none; background: none; color: var(--text); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
+.phone-modal__remote-head > span:nth-child(2) { flex: 1; }
+.phone-modal__steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 13px; color: var(--text-dim); justify-self: stretch; }

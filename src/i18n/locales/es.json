@@ -1119,6 +1119,16 @@
       "live": "En vivo",
       "down": "Reconectando…",
       "nokey": "Sin código"
+    },
+    "remote": {
+      "title": "Fuera de casa (4G/5G)",
+      "on": "listo",
+      "off": "necesita Tailscale",
+      "scan": "Escanéalo con el móvil con Tailscale activo: funciona también con datos móviles.",
+      "firewall": "Windows aún bloquea el mapa por Tailscale.",
+      "step1": "Instala Tailscale (gratis) en este PC y en el móvil, desde tailscale.com o la tienda de apps.",
+      "step2": "Entra con la misma cuenta en los dos y deja Tailscale activo.",
+      "step3": "Cierra y abre esta ventana de nuevo: aparece aquí un segundo QR, para usar fuera de casa."
     }
   },
   "route": {

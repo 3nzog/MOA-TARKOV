@@ -89,6 +89,20 @@ pub fn parse_nets(text: &str) -> Vec<LocalNet> {
     out
 }
 
+/// Tailscale's address range (100.64.0.0/10): a private network of the
+/// player's own devices, across the internet, encrypted.
+pub fn is_tailscale(ip: Ipv4Addr) -> bool {
+    let o = ip.octets();
+    o[0] == 100 && (64..=127).contains(&o[1])
+}
+
+/// This PC's Tailscale address, when Tailscale is on: the address Windows
+/// would use to reach Tailscale's own resolver (100.100.100.100). With
+/// Tailscale off that route goes out the normal way, and nothing is returned.
+pub fn tailscale_ip() -> Option<Ipv4Addr> {
+    route_ip("100.100.100.100:53").filter(|ip| is_tailscale(*ip))
+}
+
 /// The local address the OS would use to reach `target` (no packet is sent).
 fn route_ip(target: &str) -> Option<Ipv4Addr> {
     let sock = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
@@ -267,6 +281,16 @@ pub async fn net_local_ips() -> Vec<NetInfo> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tells_tailscale_addresses() {
+        assert!(is_tailscale(Ipv4Addr::new(100, 64, 0, 1)));
+        assert!(is_tailscale(Ipv4Addr::new(100, 101, 2, 3)));
+        assert!(is_tailscale(Ipv4Addr::new(100, 127, 255, 254)));
+        assert!(!is_tailscale(Ipv4Addr::new(100, 63, 0, 1)));
+        assert!(!is_tailscale(Ipv4Addr::new(100, 128, 0, 1)));
+        assert!(!is_tailscale(Ipv4Addr::new(192, 168, 1, 2)));
+    }
 
     #[test]
     fn reads_addresses_prefixes_and_profiles() {

@@ -1119,6 +1119,16 @@
       "live": "Live",
       "down": "Reconnecting…",
       "nokey": "No code"
+    },
+    "remote": {
+      "title": "Away from home (4G/5G)",
+      "on": "ready",
+      "off": "needs Tailscale",
+      "scan": "Scan with the phone on Tailscale: it works on mobile data too.",
+      "firewall": "Windows still blocks the map over Tailscale.",
+      "step1": "Install Tailscale (free) on this PC and on the phone, from tailscale.com or the app store.",
+      "step2": "Sign in with the same account on both and leave Tailscale on.",
+      "step3": "Close and open this window again: a second QR code shows up here, for use away from home."
     }
   },
   "route": {

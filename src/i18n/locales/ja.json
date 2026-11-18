@@ -1119,6 +1119,16 @@
       "live": "ライブ",
       "down": "再接続中…",
       "nokey": "コードなし"
+    },
+    "remote": {
+      "title": "外出先（4G/5G）",
+      "on": "準備完了",
+      "off": "Tailscale が必要",
+      "scan": "Tailscale をオンにしたスマホで読み取ってください。モバイル通信でも使えます。",
+      "firewall": "Windows がまだ Tailscale 経由のマップをブロックしています。",
+      "step1": "この PC とスマホに Tailscale（無料）を tailscale.com かアプリストアからインストール。",
+      "step2": "両方で同じアカウントにログインし、Tailscale をオンのままに。",
+      "step3": "このウィンドウを閉じて開き直すと、外出先用の 2 つ目の QR がここに表示されます。"
     }
   },
   "route": {

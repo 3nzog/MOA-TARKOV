@@ -125,6 +125,7 @@ fn main() {
             phone::phone_new_key,
             phone::phone_publish,
             phone::phone_publish_layers,
+            phone::phone_remote_firewall,
             link::link_set_auto_accept,
             link::link_forget,
             link::link_find,

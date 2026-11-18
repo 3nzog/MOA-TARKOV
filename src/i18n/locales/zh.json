@@ -1119,6 +1119,16 @@
       "live": "实时",
       "down": "重新连接中…",
       "nokey": "没有密钥"
+    },
+    "remote": {
+      "title": "在外面（4G/5G）",
+      "on": "已就绪",
+      "off": "需要 Tailscale",
+      "scan": "用开着 Tailscale 的手机扫码：移动数据下也能用。",
+      "firewall": "Windows 仍在阻止通过 Tailscale 访问地图。",
+      "step1": "在这台电脑和手机上安装 Tailscale（免费），可从 tailscale.com 或应用商店获取。",
+      "step2": "两台设备登录同一个账号，并保持 Tailscale 开启。",
+      "step3": "关闭并重新打开此窗口：这里会出现第二个二维码，供在外面使用。"
     }
   },
   "route": {

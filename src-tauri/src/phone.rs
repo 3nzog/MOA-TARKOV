@@ -97,6 +97,12 @@ impl Handle {
     }
 }
 
+/// A phone may connect from the home network, or over Tailscale when this PC
+/// is on Tailscale (the player's own devices; the key is still needed).
+pub fn phone_peer(peer: &IpAddr, nets: &[LocalNet], tailscale: Option<Ipv4Addr>) -> bool {
+    home_peer(peer, nets) || (tailscale.is_some() && matches!(peer, IpAddr::V4(v4) if net::is_tailscale(*v4)))
+}
+
 /// This PC or a PC/phone on its home network (Wi-Fi, same router).
 pub fn home_peer(peer: &IpAddr, nets: &[LocalNet]) -> bool {
     let lan: Vec<LocalNet> = nets.iter().filter(|n| n.kind == NetKind::Lan).copied().collect();
@@ -407,6 +413,11 @@ pub struct PhoneStatus {
     pub qr: Option<Qr>,
     pub clients: usize,
     pub firewall: bool,
+    /// Away from home (4G/5G): the address over Tailscale, when this PC is on it.
+    pub remote_url: Option<String>,
+    pub remote_qr: Option<Qr>,
+    /// The firewall lets Tailscale reach the map.
+    pub remote_firewall: bool,
 }
 
 pub fn qr_of(text: &str) -> Option<Qr> {
@@ -428,7 +439,15 @@ async fn status_now(firewall: bool) -> PhoneStatus {
     let key = current_key().lock().unwrap().clone();
     let urls = phone_urls(&nets, PHONE_PORT, &key);
     let qr = urls.first().and_then(|u| qr_of(u));
-    PhoneStatus { running: true, urls, qr, clients, firewall }
+    let tailscale = net::tailscale_ip();
+    let remote_url = tailscale.map(|ip| format!("http://{ip}:{PHONE_PORT}/?view=phone&k={key}"));
+    let remote_qr = remote_url.as_deref().and_then(qr_of);
+    let remote_firewall = if tailscale.is_some() {
+        tauri::async_runtime::spawn_blocking(crate::party::phone_remote_rule_present).await.unwrap_or(false)
+    } else {
+        false
+    };
+    PhoneStatus { running: true, urls, qr, clients, firewall, remote_url, remote_qr, remote_firewall }
 }
 
 async fn start_for(app: tauri::AppHandle, fresh_key: bool) -> Result<PhoneStatus, String> {
@@ -444,7 +463,7 @@ async fn start_for(app: tauri::AppHandle, fresh_key: bool) -> Result<PhoneStatus
         let assets: AssetsFn = Arc::new(move |path: &str| {
             a2.asset_resolver().get(path.to_string()).map(|a| (a.bytes, a.mime_type))
         });
-        let allow: AllowFn = Arc::new(|peer: &IpAddr| home_peer(peer, &net::local_nets()));
+        let allow: AllowFn = Arc::new(|peer: &IpAddr| phone_peer(peer, &net::local_nets(), net::tailscale_ip()));
         let h = start(Ipv4Addr::UNSPECIFIED, PHONE_PORT, key, assets, allow).await?;
         net::log("celular: mapa no celular ligado (porta 8791)");
         *cell().lock().unwrap() = Some(h);
@@ -495,6 +514,14 @@ pub fn phone_publish(state: String) -> bool {
         }
         None => false,
     }
+}
+
+/// Lets Tailscale reach the map (Windows asks for admin rights). True when it is allowed.
+#[tauri::command]
+pub async fn phone_remote_firewall() -> bool {
+    tauri::async_runtime::spawn_blocking(|| crate::party::phone_remote_rule_present() || (crate::party::request_firewall_rules() && crate::party::phone_remote_rule_present()))
+        .await
+        .unwrap_or(false)
 }
 
 /// Everything the map draws, for the phones (JSON from the app). False when off or refused.
@@ -603,6 +630,20 @@ mod tests {
             assert!(t0.elapsed() < Duration::from_millis(100), "{:?}", t0.elapsed());
             h.stop();
         });
+    }
+
+    /// A phone over Tailscale gets in only while this PC is on Tailscale; the home network always.
+    #[test]
+    fn a_phone_away_from_home_comes_in_over_tailscale_only() {
+        let nets = [LocalNet { ip: Ipv4Addr::new(192, 168, 1, 20), prefix: 24, kind: NetKind::Lan, public: false }];
+        let phone_home: IpAddr = "192.168.1.33".parse().unwrap();
+        let phone_ts: IpAddr = "100.90.1.2".parse().unwrap();
+        let stranger: IpAddr = "8.8.8.8".parse().unwrap();
+        let ts = Some(Ipv4Addr::new(100, 70, 0, 1));
+        assert!(phone_peer(&phone_home, &nets, None));
+        assert!(phone_peer(&phone_ts, &nets, ts));
+        assert!(!phone_peer(&phone_ts, &nets, None));
+        assert!(!phone_peer(&stranger, &nets, ts));
     }
 
     /// The map's layers reach a phone that connects later (after its state) and every phone when they change.

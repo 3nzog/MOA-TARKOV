@@ -479,6 +479,27 @@ pub fn firewall_rules_present() -> bool {
     }
 }
 
+/// The rule that lets the phone reach the map over Tailscale (TCP 8791 from
+/// 100.64.0.0/10 only). Checked apart from the others: it is only needed by
+/// whoever uses the map away from home.
+pub fn phone_remote_rule_present() -> bool {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        std::process::Command::new("powershell.exe")
+            .args(["-NoProfile", "-Command", "if (Get-NetFirewallRule -DisplayName 'Tarkov MoA celular (Tailscale)' -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false)
+    }
+    #[cfg(not(windows))]
+    {
+        true
+    }
+}
+
 /// Asks Windows (UAC prompt) to let Radmin and the home network reach MoA's ports.
 pub fn request_firewall_rules() -> bool {
     let path = std::env::temp_dir().join("tarkov-moa-party-firewall.ps1");
