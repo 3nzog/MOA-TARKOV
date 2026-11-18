@@ -181,11 +181,11 @@ export default function SettingsModal({
     const chosen = await openDialog({ directory: true, multiple: false, title: t('settings.selectEftInstallFolder') });
     if (!chosen || Array.isArray(chosen)) return;
     await handleSetRoot(chosen, t('settings.eftFolderUpdated'));
-  }, [handleSetRoot]);
+  }, [handleSetRoot, t]);
 
   const handleUseAutoDetect = useCallback(async () => {
     await handleSetRoot(null, t('settings.autoDetectReEnabled'));
-  }, [handleSetRoot]);
+  }, [handleSetRoot, t]);
 
   const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
     { id: 'general', label: t('settings.tabs.general'), icon: <SlidersHorizontal weight="duotone" /> },

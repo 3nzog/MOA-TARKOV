@@ -162,6 +162,12 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   // Which action is in flight, so a connect-timeout error speaks the right
   // language: a create has no code to "check", a join does.
   const lastConnectModeRef = useRef<"create" | "join">("join");
+  // The texts in the language of the moment, read by the transport's callbacks
+  // (the transport itself is not rebuilt, and the link not cut, when it changes).
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   // Our own latest broadcast state — kept so we can resync to a peer who joins
   // after us (the relay never replays anything sent before they arrived).
@@ -300,8 +306,8 @@ export function SquadProvider({ children }: { children: ReactNode }) {
           error:
             status === "error" && !s.error
               ? lastConnectModeRef.current === "create"
-                ? t('errors.squadServerOffline')
-                : t('errors.squadUnreachable')
+                ? tRef.current('errors.squadServerOffline')
+                : tRef.current('errors.squadUnreachable')
               : status === "connecting" || status === "connected"
                 ? null
                 : s.error,

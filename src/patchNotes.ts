@@ -15,6 +15,20 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "0.10.1",
+    date: "2026-11-18",
+    changes: [
+      "The map on the phone shows everything the PC's map shows: the exits, spawns, loot and other map intel you have switched on, quest pins (with names), sniper and minefield zones, place names, the grid, your markers and drawings, the party's markers, drawings and quest pins, the hot zones, and the relief picture when the PC uses it. Only as a map: tapping shows a name, never location pictures or wiki links.",
+      "The phone is faster: a screenshot's position goes straight to it (it used to wait for the app's window, which runs slowly behind the game, and the PC waited 150 ms before reading each screenshot), its Wi-Fi is kept awake while the map is on screen, and the map glides to you in 0.1 s. The bar shows how long a screenshot took to get there.",
+      "The phone keeps its screen on while the map is open, and reconnects on its own if it stopped getting positions (it could, after its screen went off). Full screen: a button on Android; on iPhone, add the map to the home screen and it opens full screen, like an app. Fixed: the map on the phone could stay blank.",
+      "Routes: the route button on the map opens and closes the route window; the \"Routes\" switch inside it (and in Settings → General) turns every route on or off. Off means off: nothing of them on the map, minimap or phone, and no route sounds (they used to play with the route off).",
+      "Linking PCs: a PC outside your home network (Radmin, internet) that nobody clicked no longer pops up \"Link a PC?\" on yours; it is turned away quietly. A request made with a click still asks. Over Radmin, the PC that asks needs 0.10.1 too.",
+      "Faster start: only your language is loaded (the other five come when you switch), which halves the main script.",
+      "One file to install, update and open: \"Abrir Tarkov MoA.bat\". Run from anywhere it installs (into Documents\\Tarkov MoA); run inside the program's folder it updates and opens. \"Instalar Tarkov MoA.bat\" is gone.",
+      "Squad Mode: no change to the squad protocol; 0.10.0 and 0.10.1 see each other.",
+    ],
+  },
+  {
     version: "0.10.0",
     date: "2026-11-17",
     changes: [
@@ -23,13 +37,7 @@ export const PATCH_NOTES: PatchNote[] = [
       "Hot zones: where players tend to be at each moment of the raid (spawns early, loot mid-raid, exits late), shown on the map, with a ⚠ on busy stops and an optional sound when you walk into one.",
       "The route on the in-game minimap and on the phone; loot worth a short detour; ending at the car exit for Fence reputation; \"Which map pays off\" and \"Only what the route needs\" in Planner → Raid.",
       "A screenshot of the game's Tasks screen marks the quests listed there as active when the logs missed them. Ammo shows the cheapest round that gets through a given armour class, at trader prices.",
-      "Faster: the minimap window loads only its own code, panels load when first opened, the raid clock no longer redraws the whole app every second, and only your language is loaded (the other five come when you switch), which halves the main script and makes the phone page quicker to open. Fixed: quest and exit dots on the minimap could be hidden under the map art.",
-      "Fixed: the map on the phone could stay blank. The PC cut each connection short, so the app's script never arrived whole; now every file arrives complete.",
-      "The raid route can be turned off in Settings → General too (or with the route button on the map, or the X on its panel). Off means off: nothing of it on the map, minimap or phone, and no route sounds. Fixed: the hot-zone and \"route stop done\" sounds played in raids even with the route off.",
-      "Linking PCs: a PC outside your home network (Radmin, internet) that nobody clicked no longer pops up \"Link a PC?\" on yours; it is turned away quietly. A request made with a click still asks. Over Radmin, the PC that asks needs 0.10.0 too.",
-      "Map on the phone, faster: a screenshot's position now goes straight to the phone (it used to wait for the app's window, which runs slowly behind the game, and the PC waited 150 ms before reading each screenshot), the phone's Wi-Fi is kept awake while the map is on screen, and the map glides to you in 0.1 s. The bar shows how long a screenshot took to get there. Fixed: the phone could stop getting positions after its screen went off; it now reconnects on its own. New: a full-screen button (Android; iPhone Safari does not allow it).",
-      "The map on the phone now shows everything the PC's map shows: the exits, spawns, loot and other map intel you have switched on, quest pins (with names), sniper and minefield zones, place names, the grid, your markers and drawings, the party's markers, drawings and quest pins, and the hot zones. Only as a map: tapping shows a name, never location pictures or wiki links.",
-      "Routes: the route button on the map opens and closes the route window; the \"Routes\" switch inside it (and in Settings → General) turns every route on or off. Closing the window keeps the routes as they are.",
+      "Faster: the minimap window loads only its own code, panels load when first opened, and the raid clock no longer redraws the whole app every second. Fixed: quest and exit dots on the minimap could be hidden under the map art.",
       "Squad Mode: no change to the squad protocol; 0.9.0 and 0.10.0 still see each other.",
     ],
   },

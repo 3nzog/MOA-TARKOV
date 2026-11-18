@@ -52,6 +52,15 @@ Tarkov MoA runs on a second monitor (or off to the side) and quietly keeps a map
 
 That's it. From then on it stays out of your way and updates itself.
 
+### From this repository's code (one file: `Abrir Tarkov MoA.bat`)
+
+The same file installs, updates and opens:
+
+- **Run it from anywhere** (Downloads, Desktop): it installs into `Documents\Tarkov MoA` (asking GitHub for your login the first time — your account must be invited to the repository), puts a shortcut on the Desktop and opens the app. The first time it also installs what the PC lacks (Git, Node.js, Rust, the C++ build tools, WebView2) and builds the app, which takes a few minutes.
+- **Run it inside `Documents\Tarkov MoA`** (or from its shortcut): it fetches the newest version, rebuilds only when the code changed, and opens the app.
+
+Everything it does is written to `%TEMP%\TarkovMoA.log`.
+
 ## Is it safe? Is it a cheat?
 
 Short answer: **yes, it's safe, and no, it's not a cheat.**

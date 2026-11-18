@@ -136,7 +136,7 @@ export default function Onboarding({
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [t]);
 
   // Re-run auto-detect (clears any manual override — same backend as Settings'
   // "Use auto-detect"). Lets a user who picked the wrong folder fall back.
