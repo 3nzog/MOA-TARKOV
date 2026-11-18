@@ -77,7 +77,14 @@ export function recordRaidStart(
   return { ...h, raids: raids.slice(-MAX_RAIDS) };
 }
 
-export function recordRaidEnd(h: RaidHistory, location: string | null, at: number): RaidHistory {
+/** Two ends this close are the same raid's (the game writes it in more than one log). */
+const SAME_END_MS = 5 * 60 * 1000;
+
+/**
+ * A raid ended. `soft`: only a hint (back in the menus) — it closes a raid
+ * still open and is otherwise ignored (the same hint comes at log-in).
+ */
+export function recordRaidEnd(h: RaidHistory, location: string | null, at: number, soft = false): RaidHistory {
   if (h.raids.some((r) => r.endedAt === at)) return h; // replayed
   // Close the latest open raid that started before this end, on the same map
   // when both sides know it.
@@ -94,6 +101,8 @@ export function recordRaidEnd(h: RaidHistory, location: string | null, at: numbe
   if (idx >= 0) {
     raids[idx] = { ...raids[idx], endedAt: at, location: raids[idx].location ?? location };
   } else {
+    // Nothing open to close: the same end seen again in another log, or a hint.
+    if (soft || h.raids.some((r) => r.endedAt !== null && Math.abs(r.endedAt - at) <= SAME_END_MS)) return h;
     raids.push({ location, startedAt: null, endedAt: at });
     raids.sort((a, b) => (a.startedAt ?? a.endedAt ?? 0) - (b.startedAt ?? b.endedAt ?? 0));
   }

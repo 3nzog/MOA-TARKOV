@@ -56,6 +56,7 @@ import { useAppUpdate } from './app/useAppUpdate';
 import { useShowOnGameLaunch } from './app/startup';
 import { useScavTimer } from './scav/scavTimer';
 import ScavChip from './scav/ScavChip';
+import RaidSideAsk from './scav/RaidSideAsk';
 import { reqLabels, useExitReqs } from './map/extractReqs';
 import { bossList } from './route/describe';
 import { useHideoutAlarms, type HideoutTimer } from './hideout/timers';
@@ -1106,6 +1107,7 @@ function App() {
 
         <section className="map-stage map-area">
           <ScavChip state={scav} />
+          {liveRaid?.profileKey && !liveRaidSide && <RaidSideAsk onPick={setLiveRaidSide} />}
               {mapCard && selectedMapId && (
                 <Suspense fallback={null}>
                   <MapInfoCard card={mapCard} onClose={() => setMapCard(null)} />

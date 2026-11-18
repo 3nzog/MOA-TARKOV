@@ -1327,5 +1327,9 @@
     "notAlways": "No siempre abierta",
     "singleUse": "Un solo uso",
     "other": "Ver detalles"
+  },
+  "raidSideAsk": {
+    "question": "Esta raid es de:",
+    "hint": "Los logs del juego distinguen tus dos perfiles, pero no cuál es el Scav. Responde una vez: el otro perfil queda conocido también."
   }
 }

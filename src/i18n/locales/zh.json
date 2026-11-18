@@ -1327,5 +1327,9 @@
     "notAlways": "不一定开放",
     "singleUse": "一次性",
     "other": "查看详情"
+  },
+  "raidSideAsk": {
+    "question": "本场战局是：",
+    "hint": "游戏日志能区分你的两个角色，但不知道哪个是 Scav。回答一次后，另一个角色也就知道了。"
   }
 }

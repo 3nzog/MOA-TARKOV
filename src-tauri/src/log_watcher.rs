@@ -198,6 +198,11 @@ pub(crate) fn is_application_log(path: &Path) -> bool {
         || name.contains("_application")
         || name.contains(" push-notifications")
         || name.contains("_push-notifications")
+        // The end of a raid: its "userMatchOver" reaches the backend log every
+        // time, while the push-notification log has it only now and then (6 of
+        // 50 raids in a real log folder).
+        || name.contains(" backend")
+        || name.contains("_backend")
 }
 
 fn classify_template_type(t: i64) -> Option<&'static str> {
@@ -395,6 +400,19 @@ pub fn process_file(
         } else if line.contains("Got notification | UserMatchOver") {
             pending = Some(Pending::RaidEnded);
             pending_time = extract_log_time(&line);
+        } else if line.contains("payloadType=userMatchOver") {
+            // The raid is over (survived or not: the logs do not say which).
+            let _ = app.emit(
+                "raid-ended",
+                serde_json::json!({ "location": "", "shortId": "", "logTime": extract_log_time(&line) }),
+            );
+        } else if line.contains("application|PrepareSelectedProfileLocally") {
+            // Back in the menus. After a raid this closes it when nothing else
+            // did; at log-in there is no raid open and the app ignores it.
+            let _ = app.emit(
+                "raid-ended",
+                serde_json::json!({ "location": "", "shortId": "", "logTime": extract_log_time(&line), "soft": true }),
+            );
         } else if line.contains("Got notification | ChatMessageReceived") {
             pending = Some(Pending::QuestEvent);
             pending_time = extract_log_time(&line);
@@ -722,6 +740,8 @@ fn scan_sides_in_text(text: &str, out: &mut SideScan) {
             pending = Some((Kind::Group, extract_log_time(line)));
         } else if line.contains("Got notification | UserMatchOver") {
             pending = Some((Kind::End, extract_log_time(line)));
+        } else if line.contains("payloadType=userMatchOver") {
+            out.ends.push(SideScanEnd { location: None, log_time: extract_log_time(line) });
         } else if line.contains("Got notification |") {
             pending = None;
         }
@@ -811,7 +831,7 @@ mod tests {
     #[test]
     fn rejects_non_application_logs() {
         let cases = [
-            "2026.05.28_15-59-03_1.0.5.0.45272 backend_0.log",
+            // (backend logs ARE read now: the end of a raid is reliable only there)
             "2026.05.28_15-59-03_1.0.5.0.45272 output_000.log",
             "2026.05.28_15-59-03_1.0.5.0.45272 spatial-audio_0.log",
             "2026.05.28_15-59-03_1.0.5.0.45272 errors_000.log",
@@ -937,6 +957,21 @@ mod tests {
         assert_eq!(t, 10);
         assert_eq!(classify_template_type(t), Some("Started"));
         assert_eq!(id, "5967733e86f774602332fc84");
+    }
+
+    /// A raid's end from the backend log (where it is always written), and the
+    /// backend log is among the files read.
+    #[test]
+    fn a_raid_ends_by_the_backend_log() {
+        assert!(is_application_log(Path::new("2026.11.17_20-27-12_1.3.0.2.48779 backend_000.log")));
+        let mut out = SideScan::default();
+        scan_sides_in_text(
+            "2026-11-17 21:53:25.709|1.3.0.2.48779|Info|backend|WebSocketSharp - binary message received: type=Notification, trackingId=x, payloadType=userMatchOver, payloadLength=10\n",
+            &mut out,
+        );
+        assert_eq!(out.ends.len(), 1);
+        assert_eq!(out.ends[0].location, None);
+        assert_eq!(out.ends[0].log_time.as_deref(), Some("2026-11-17 21:53:25.709"));
     }
 
     #[test]

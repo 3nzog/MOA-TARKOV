@@ -94,7 +94,7 @@ export function useGameEvents({ setProgress, setSelectedMapId, setHistory, onLiv
           const target = mapIdFromLogLocation(ev.location);
           if (target) setSelectedMapId(target);
           const at = parseLogTime(ev.logTime) ?? Date.now();
-          setHistory?.((h) => recordRaidEnd(h, ev.location || null, at));
+          setHistory?.((h) => recordRaidEnd(h, ev.location || null, at, ev.soft === true));
         });
         const u3 = await subscribeRaidStarted((ev) => {
           const logAt = parseLogTime(ev.logTime);

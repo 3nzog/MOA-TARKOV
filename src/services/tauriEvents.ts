@@ -20,6 +20,8 @@ export interface RaidEndedPayload {
   location: string;
   shortId: string;
   logTime?: string | null;
+  /** Only a hint (back in the menus): closes a raid still open, nothing else. */
+  soft?: boolean;
 }
 export interface QuestEventPayload {
   status: 'Started' | 'Failed' | 'Finished';
