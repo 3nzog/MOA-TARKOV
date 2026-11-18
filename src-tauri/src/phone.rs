@@ -15,7 +15,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::watch;
 use tokio_tungstenite::tungstenite::handshake::server::{ErrorResponse, Request, Response};
@@ -30,6 +30,8 @@ const STATE_MAX: usize = 512 * 1024;
 const MAX_CLIENTS: usize = 8;
 const HEAD_MAX: usize = 8 * 1024;
 const HEAD_WAIT: Duration = Duration::from_secs(5);
+/// How long a finished reply waits for the browser to close its side.
+const CLOSE_WAIT: Duration = Duration::from_secs(3);
 
 /// An app file by path ("index.html", "assets/x.js") → (bytes, mime type).
 pub type AssetsFn = Arc<dyn Fn(&str) -> Option<(Vec<u8>, String)> + Send + Sync>;
@@ -98,8 +100,9 @@ pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, all
     Ok(Handle { stop, state, clients, port })
 }
 
-/// Reads the request head without consuming it (a WebSocket handshake reads it again).
-async fn peek_head(stream: &TcpStream) -> Option<String> {
+/// Reads the request head without consuming it (a WebSocket handshake reads it
+/// again). Gives the head and its length in bytes, blank line included.
+async fn peek_head(stream: &TcpStream) -> Option<(String, usize)> {
     let mut buf = vec![0u8; HEAD_MAX];
     let deadline = tokio::time::Instant::now() + HEAD_WAIT;
     loop {
@@ -108,7 +111,8 @@ async fn peek_head(stream: &TcpStream) -> Option<String> {
             return None;
         }
         if let Some(end) = buf[..n].windows(4).position(|w| w == b"\r\n\r\n") {
-            return String::from_utf8(buf[..end].to_vec()).ok();
+            let head = String::from_utf8(buf[..end].to_vec()).ok()?;
+            return Some((head, end + 4));
         }
         if n == HEAD_MAX {
             return None;
@@ -148,7 +152,7 @@ async fn serve(
     clients: Arc<AtomicUsize>,
 ) {
     let _ = stream.set_nodelay(true);
-    let Some(head) = peek_head(&stream).await else { return };
+    let Some((head, head_len)) = peek_head(&stream).await else { return };
     let mut lines = head.split("\r\n");
     let first = lines.next().unwrap_or("");
     let mut parts = first.split(' ');
@@ -160,11 +164,19 @@ async fn serve(
     if upgrade {
         serve_ws(stream, key, state_rx, stop_rx, clients).await;
     } else {
-        serve_http(stream, method, target, assets).await;
+        serve_http(stream, method, target, head_len, assets).await;
     }
 }
 
-async fn serve_http(mut stream: TcpStream, method: &str, target: &str, assets: AssetsFn) {
+async fn serve_http(mut stream: TcpStream, method: &str, target: &str, head_len: usize, assets: AssetsFn) {
+    // Take the request off the connection first. On Windows, closing a
+    // connection that still holds unread data resets it, and the browser then
+    // loses the end of the reply: a small file may get through, the app's
+    // script never arrives whole, and the phone page stays blank.
+    let mut head = vec![0u8; head_len];
+    if stream.read_exact(&mut head).await.is_err() {
+        return;
+    }
     let found = if method == "GET" { asset_path(target).and_then(|p| assets(&p).map(|a| (p, a))) } else { None };
     let reply = match found {
         Some((path, (bytes, mime))) => {
@@ -180,8 +192,18 @@ async fn serve_http(mut stream: TcpStream, method: &str, target: &str, assets: A
         }
         None => b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".to_vec(),
     };
-    let _ = stream.write_all(&reply).await;
+    if stream.write_all(&reply).await.is_err() {
+        return;
+    }
+    let _ = stream.flush().await;
+    // Close gently: say the reply is over, then let the browser close first,
+    // taking whatever else it sends so nothing is left unread.
     let _ = stream.shutdown().await;
+    let mut sink = [0u8; 4096];
+    let _ = tokio::time::timeout(CLOSE_WAIT, async {
+        while matches!(stream.read(&mut sink).await, Ok(n) if n > 0) {}
+    })
+    .await;
 }
 
 async fn serve_ws(
@@ -375,7 +397,6 @@ pub fn phone_publish(state: String) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::io::AsyncReadExt;
 
     fn assets() -> AssetsFn {
         Arc::new(|p: &str| match p {
@@ -396,6 +417,32 @@ mod tests {
         let mut out = String::new();
         let _ = s.read_to_string(&mut out).await;
         out
+    }
+
+    /// A big file asked for the way a browser does (many header lines), read to
+    /// the end: the whole file must arrive, not a connection reset half way.
+    #[test]
+    fn a_big_file_arrives_whole_to_a_browser() {
+        tauri::async_runtime::block_on(async {
+            const SIZE: usize = 2 * 1024 * 1024;
+            let big: AssetsFn = Arc::new(|p: &str| (p == "assets/big.js").then(|| (vec![b'x'; SIZE], "text/javascript".into())));
+            let h = start(Ipv4Addr::LOCALHOST, 0, "abcdef0123456789".into(), big, Arc::new(|_: &IpAddr| true)).await.unwrap();
+            for _ in 0..5 {
+                let mut s = TcpStream::connect(("127.0.0.1", h.port)).await.unwrap();
+                let mut req = String::from("GET /assets/big.js HTTP/1.1\r\nHost: 192.168.100.11:8791\r\nConnection: keep-alive\r\n");
+                for i in 0..20 {
+                    req.push_str(&format!("X-Browser-Header-{i}: {}\r\n", "v".repeat(60)));
+                }
+                req.push_str("\r\n");
+                s.write_all(req.as_bytes()).await.unwrap();
+                let mut out = Vec::new();
+                let read = s.read_to_end(&mut out).await;
+                assert!(read.is_ok(), "the connection was reset: {read:?}");
+                let body = out.windows(4).position(|w| w == b"\r\n\r\n").map(|i| out.len() - i - 4);
+                assert_eq!(body, Some(SIZE), "the whole file must arrive");
+            }
+            h.stop();
+        });
     }
 
     #[test]
