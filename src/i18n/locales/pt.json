@@ -1106,6 +1106,7 @@
     "rtt": "Wi-Fi {{ms}} ms",
     "fullscreen": "Tela cheia",
     "exitFullscreen": "Sair da tela cheia",
+    "iosHomeScreen": "No iPhone: toque em Compartilhar → Adicionar à Tela de Início e abra o mapa por lá: ele abre em tela cheia, como um app.",
     "follow": "Seguir",
     "err": {
       "port_busy": "Outro programa está usando a porta 8791.",

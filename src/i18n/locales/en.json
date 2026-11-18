@@ -1106,6 +1106,7 @@
     "rtt": "Wi-Fi {{ms}} ms",
     "fullscreen": "Full screen",
     "exitFullscreen": "Leave full screen",
+    "iosHomeScreen": "On iPhone: tap Share → Add to Home Screen, then open the map from there: it opens full screen, like an app.",
     "follow": "Follow",
     "err": {
       "port_busy": "Another program is using port 8791.",

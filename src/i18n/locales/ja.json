@@ -1106,6 +1106,7 @@
     "rtt": "Wi-Fi {{ms}} ms",
     "fullscreen": "全画面",
     "exitFullscreen": "全画面を終了",
+    "iosHomeScreen": "iPhone では「共有」→「ホーム画面に追加」を選び、そこからマップを開くと全画面（アプリのよう）で開きます。",
     "follow": "追従",
     "err": {
       "port_busy": "ポート8791は他のプログラムが使用中です。",

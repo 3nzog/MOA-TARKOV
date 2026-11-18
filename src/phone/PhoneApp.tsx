@@ -3,12 +3,13 @@
 // phone changes anything on the PC.
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CircleMarker, ImageOverlay, MapContainer, Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
+import { CircleMarker, ImageOverlay, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { CornersIn, CornersOut, Crosshair, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import { MAPS, SUPPORTED_MAP_NAMES, getGameToLatLng, getMapDef, leafletBounds, makeCRS } from '../map/mapDefs';
 import { canonicalMapId } from '../map/canonicalMap';
+import { RELIEF_DEFAULT_LAYERS, TILE_STYLES } from '../map/mapStyles';
 import FloorVisualOverlay from '../map/FloorVisualOverlay';
 import { ALL_FLOORS } from '../map/FloorSwitcher';
 import PlayerMarker from '../map/PlayerMarker';
@@ -20,6 +21,7 @@ import { headingAngle, ROUTE_COLOR, type MinimapPoint } from '../minimap/protoco
 import type { PhoneState } from './phoneApi';
 import { usePhoneFeed, type LinkStats } from './usePhoneFeed';
 import PhoneMapLayers from './PhoneMapLayers';
+import { useKeepAwake } from './useKeepAwake';
 import '../App.css';
 import './phone.css';
 
@@ -106,6 +108,28 @@ function LinkSpeed({ link }: { link: RefObject<LinkStats> }) {
   return <span className={`phone-bar__speed mono${text.ms > 300 ? ' is-slow' : ''}`}>{t(text.key, { ms: text.ms })}</span>;
 }
 
+/**
+ * "Add to home screen" opens the map like an app, full screen: the manifest
+ * (no start address: it opens this very address, key included) and the
+ * iPhone's own tags.
+ */
+function addHomeScreenTags(): void {
+  const head = document.head;
+  if (head.querySelector('link[rel="manifest"]')) return;
+  const add = (tag: 'link' | 'meta', attrs: Record<string, string>) => {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    head.appendChild(el);
+  };
+  add('link', { rel: 'manifest', href: '/phone.webmanifest' });
+  add('link', { rel: 'apple-touch-icon', href: '/phone-icon-180.png' });
+  add('meta', { name: 'apple-mobile-web-app-capable', content: 'yes' });
+  add('meta', { name: 'mobile-web-app-capable', content: 'yes' });
+  add('meta', { name: 'apple-mobile-web-app-title', content: 'MoA mapa' });
+  add('meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' });
+  add('meta', { name: 'theme-color', content: '#0b0a14' });
+}
+
 /** Full screen: hides the browser's address bar (and the phone's bars, on Android). */
 function FullscreenButton() {
   const { t } = useTranslation();
@@ -115,8 +139,25 @@ function FullscreenButton() {
     document.addEventListener('fullscreenchange', h);
     return () => document.removeEventListener('fullscreenchange', h);
   }, []);
-  // iPhone Safari has no full screen for a page: no button there.
-  if (!document.fullscreenEnabled) return null;
+  const [tip, setTip] = useState(false);
+  // iPhone Safari has no full screen for a page: there, the map added to the
+  // home screen opens full screen (and already did when it runs that way).
+  if (!document.fullscreenEnabled) {
+    const standalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
+    if (standalone || !/iPhone|iPad|iPod/.test(navigator.userAgent)) return null;
+    return (
+      <>
+        <button type="button" className="phone-bar__btn" onClick={() => setTip((v) => !v)} aria-label={t('phone.fullscreen')} title={t('phone.fullscreen')}>
+          <CornersOut weight="bold" />
+        </button>
+        {tip && (
+          <div className="phone-tip" role="note" onClick={() => setTip(false)}>
+            {t('phone.iosHomeScreen')}
+          </div>
+        )}
+      </>
+    );
+  }
   const toggle = () => {
     const p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen({ navigationUI: 'hide' });
     void p.catch(() => undefined);
@@ -142,10 +183,13 @@ function RaidClock({ c }: { c: NonNullable<PhoneState['raidClock']> }) {
 export default function PhoneApp() {
   const { t } = useTranslation();
   const { state, layers: allLayers, conn, link } = usePhoneFeed();
+  // The screen stays on while the map is open (a dark phone stops getting positions).
+  useKeepAwake(conn !== 'nokey');
   const [follow, setFollow] = useState(true);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     document.documentElement.classList.add('phone-root');
+    addHomeScreenTags();
     const id = window.setInterval(() => setNow(Date.now()), 10_000);
     return () => window.clearInterval(id);
   }, []);
@@ -162,6 +206,9 @@ export default function PhoneApp() {
   // then the few dots of the state stand in).
   const layers = allLayers && mapId && canonicalMapId(allLayers.mapId) === mapId ? allLayers : null;
   const floor = state?.activeFloorId ?? ALL_FLOORS;
+  const tiles = mapId && layers?.mapStyle === 'relief' ? TILE_STYLES[mapId] : undefined;
+  const floorLayer = def?.floors?.find((f) => f.id === floor)?.svgLayerId;
+  const reliefGroups = tiles && mapId ? (floorLayer ? [floorLayer] : (RELIEF_DEFAULT_LAYERS[mapId] ?? [])) : [];
 
   return (
     <div className="phone">
@@ -182,7 +229,7 @@ export default function PhoneApp() {
         <div className="phone-msg">{state ? t('phone.waitingMap') : t('phone.waitingPc')}</div>
       ) : (
         <MapContainer
-          key={mapId}
+          key={`${mapId}:${tiles ? 'relief' : 'vector'}`}
           crs={crs}
           bounds={leafletBounds(def)}
           className="phone-map"
@@ -192,7 +239,30 @@ export default function PhoneApp() {
           minZoom={-3}
           maxZoom={7}
         >
-          {def.svgUrl.endsWith('.svg') ? (
+          {tiles ? (
+            // The PC shows the relief map: the same picture (tarkov.dev's tiles,
+            // over the phone's own internet), with the floor plans over it.
+            <>
+              <TileLayer
+                key={tiles.url}
+                url={tiles.url}
+                tileSize={tiles.tileSize}
+                minNativeZoom={tiles.minZoom}
+                maxNativeZoom={tiles.maxZoom}
+                bounds={leafletBounds(def)}
+                noWrap
+              />
+              {reliefGroups.length > 0 && def.svgUrl.endsWith('.svg') && (
+                <FloorVisualOverlay
+                  key={reliefGroups.join(',')}
+                  svgUrl={def.svgUrl}
+                  onlyGroups={reliefGroups}
+                  bounds={leafletBounds(def)}
+                  activeFloorId={floor}
+                />
+              )}
+            </>
+          ) : def.svgUrl.endsWith('.svg') ? (
             <FloorVisualOverlay
               svgUrl={def.svgUrl}
               bounds={leafletBounds(def)}

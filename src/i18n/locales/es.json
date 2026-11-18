@@ -1106,6 +1106,7 @@
     "rtt": "Wi-Fi {{ms}} ms",
     "fullscreen": "Pantalla completa",
     "exitFullscreen": "Salir de pantalla completa",
+    "iosHomeScreen": "En iPhone: toca Compartir → Añadir a pantalla de inicio y abre el mapa desde ahí: se abre a pantalla completa, como una app.",
     "follow": "Seguir",
     "err": {
       "port_busy": "Otro programa está usando el puerto 8791.",

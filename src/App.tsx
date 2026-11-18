@@ -659,6 +659,7 @@ function App() {
     }
     return {
       mapId: selectedMapId,
+      mapStyle: appearance.mapStyle === 'relief' ? 'relief' : 'vector',
       pois: pois.currentPois.filter(isPoiVisible),
       dimmed: pois.currentPois.filter((p) => isPoiVisible(p) && isPoiDimmed(p)).map((p) => p.id),
       selected: [...pois.selectedPoiIds],
@@ -696,6 +697,7 @@ function App() {
     appearance.upcomingQuests,
     appearance.questNames,
     appearance.placeLabels,
+    appearance.mapStyle,
     questState,
     upcomingObjectives,
     drawing.ownDraws,

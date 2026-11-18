@@ -31,6 +31,8 @@ export interface PhoneSquad {
 
 export interface PhoneLayers {
   mapId: string;
+  /** The PC's map picture: plain, or the relief (tarkov.dev's tiles). */
+  mapStyle: 'vector' | 'relief';
   /** Map intel the player has switched on (already filtered). */
   pois: Poi[];
   /** Ids drawn faded (exits that are not yours this raid). */
@@ -91,6 +93,7 @@ export function parsePhoneLayers(raw: string): PhoneLayers | null {
     const sq = v.squad;
     return {
       mapId: v.mapId,
+      mapStyle: v.mapStyle === 'relief' ? 'relief' : 'vector',
       pois: list<unknown>(v.pois).filter(okPoi),
       dimmed: strings(v.dimmed),
       selected: strings(v.selected),
