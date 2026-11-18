@@ -9,13 +9,27 @@ import { canonicalMapId } from './canonicalMap';
 
 const API = 'https://escapefromtarkov.fandom.com/api.php';
 const WIKI = 'https://escapefromtarkov.fandom.com/wiki/';
-const CACHE_KEY = 'tc_wiki_extracts_v2';
+const CACHE_KEY = 'tc_wiki_extracts_v3';
 const CACHE_MS = 3 * 24 * 60 * 60 * 1000;
 
 export interface WikiExtract {
   name: string;
   images: GuideImage[];
+  /** The "Requirements" column ("-" or empty: none). */
+  requirements?: string;
+  /** "Always available": false when it opens only some raids. */
+  always?: boolean;
+  /** "Single-Use". */
+  singleUse?: boolean;
 }
+
+/** A cell's text with its line breaks and list items kept apart. */
+function cellText(el: Element): string {
+  const c = el.cloneNode(true) as Element;
+  for (const br of Array.from(c.querySelectorAll('br, li'))) br.before('\n');
+  return (c.textContent ?? '').replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim();
+}
+const yesNo = (s: string): boolean | undefined => (/✔|^yes$/i.test(s) ? true : /✘|^no$/i.test(s) ? false : undefined);
 
 /** The map's wiki page ("Streets_of_Tarkov"), or null for a map without one. */
 export function wikiMapPage(mapId: string): string | null {
@@ -49,6 +63,13 @@ export function extractsFromHtml(html: string): WikiExtract[] {
   }
   if (!table) return [];
   const out: WikiExtract[] = [];
+  // Which column is which, from the header row (the wiki may reorder them).
+  const head = Array.from(table.querySelectorAll('tr')).find((tr) => tr.querySelector('th'));
+  const cols = head ? Array.from(head.children).map((c) => (c.textContent ?? '').trim().toLowerCase()) : [];
+  const col = (re: RegExp) => cols.findIndex((c) => re.test(c));
+  const reqCol = col(/^requirement/);
+  const alwaysCol = col(/^always/);
+  const singleCol = col(/^single/);
   for (const tr of Array.from(table.querySelectorAll('tr'))) {
     const cells = Array.from(tr.children);
     if (cells.length < 2) continue;
@@ -65,7 +86,14 @@ export function extractsFromHtml(html: string): WikiExtract[] {
       if (images.some((i) => i.full === full)) continue;
       images.push({ full, thumb: resizeWikiImage(src, 480), caption: name });
     }
-    out.push({ name, images });
+    const at = (i: number) => (i >= 0 && cells[i] ? cellText(cells[i]) : '');
+    out.push({
+      name,
+      images,
+      ...(reqCol >= 0 ? { requirements: at(reqCol) } : {}),
+      ...(alwaysCol >= 0 && yesNo(at(alwaysCol)) !== undefined ? { always: yesNo(at(alwaysCol)) } : {}),
+      ...(singleCol >= 0 && yesNo(at(singleCol)) !== undefined ? { singleUse: yesNo(at(singleCol)) } : {}),
+    });
   }
   return out;
 }

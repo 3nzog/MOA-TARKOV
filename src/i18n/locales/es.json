@@ -1297,5 +1297,25 @@
     "crafts": "Fabricaciones (▶ al empezar una)",
     "startCraft": "Empecé esta fabricación",
     "done": "Refugio: {{label}} terminó."
+  },
+  "exitReq": {
+    "title": "Para usar esta salida",
+    "paracord": "Paracord",
+    "redRebel": "Piolet Red Rebel",
+    "noArmor": "Sin chaleco blindado",
+    "noBackpack": "Sin mochila",
+    "flareZone": "Bengala verde en la zona marcada",
+    "greenFlare": "La bengala verde la abre",
+    "redFlare": "Bengala roja",
+    "codeNote": "Nota con la palabra clave {{arg}}",
+    "minefieldMap": "Mapa del campo minado",
+    "coop": "Co-op: Scav + PMC",
+    "pay": "De pago (por jugador)",
+    "power": "Encender la energía",
+    "lever": "Palanca / botón",
+    "keyItem": "Llave o tarjeta",
+    "notAlways": "No siempre abierta",
+    "singleUse": "Un solo uso",
+    "other": "Ver detalles"
   }
 }

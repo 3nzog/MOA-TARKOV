@@ -56,6 +56,7 @@ import { useAppUpdate } from './app/useAppUpdate';
 import { useShowOnGameLaunch } from './app/startup';
 import { useScavTimer } from './scav/scavTimer';
 import ScavChip from './scav/ScavChip';
+import { reqLabels, useExitReqs } from './map/extractReqs';
 import { useHideoutAlarms, type HideoutTimer } from './hideout/timers';
 import { usePlanner, useRaidHistory } from './app/usePlanner';
 import { useTracker } from './app/useTracker';
@@ -701,6 +702,22 @@ function App() {
   // Everything else the map draws goes to the phone too, as a map only: no
   // location pictures, no wiki links. Sent apart from the state above, and only
   // when it changes (the party's positions already go in the state, as mates).
+  // What each exit asks for (paracord, flare, a code note…), from the wiki's table.
+  const exitReqsOf = useExitReqs(selectedMapId);
+  const describePoi = useMemo(
+    () =>
+      exitReqsOf
+        ? (p: Poi) => {
+            if (p.category !== 'extract') return null;
+            const faction = typeof p.meta?.faction === 'string' ? t(`mapCard.faction.${p.meta.faction}`, { defaultValue: '' }) : '';
+            const reqs = exitReqsOf([...(exitAliases[p.id] ?? []), p.label]);
+            // No wiki row for it: the data's own note stays.
+            if (!reqs) return null;
+            return [faction, ...reqLabels(reqs, t)].filter(Boolean).join(' · ');
+          }
+        : undefined,
+    [exitReqsOf, exitAliases, t],
+  );
   const heatOn = route.on && route.heat.on;
   const { sources: heatSources, phase: heatPhase } = route.heat;
   const raidLength = route.raidSeconds;
@@ -735,6 +752,12 @@ function App() {
         : null,
       squadQuests,
       heat: heatOn ? { sources: heatSources, phase: heatPhase, raid: raidLength } : null,
+      exitReqs: Object.fromEntries(
+        pois.currentPois
+          .filter(isPoiVisible)
+          .map((p) => [p.id, describePoi?.(p) ?? null] as const)
+          .filter((e): e is readonly [string, string] => !!e[1]),
+      ),
     };
   }, [
     selectedMapId,
@@ -768,6 +791,7 @@ function App() {
     heatSources,
     heatPhase,
     raidLength,
+    describePoi,
   ]);
   const phone = usePhoneShare(phoneState, phoneLayers);
   const relativeSynced = useRelativeTime(quests.lastSynced);
@@ -1150,6 +1174,7 @@ function App() {
                       selectedPoiIds={pois.selectedPoiIds}
                       floors={selectedMapDef?.floors}
                       activeFloorId={floors.activeFloorId}
+                      describe={describePoi}
                       onSelect={(poi) => {
                         pois.togglePoi(poi);
                         if (poi.category === 'extract') {

@@ -59,6 +59,8 @@ export interface PhoneLayers {
   squadQuests: Record<string, PhoneObjective[]>;
   /** Hot zones, when the route and its hot zones are on. */
   heat: { sources: HeatSource[]; phase: RaidPhase; raid: number } | null;
+  /** What each exit asks for, already in the PC's language, by POI id. */
+  exitReqs: Record<string, string>;
 }
 
 /** The objective's places on this map only (the rest of the quest stays on the PC). */
@@ -121,6 +123,10 @@ export function parsePhoneLayers(raw: string): PhoneLayers | null {
           : null,
       squadQuests: v.squadQuests && typeof v.squadQuests === 'object' ? v.squadQuests : {},
       heat: v.heat && Array.isArray(v.heat.sources) ? v.heat : null,
+      exitReqs:
+        v.exitReqs && typeof v.exitReqs === 'object'
+          ? Object.fromEntries(Object.entries(v.exitReqs).filter((e): e is [string, string] => typeof e[1] === 'string'))
+          : {},
     };
   } catch {
     return null;

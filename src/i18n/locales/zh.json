@@ -1297,5 +1297,25 @@
     "crafts": "制作（开始时点 ▶）",
     "startCraft": "已开始此制作",
     "done": "藏身处：{{label}} 已完成。"
+  },
+  "exitReq": {
+    "title": "使用此撤离点需要",
+    "paracord": "伞绳",
+    "redRebel": "Red Rebel 冰镐",
+    "noArmor": "不穿防弹衣",
+    "noBackpack": "不带背包",
+    "flareZone": "在标记区域打绿色信号弹",
+    "greenFlare": "绿色信号弹开启",
+    "redFlare": "红色信号弹",
+    "codeNote": "写有暗号 {{arg}} 的纸条",
+    "minefieldMap": "雷区地图",
+    "coop": "合作：Scav + PMC",
+    "pay": "付费（每人）",
+    "power": "打开电源",
+    "lever": "拉杆 / 按钮",
+    "keyItem": "钥匙或门卡",
+    "notAlways": "不一定开放",
+    "singleUse": "一次性",
+    "other": "查看详情"
   }
 }

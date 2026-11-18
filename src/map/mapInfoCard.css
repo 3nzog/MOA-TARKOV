@@ -87,3 +87,8 @@
 .map-card__chip--pmc { background: rgba(94, 224, 127, 0.14); color: #5ee07f; }
 .map-card__chip--scav { background: rgba(255, 170, 60, 0.14); color: #ffb347; }
 .map-card__chip--shared { background: rgba(120, 180, 255, 0.14); color: #8cc0ff; }
+
+.map-card__reqs { display: grid; gap: 6px; margin: 8px 0; }
+.map-card__reqchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.map-card__chip--req { background: var(--accent-soft); color: var(--text); }
+.map-card__reqs .map-card__muted { white-space: pre-line; font-size: 12px; }

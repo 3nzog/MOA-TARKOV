@@ -1297,5 +1297,25 @@
     "crafts": "製作（始めたら ▶）",
     "startCraft": "この製作を開始",
     "done": "隠れ家：{{label}} が完了しました。"
+  },
+  "exitReq": {
+    "title": "この脱出地点の条件",
+    "paracord": "パラコード",
+    "redRebel": "Red Rebel アイスピック",
+    "noArmor": "ボディアーマーなし",
+    "noBackpack": "バックパックなし",
+    "flareZone": "指定エリアで緑の信号弾",
+    "greenFlare": "緑の信号弾で開く",
+    "redFlare": "赤の信号弾",
+    "codeNote": "合言葉 {{arg}} のメモ",
+    "minefieldMap": "地雷原の地図",
+    "coop": "協力: Scav + PMC",
+    "pay": "有料（1人ごと）",
+    "power": "電源を入れる",
+    "lever": "レバー / ボタン",
+    "keyItem": "鍵またはカード",
+    "notAlways": "常に開いているとは限らない",
+    "singleUse": "1回のみ",
+    "other": "詳細を見る"
   }
 }

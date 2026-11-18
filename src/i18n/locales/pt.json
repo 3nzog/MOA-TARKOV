@@ -1297,5 +1297,25 @@
     "crafts": "Fabricações (▶ quando começar uma)",
     "startCraft": "Comecei esta fabricação",
     "done": "Esconderijo: {{label}} terminou."
+  },
+  "exitReq": {
+    "title": "Para usar esta saída",
+    "paracord": "Paracord",
+    "redRebel": "Picareta Red Rebel",
+    "noArmor": "Sem colete balístico",
+    "noBackpack": "Sem mochila",
+    "flareZone": "Sinalizador verde na área marcada",
+    "greenFlare": "Sinalizador verde abre",
+    "redFlare": "Sinalizador vermelho",
+    "codeNote": "Bilhete com a palavra-código {{arg}}",
+    "minefieldMap": "Mapa do campo minado",
+    "coop": "Co-op: Scav + PMC",
+    "pay": "Paga (por jogador)",
+    "power": "Ligar a energia",
+    "lever": "Alavanca / botão",
+    "keyItem": "Chave ou cartão",
+    "notAlways": "Nem sempre aberta",
+    "singleUse": "Uso único",
+    "other": "Veja os detalhes"
   }
 }

@@ -12,6 +12,7 @@ import QuestGuide from '../quests/QuestGuide';
 import { useWikiLinks } from '../quests/wikiLinks';
 import type { GuideImage } from '../quests/wikiGuide';
 import { fetchWikiExtracts, findWikiExtract, wikiMapPage, wikiMapUrl } from './wikiExtracts';
+import { exitReqs, reqLabels, type ExitReqs } from './extractReqs';
 import './mapInfoCard.css';
 
 export type MapCard =
@@ -62,7 +63,7 @@ function QuestBody({ task, objective }: { task: TarkovTask; objective: TaskObjec
   );
 }
 
-type Load = { state: 'loading' } | { state: 'ok'; images: GuideImage[] } | { state: 'error' };
+type Load = { state: 'loading' } | { state: 'ok'; images: GuideImage[]; reqs: ExitReqs | null } | { state: 'error' };
 
 function ExtractBody({ poi, names }: { poi: Poi; names: string[] }) {
   const { t } = useTranslation();
@@ -74,7 +75,10 @@ function ExtractBody({ poi, names }: { poi: Poi; names: string[] }) {
   useEffect(() => {
     let alive = true;
     fetchWikiExtracts(poi.mapId)
-      .then((rows) => alive && setLoad({ state: 'ok', images: findWikiExtract(rows, key.split('|'))?.images ?? [] }))
+      .then((rows) => {
+        const row = findWikiExtract(rows, key.split('|'));
+        if (alive) setLoad({ state: 'ok', images: row?.images ?? [], reqs: exitReqs(row) });
+      })
       .catch(() => alive && setLoad({ state: 'error' }));
     return () => {
       alive = false;
@@ -86,6 +90,19 @@ function ExtractBody({ poi, names }: { poi: Poi; names: string[] }) {
   return (
     <div className="map-card__body">
       {faction && <span className={`map-card__chip map-card__chip--${faction}`}>{t(`mapCard.faction.${faction}`, { defaultValue: faction })}</span>}
+      {load.state === 'ok' && load.reqs && (
+        <div className="map-card__reqs">
+          <strong>{t('exitReq.title')}</strong>
+          <div className="map-card__reqchips">
+            {reqLabels(load.reqs, t).map((l) => (
+              <span key={l} className="map-card__chip map-card__chip--req">
+                {l}
+              </span>
+            ))}
+          </div>
+          {load.reqs.text && <p className="map-card__muted">{load.reqs.text}</p>}
+        </div>
+      )}
       {load.state === 'loading' ? (
         <p className="map-card__muted">
           <Spinner size="sm" /> {t('quests.guide.loading')}

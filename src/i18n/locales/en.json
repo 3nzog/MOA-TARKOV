@@ -1297,5 +1297,25 @@
     "crafts": "Crafts (▶ when you start one)",
     "startCraft": "Started this craft",
     "done": "Hideout: {{label}} is done."
+  },
+  "exitReq": {
+    "title": "To use this exit",
+    "paracord": "Paracord",
+    "redRebel": "Red Rebel ice pick",
+    "noArmor": "No armour vest",
+    "noBackpack": "No backpack",
+    "flareZone": "Green flare in the marked area",
+    "greenFlare": "Green flare opens it",
+    "redFlare": "Red flare",
+    "codeNote": "Note with code word {{arg}}",
+    "minefieldMap": "Minefield map",
+    "coop": "Co-op: Scav + PMC",
+    "pay": "Paid (per player)",
+    "power": "Power on",
+    "lever": "Lever / button",
+    "keyItem": "Key or keycard",
+    "notAlways": "Not always open",
+    "singleUse": "Single use",
+    "other": "See the details"
   }
 }

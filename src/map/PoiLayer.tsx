@@ -47,6 +47,11 @@ export interface PoiLayerProps {
   // quest-marker behavior — so only POIs on the visible floor read as present.
   floors?: MapFloor[];
   activeFloorId?: string;
+  /**
+   * The hover text's second line, in place of the data's own note (an exit's
+   * side and requirements, from the wiki). null keeps the note.
+   */
+  describe?: (poi: Poi) => string | null;
 }
 
 // One stable icon per color+glyph combo. Highlight is applied via a ".tc-hl"
@@ -93,6 +98,7 @@ interface PoiMarkerProps {
   latLng: [number, number];
   onHover?: (poiId: string | null) => void;
   onSelect?: (poi: Poi) => void;
+  extra?: string | null;
 }
 
 function PoiMarker({
@@ -103,6 +109,7 @@ function PoiMarker({
   latLng,
   onHover,
   onSelect,
+  extra,
 }: PoiMarkerProps): React.JSX.Element {
   const markerRef = useRef<L.Marker | null>(null);
 
@@ -129,11 +136,18 @@ function PoiMarker({
     >
       <Tooltip direction="top" className="tc-poi-tip" opacity={1}>
         <span>{poiLabel(poi)}</span>
-        {poi.note && (
+        {extra != null ? (
           <>
             <br />
-            <small>{poi.note}</small>
+            <small>{extra}</small>
           </>
+        ) : (
+          poi.note && (
+            <>
+              <br />
+              <small>{poi.note}</small>
+            </>
+          )
         )}
       </Tooltip>
     </Marker>
@@ -150,6 +164,7 @@ export default function PoiLayer({
   onHover,
   floors,
   activeFloorId = ALL_FLOORS,
+  describe,
 }: PoiLayerProps): React.JSX.Element {
   const toLatLng = getGameToLatLng(mapId);
   if (!toLatLng) return <></>;
@@ -174,6 +189,7 @@ export default function PoiLayer({
             latLng={toLatLng(poi.position.x, poi.position.z)}
             onHover={onHover}
             onSelect={onSelect}
+            extra={describe?.(poi) ?? null}
           />
         );
       })}

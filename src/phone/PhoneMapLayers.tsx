@@ -31,6 +31,7 @@ function PhoneMapLayers({ layers, floors, activeFloorId }: { layers: PhoneLayers
   const selected = useMemo(() => new Set(layers.selected), [layers.selected]);
   const dimmed = useMemo(() => new Set(layers.dimmed), [layers.dimmed]);
   const isDimmed = useMemo(() => (p: Poi) => dimmed.has(p.id), [dimmed]);
+  const describe = useMemo(() => (p: Poi) => layers.exitReqs[p.id] ?? null, [layers.exitReqs]);
   // The party as the layers read it; the phone never acts on it.
   const squad = useMemo(
     () =>
@@ -76,6 +77,7 @@ function PhoneMapLayers({ layers, floors, activeFloorId }: { layers: PhoneLayers
         selectedPoiIds={selected}
         floors={floors}
         activeFloorId={activeFloorId}
+        describe={describe}
       />
       <GridOverlay mapId={mapId} visible={layers.grid} />
       {layers.heat && <HeatLayer mapId={mapId} sources={layers.heat.sources} phase={layers.heat.phase} raid={layers.heat.raid} />}
