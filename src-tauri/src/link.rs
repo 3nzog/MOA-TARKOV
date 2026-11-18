@@ -72,13 +72,9 @@ pub struct Device {
     pub name: String,
 }
 
-/// A PC on this PC's own home network (same router) links without a question:
-/// it is the player's other PC. Radmin (other people's PCs too) still asks.
-pub fn auto_accepts(peer: &std::net::IpAddr, nets: &[LocalNet], enabled: bool) -> bool {
-    enabled && on_home_network(peer, nets)
-}
-
-/// A PC on this PC's own home network (same router), whatever the settings say.
+/// A PC on this PC's own home network (same router): the player's other PC,
+/// which links without a question while "accept my PCs" is on (first_contact).
+/// Radmin is not home: other people's PCs are there too.
 fn on_home_network(peer: &std::net::IpAddr, nets: &[LocalNet]) -> bool {
     let std::net::IpAddr::V4(v4) = peer else { return false };
     nets.iter().any(|n| n.kind == net::NetKind::Lan && n.contains(*v4))
@@ -1367,12 +1363,14 @@ mod tests {
     #[test]
     fn home_network_pcs_link_on_their_own_radmin_ones_ask() {
         let nets = net::parse_nets("192.168.1.5/24/Public\n26.1.1.1/8/Public\n");
-        let ip = |s: &str| s.parse::<std::net::IpAddr>().unwrap();
-        assert!(auto_accepts(&ip("192.168.1.20"), &nets, true), "same router");
-        assert!(!auto_accepts(&ip("26.5.5.5"), &nets, true), "Radmin asks");
-        assert!(!auto_accepts(&ip("192.168.7.20"), &nets, true), "another network");
-        assert!(!auto_accepts(&ip("127.0.0.1"), &nets, true));
-        assert!(!auto_accepts(&ip("192.168.1.20"), &nets, false), "turned off");
+        let home = |s: &str| on_home_network(&s.parse::<std::net::IpAddr>().unwrap(), &nets);
+        assert!(home("192.168.1.20"), "same router");
+        assert!(!home("26.5.5.5"), "Radmin is not home");
+        assert!(!home("192.168.7.20"), "another network");
+        assert!(!home("127.0.0.1"));
+        assert_eq!(first_contact(home("192.168.1.20"), true, false, false), FirstContact::Accept, "same router: on its own");
+        assert_eq!(first_contact(home("26.5.5.5"), true, true, false), FirstContact::Ask, "Radmin, clicked: asks");
+        assert_eq!(first_contact(home("192.168.1.20"), false, false, false), FirstContact::Ask, "turned off: asks");
     }
 
     #[test]
