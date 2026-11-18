@@ -1,16 +1,33 @@
-import i18n from 'i18next';
+import i18n, { type Resource } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 
+// English is built in (it is the fallback for any missing text); every other
+// language is loaded on its own, only when chosen, so the app (and the phone
+// page over Wi-Fi) does not carry all six on every start.
 import en from './locales/en.json';
-import pt from './locales/pt.json';
-import ru from './locales/ru.json';
-import ja from './locales/ja.json';
-import zh from './locales/zh.json';
-import es from './locales/es.json';
 
 export const SUPPORTED_LANGS = ['en', 'pt', 'ru', 'ja', 'zh', 'es'] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
+
+type Texts = Record<string, unknown>;
+const LOADERS: Record<Exclude<Lang, 'en'>, () => Promise<{ default: Texts }>> = {
+  pt: () => import('./locales/pt.json'),
+  ru: () => import('./locales/ru.json'),
+  ja: () => import('./locales/ja.json'),
+  zh: () => import('./locales/zh.json'),
+  es: () => import('./locales/es.json'),
+};
+
+/** A language's texts (null when they could not load: English stands in). */
+export async function loadTexts(lang: Lang): Promise<Texts | null> {
+  if (lang === 'en') return en;
+  try {
+    return (await LOADERS[lang]()).default;
+  } catch {
+    return null;
+  }
+}
 
 // Endonyms — each language named in itself, which is the expected convention
 // for a language picker.
@@ -87,15 +104,13 @@ export async function resolveInitialLang(): Promise<Lang> {
 
 export async function setupI18n(): Promise<void> {
   const lng = await resolveInitialLang();
+  // The chosen language's texts are in before the first render (no flash of English).
+  const resources: Resource = { en: { translation: en } };
+  const texts = lng === 'en' ? null : await loadTexts(lng);
+  if (texts) resources[lng] = { translation: texts };
   await i18n.use(initReactI18next).init({
-    resources: {
-      en: { translation: en },
-      pt: { translation: pt },
-      ru: { translation: ru },
-      ja: { translation: ja },
-      zh: { translation: zh },
-      es: { translation: es },
-    },
+    resources,
+    partialBundledLanguages: true,
     lng,
     fallbackLng: 'en',
     interpolation: { escapeValue: false }, // React already escapes
@@ -103,9 +118,13 @@ export async function setupI18n(): Promise<void> {
   });
 }
 
-/** Persist + apply a user-chosen language. */
+/** Persist + apply a user-chosen language (its texts loaded first, once). */
 export async function changeLang(lang: Lang): Promise<void> {
   localStorage.setItem(LANG_STORAGE_KEY, lang);
+  if (!i18n.hasResourceBundle(lang, 'translation')) {
+    const texts = await loadTexts(lang);
+    if (texts) i18n.addResourceBundle(lang, 'translation', texts, true, true);
+  }
   await i18n.changeLanguage(lang);
 }
 
