@@ -17,6 +17,7 @@ import AppearanceSettings from './AppearanceSettings';
 import LinkSettings from '../link/LinkSettings';
 import ConnectionTest from '../net/ConnectionTest';
 import SoundSettings from '../sound/SoundSettings';
+import { setRoutePrefs, useRoutePrefs } from '../route/routePrefs';
 import {
   Desktop,
   Info,
@@ -72,6 +73,7 @@ export default function SettingsModal({
 }: SettingsModalProps): React.JSX.Element {
   const { t, i18n } = useTranslation();
   const [tab, setTab] = useState<SettingsTab>(initialTab);
+  const routeOn = useRoutePrefs().on;
   const [installRoot, setInstallRoot] = useState<string | null>(null);
   const [resolvedLogsDir, setResolvedLogsDir] = useState<string | null>(null);
   const [resolveError, setResolveError] = useState<string | null>(null);
@@ -281,6 +283,15 @@ export default function SettingsModal({
             <HelpTip>{t('settings.automaticFloorsOnlyHint')}</HelpTip>
           </div>
           <Toggle checked={floorLock} onChange={onFloorLockChange} label={t('settings.automaticFloorsOnlyLabel')} />
+        </div>
+
+        <SectionLabel>{t('route.title')}</SectionLabel>
+        <div className="settings-row">
+          <div className="settings-row__text">
+            <span>{t('route.settingsOn')}</span>
+            <HelpTip>{t('route.settingsHint')}</HelpTip>
+          </div>
+          <Toggle checked={routeOn} onChange={(on) => setRoutePrefs({ on })} label={t('route.settingsOn')} />
         </div>
 
         <SectionLabel help={t('sounds.help')}>{t('sounds.title')}</SectionLabel>

@@ -1116,8 +1116,8 @@
   },
   "route": {
     "title": "Ruta de la incursión",
-    "show": "Mostrar la ruta de la incursión",
-    "hide": "Ocultar la ruta de la incursión",
+    "show": "Activar la ruta de la incursión",
+    "hide": "Desactivar la ruta de la incursión",
     "you": "Tú",
     "help": "Arma la incursión según el objetivo que elijas: Misiones (el orden que completa más objetivos), Botín (las zonas que más rinden en dinero, los objetos que le faltan a tu refugio, o armas, munición y accesorios) o Scavs (dónde aparecen). Siempre sale de donde estás ahora (tu última captura) y termina en una extracción de tu bando. Los 4 estilos aparecen lado a lado: Directo va recto; Equilibrado y Discreto rodean las zonas calientes (donde suele haber jugadores en ese momento: spawns al principio, botín a mitad, extracciones al final) y Discreto deja fuera lo que esté muy concurrido; Agresivo pasa por donde hay PMC, pero evita minas y francotiradores. Las zonas calientes y los desvíos son estimaciones: MoA no sabe dónde hay paredes ni dónde están de verdad los jugadores.",
     "summary_one": "{{count}} objetivo · ~{{min}} min",
@@ -1225,7 +1225,10 @@
       "mine": "Campo de minas",
       "gun": "Ametralladora fija",
       "btr": "BTR"
-    }
+    },
+    "off": "Desactivar la ruta",
+    "settingsOn": "Usar la ruta de la incursión",
+    "settingsHint": "Desactivada, no aparece nada de la ruta: ni en el mapa, ni en el minimapa, ni en el móvil, y sus sonidos (parada de la ruta hecha, zona caliente) no suenan. El botón de ruta en la esquina del mapa también la activa y desactiva."
   },
   "sounds": {
     "title": "Alertas sonoras",

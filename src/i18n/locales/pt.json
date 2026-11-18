@@ -1116,8 +1116,8 @@
   },
   "route": {
     "title": "Rota da raid",
-    "show": "Mostrar a rota da raid",
-    "hide": "Esconder a rota da raid",
+    "show": "Ligar a rota da raid",
+    "hide": "Desligar a rota da raid",
     "you": "Você",
     "help": "Monta a raid pelo objetivo que você escolher: Missões (a ordem que conclui mais objetivos), Loot (as áreas que mais rendem em dinheiro, itens que faltam pro hideout ou armas, munição e acessórios) ou Scavs (onde eles nascem). Sempre sai de onde você está agora (seu último print) e termina numa extração do seu lado. Os 4 estilos aparecem lado a lado: Direto vai reto; Equilibrado e Discreto contornam as zonas quentes (onde costuma ter jogador naquela hora da raid: spawns no começo, loot no meio, extrações no fim) e o Discreto deixa de fora o que estiver muito movimentado; Agressivo passa onde tem PMC, mas foge de minas e snipers. Zonas quentes e desvios são estimativas: o MoA não sabe onde ficam paredes nem onde estão os jogadores de verdade.",
     "summary_one": "{{count}} objetivo · ~{{min}} min",
@@ -1225,7 +1225,10 @@
       "mine": "Campo minado",
       "gun": "Metralhadora fixa",
       "btr": "BTR"
-    }
+    },
+    "off": "Desligar a rota",
+    "settingsOn": "Usar a rota da raid",
+    "settingsHint": "Desligada, nada da rota aparece: nem no mapa, nem no minimapa, nem no celular, e os sons dela (parada da rota concluída, zona quente) não tocam. O botão de rota no canto do mapa também liga e desliga."
   },
   "sounds": {
     "title": "Alertas sonoros",

@@ -63,7 +63,7 @@ export default function RoutePanel({ route, inSquad, names }: { route: RaidRoute
           </small>
         </div>
         <HelpTip>{t('route.help')}</HelpTip>
-        <IconButton size="sm" icon={<X />} label={t('common.close')} onClick={() => route.setOn(false)} />
+        <IconButton size="sm" icon={<X />} label={t('route.off')} onClick={() => route.setOn(false)} />
       </header>
 
       <div className="route-card__body">

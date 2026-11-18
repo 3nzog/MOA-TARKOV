@@ -25,7 +25,7 @@ export const PATCH_NOTES: PatchNote[] = [
       "A screenshot of the game's Tasks screen marks the quests listed there as active when the logs missed them. Ammo shows the cheapest round that gets through a given armour class, at trader prices.",
       "Faster: the minimap window loads only its own code, panels load when first opened, and the raid clock no longer redraws the whole app every second. Fixed: quest and exit dots on the minimap could be hidden under the map art.",
       "Fixed: the map on the phone could stay blank. The PC cut each connection short, so the app's script never arrived whole; now every file arrives complete.",
-      "Squad Mode: no change to the squad protocol; 0.9.0 and 0.10.0 still see each other.",
+      "The raid route can be turned off in Settings → General too (or with the route button on the map, or the X on its panel). Off means off: nothing of it on the map, minimap or phone, and no route sounds. Fixed: the hot-zone and \"route stop done\" sounds played in raids even with the route off.",      "Squad Mode: no change to the squad protocol; 0.9.0 and 0.10.0 still see each other.",
     ],
   },
   {

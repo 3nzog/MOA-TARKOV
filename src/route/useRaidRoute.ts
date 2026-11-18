@@ -253,10 +253,11 @@ export function useRaidRoute(o: Options): RaidRoute {
   }, [fresh, party, mapId, mates, squad.positions]);
   const fixes = useMemo<Point[]>(() => (own ? [{ x: own.x, z: own.z }, ...mateFixes] : mateFixes), [own, mateFixes]);
 
-  // Stops someone walked up to count as done for the rest of the raid.
-  const reached = goalStops.filter(
-    (s) => !current.done.includes(s.id) && fixes.some((f) => Math.hypot(f.x - s.x, f.z - s.z) <= REACHED_M),
-  );
+  // Stops someone walked up to count as done for the rest of the raid (only
+  // with the route on: off, nothing of it runs, and its "stop done" sound stays quiet).
+  const reached = prefs.on
+    ? goalStops.filter((s) => !current.done.includes(s.id) && fixes.some((f) => Math.hypot(f.x - s.x, f.z - s.z) <= REACHED_M))
+    : [];
   if (reached.length > 0) setPerRaid({ ...current, done: [...current.done, ...reached.map((s) => s.id)] });
 
   // The route always leaves from where you are now (your latest screenshot).
@@ -357,14 +358,14 @@ export function useRaidRoute(o: Options): RaidRoute {
     return out.sort((p, q) => (q.stop.value ?? 0) - (p.stop.value ?? 0)).slice(0, ON_WAY_MAX);
   }, [prefs.goal, prefs.lootOnWay, plan, start, lootCtx, self]);
 
-  // Where you are, when it is hot right now.
+  // Where you are, when it is hot right now (route on only: it drives the hot-zone sound).
   const selfHeat = useMemo<SelfHeat | null>(() => {
-    if (!own || !raid) return null;
+    if (!prefs.on || !own || !raid) return null;
     const why = hotReason(sources, own, elapsed, raidSeconds);
     if (!why) return null;
     const src = sources.find((s) => s.kind === why.kind && heatAt([s], own, elapsed, raidSeconds) > 0);
     return { level: why.level, kind: why.kind, key: src ? `${src.kind}:${Math.round(src.x)}:${Math.round(src.z)}` : why.kind };
-  }, [own, raid, sources, elapsed, raidSeconds]);
+  }, [prefs.on, own, raid, sources, elapsed, raidSeconds]);
 
   const [previewPhase, setPreviewPhase] = useState<RaidPhase>(0);
   const phase: RaidPhase = raid ? phaseOf(elapsed, raidSeconds) : previewPhase;
