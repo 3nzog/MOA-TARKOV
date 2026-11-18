@@ -1231,7 +1231,9 @@
       "btr": "BTR"
     },
     "off": "Turn the route off",
-    "settingsOn": "Use the raid route",
+    "free": "Play free",
+    "offHint": "Turns the route off: nothing of it on the map, minimap or phone, no route sounds. The route button on the map turns it back on.",
+    "settingsOn": "Use the raid route (off = play free)",
     "settingsHint": "Off, nothing of the route shows up: not on the map, the minimap or the phone, and its sounds (route stop done, hot zone) stay quiet. The route button in the corner of the map turns it on and off too."
   },
   "sounds": {

@@ -1231,7 +1231,9 @@
       "btr": "BTR"
     },
     "off": "Desactivar la ruta",
-    "settingsOn": "Usar la ruta de la incursión",
+    "free": "Jugar libre",
+    "offHint": "Apaga la ruta: nada de ella en el mapa, el minimapa ni el móvil, y sin sus sonidos. El botón de ruta del mapa la vuelve a encender.",
+    "settingsOn": "Usar la ruta de la raid (apagada = jugar libre)",
     "settingsHint": "Desactivada, no aparece nada de la ruta: ni en el mapa, ni en el minimapa, ni en el móvil, y sus sonidos (parada de la ruta hecha, zona caliente) no suenan. El botón de ruta en la esquina del mapa también la activa y desactiva."
   },
   "sounds": {
