@@ -19,6 +19,7 @@ import ConnectionTest from '../net/ConnectionTest';
 import SoundSettings from '../sound/SoundSettings';
 import { setRoutePrefs, useRoutePrefs } from '../route/routePrefs';
 import StartupSettings from './StartupSettings';
+import ScavSettings from '../scav/ScavSettings';
 import {
   Desktop,
   Info,
@@ -296,6 +297,8 @@ export default function SettingsModal({
         </div>
 
         <StartupSettings />
+
+        <ScavSettings />
 
         <SectionLabel help={t('sounds.help')}>{t('sounds.title')}</SectionLabel>
         <SoundSettings />

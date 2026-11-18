@@ -54,6 +54,8 @@ import { useDrawing } from './app/useDrawing';
 import { useSquadSync } from './app/useSquadSync';
 import { useAppUpdate } from './app/useAppUpdate';
 import { useShowOnGameLaunch } from './app/startup';
+import { useScavTimer } from './scav/scavTimer';
+import ScavChip from './scav/ScavChip';
 import { usePlanner, useRaidHistory } from './app/usePlanner';
 import { useTracker } from './app/useTracker';
 import { useProgressionData, useQuestStatuses } from './app/useProgression';
@@ -335,6 +337,8 @@ function App() {
   );
   // PMC or Scav: learned from the raid's profile fingerprint (see raidHistory).
   const sideKnowledge = useMemo(() => learnSides(raidHistory.history), [raidHistory.history]);
+  // The Scav's wait after a Scav raid, and the sound when it is over.
+  const scav = useScavTimer(raidHistory.history, sideKnowledge, setToast, t('scav.readyToast'));
   // Re-checked every minute too, so a raid whose end never reached the logs
   // (game crash) stops counting as live once it is too old.
   const [raidClock, setRaidClock] = useState(() => Date.now());
@@ -1052,6 +1056,7 @@ function App() {
         )}
 
         <section className="map-stage map-area">
+          <ScavChip state={scav} />
               {mapCard && selectedMapId && (
                 <Suspense fallback={null}>
                   <MapInfoCard card={mapCard} onClose={() => setMapCard(null)} />

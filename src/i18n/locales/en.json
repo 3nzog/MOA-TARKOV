@@ -1250,14 +1250,18 @@
       "extract": "Time to head for the exit",
       "stop": "Route stop done",
       "quest": "Quest done",
-      "hot": "Hot zone"
+      "hot": "Hot zone",
+      "scav": "Scav ready",
+      "hideout": "Hideout ready"
     },
     "groupHelp": {
       "raidTime": "Beeps at 10, 5 and 2 minutes left (PMC raids, whose end is known). Less time, more and higher beeps.",
       "extract": "When the time left barely covers the walk from your latest screenshot to the nearest exit of your side (with a minute to spare).",
       "stop": "When you (or the party) reach a stop of the raid route, or tick one off.",
       "quest": "When the game's log says a quest is done.",
-      "hot": "When a screenshot of yours lands in a busy place for that moment of the raid (PMC spawns early, contested loot, boss areas, exits late, snipers, mines). At most once every 2 minutes per place."
+      "hot": "When a screenshot of yours lands in a busy place for that moment of the raid (PMC spawns early, contested loot, boss areas, exits late, snipers, mines). At most once every 2 minutes per place.",
+      "scav": "When the wait after a Scav raid is over (set its length in Settings → General → Scav).",
+      "hideout": "When a hideout craft or upgrade you started is done."
     }
   },
   "questScreen": {
@@ -1274,5 +1278,13 @@
     "showOnGameHint": "The window comes up on its own when Tarkov starts. On a second PC linked to the game PC it comes up too, so both screens open together.",
     "gameLaunched": "Tarkov started",
     "failed": "Could not change it: {{error}}"
+  },
+  "scav": {
+    "title": "Scav",
+    "minutes": "Wait after a Scav raid",
+    "minutesHint": "How long the game makes you wait after a Scav raid. It depends on Fence's reputation and your hideout, which the logs do not tell, so set it once to what the game shows you.",
+    "left": "Scav {{time}}",
+    "ready": "Scav ready",
+    "readyToast": "The Scav is ready: you can go in as Scav again."
   }
 }

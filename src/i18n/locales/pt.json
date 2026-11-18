@@ -1250,14 +1250,18 @@
       "extract": "Hora de ir pra extração",
       "stop": "Parada da rota concluída",
       "quest": "Missão concluída",
-      "hot": "Zona quente"
+      "hot": "Zona quente",
+      "scav": "Scav liberado",
+      "hideout": "Esconderijo pronto"
     },
     "groupHelp": {
       "raidTime": "Bipes quando faltam 10, 5 e 2 minutos (raids de PMC, em que o fim é conhecido). Quanto menos tempo, mais bipes e mais agudo.",
       "extract": "Quando o tempo que sobra mal dá para andar do seu último print até a extração mais perto do seu lado (com 1 minuto de folga).",
       "stop": "Quando você (ou a party) chega numa parada da rota da raid, ou marca uma como feita.",
       "quest": "Quando o log do jogo diz que uma missão foi concluída.",
-      "hot": "Quando um print seu cai num lugar movimentado naquela hora da raid (spawn de PMC no começo, loot disputado, área de boss, extração no fim, sniper, minas). No máximo uma vez a cada 2 minutos por lugar."
+      "hot": "Quando um print seu cai num lugar movimentado naquela hora da raid (spawn de PMC no começo, loot disputado, área de boss, extração no fim, sniper, minas). No máximo uma vez a cada 2 minutos por lugar.",
+      "scav": "Quando a espera depois de uma raid de Scav acaba (ajuste o tempo em Configurações → Geral → Scav).",
+      "hideout": "Quando uma fabricação ou melhoria do esconderijo que você começou termina."
     }
   },
   "questScreen": {
@@ -1274,5 +1278,13 @@
     "showOnGameHint": "A janela aparece sozinha quando o Tarkov abre. Num segundo PC ligado ao PC do jogo ela aparece também, então as duas telas abrem juntas.",
     "gameLaunched": "O Tarkov abriu",
     "failed": "Não deu para mudar: {{error}}"
+  },
+  "scav": {
+    "title": "Scav",
+    "minutes": "Espera depois de uma raid de Scav",
+    "minutesHint": "Quanto tempo o jogo faz você esperar depois de uma raid de Scav. Depende da reputação com o Fence e do seu esconderijo, que os logs não dizem, então ajuste uma vez para o que o jogo mostra.",
+    "left": "Scav {{time}}",
+    "ready": "Scav liberado",
+    "readyToast": "O Scav está liberado: dá pra entrar de Scav de novo."
   }
 }

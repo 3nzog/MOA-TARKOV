@@ -4,7 +4,7 @@ import { SpeakerHigh } from '@phosphor-icons/react';
 import { HelpTip, IconButton, Slider, Toggle } from '../ui';
 import { playSound, setSoundPrefs, SOUND_GROUPS, useSoundPrefs, type SoundGroup, type SoundKind } from './sounds';
 
-const SAMPLE: Record<SoundGroup, SoundKind> = { raidTime: 'time5', extract: 'extract', stop: 'stop', quest: 'quest', hot: 'hot' };
+const SAMPLE: Record<SoundGroup, SoundKind> = { raidTime: 'time5', extract: 'extract', stop: 'stop', quest: 'quest', hot: 'hot', scav: 'scav', hideout: 'hideout' };
 
 export default function SoundSettings() {
   const { t } = useTranslation();

@@ -1250,14 +1250,18 @@
       "extract": "Hora de ir a la extracción",
       "stop": "Parada de la ruta hecha",
       "quest": "Misión completada",
-      "hot": "Zona caliente"
+      "hot": "Zona caliente",
+      "scav": "Scav listo",
+      "hideout": "Refugio listo"
     },
     "groupHelp": {
       "raidTime": "Pitidos cuando quedan 10, 5 y 2 minutos (incursiones de PMC, cuyo final se conoce). Menos tiempo, más pitidos y más agudos.",
       "extract": "Cuando el tiempo que queda apenas alcanza para caminar desde tu última captura hasta la extracción más cercana de tu bando (con un minuto de margen).",
       "stop": "Cuando tú (o el grupo) llegas a una parada de la ruta, o marcas una como hecha.",
       "quest": "Cuando el registro del juego dice que una misión se completó.",
-      "hot": "Cuando una captura tuya cae en un lugar concurrido para ese momento de la incursión (spawns de PMC al principio, botín disputado, zonas de jefe, extracciones al final, francotiradores, minas). Como mucho una vez cada 2 minutos por lugar."
+      "hot": "Cuando una captura tuya cae en un lugar concurrido para ese momento de la incursión (spawns de PMC al principio, botín disputado, zonas de jefe, extracciones al final, francotiradores, minas). Como mucho una vez cada 2 minutos por lugar.",
+      "scav": "Cuando termina la espera tras una raid de Scav (ajústala en Ajustes → General → Scav).",
+      "hideout": "Cuando termina una fabricación o mejora del refugio que empezaste."
     }
   },
   "questScreen": {
@@ -1274,5 +1278,13 @@
     "showOnGameHint": "La ventana aparece sola cuando se abre Tarkov. En un segundo PC vinculado al PC del juego también aparece, así que las dos pantallas se abren juntas.",
     "gameLaunched": "Tarkov se abrió",
     "failed": "No se pudo cambiar: {{error}}"
+  },
+  "scav": {
+    "title": "Scav",
+    "minutes": "Espera tras una raid de Scav",
+    "minutesHint": "Cuánto te hace esperar el juego tras una raid de Scav. Depende de la reputación con Fence y de tu refugio, que los logs no dicen, así que ajústala una vez a lo que muestra el juego.",
+    "left": "Scav {{time}}",
+    "ready": "Scav listo",
+    "readyToast": "El Scav está listo: puedes volver a entrar como Scav."
   }
 }

@@ -4,10 +4,10 @@
 // done, a quest done, a hot place. Preferences live per PC.
 import { useSyncExternalStore } from 'react';
 
-export type SoundKind = 'time10' | 'time5' | 'time2' | 'extract' | 'stop' | 'quest' | 'hot';
+export type SoundKind = 'time10' | 'time5' | 'time2' | 'extract' | 'stop' | 'quest' | 'hot' | 'scav' | 'hideout';
 /** The switches in Settings (the three raid-clock sounds share one). */
-export type SoundGroup = 'raidTime' | 'extract' | 'stop' | 'quest' | 'hot';
-export const SOUND_GROUPS: readonly SoundGroup[] = ['raidTime', 'extract', 'stop', 'quest', 'hot'];
+export type SoundGroup = 'raidTime' | 'extract' | 'stop' | 'quest' | 'hot' | 'scav' | 'hideout';
+export const SOUND_GROUPS: readonly SoundGroup[] = ['raidTime', 'extract', 'stop', 'quest', 'hot', 'scav', 'hideout'];
 
 export const groupOf = (k: SoundKind): SoundGroup =>
   k === 'time10' || k === 'time5' || k === 'time2' ? 'raidTime' : k;
@@ -20,7 +20,7 @@ export interface SoundPrefs {
 }
 
 const KEY = 'tc_sounds_v1';
-const DEFAULTS: SoundPrefs = { on: true, volume: 0.6, groups: { raidTime: true, extract: true, stop: true, quest: true, hot: true } };
+const DEFAULTS: SoundPrefs = { on: true, volume: 0.6, groups: { raidTime: true, extract: true, stop: true, quest: true, hot: true, scav: true, hideout: true } };
 
 export function parseSoundPrefs(raw: string | null): SoundPrefs {
   try {
@@ -80,6 +80,10 @@ const PATTERNS: Record<SoundKind, { notes: Note[]; wave: OscillatorType }> = {
   quest: { wave: 'triangle', notes: [[523, 0, 0.14], [659, 0.12, 0.14], [784, 0.24, 0.14], [1047, 0.36, 0.3]] },
   // A hot place: two low, rough notes going down.
   hot: { wave: 'sawtooth', notes: [[392, 0, 0.16], [294, 0.2, 0.3]] },
+  // The Scav can go in again: three notes rising, like a door opening.
+  scav: { wave: 'sine', notes: [[392, 0, 0.12], [523, 0.13, 0.12], [659, 0.26, 0.28]] },
+  // A hideout craft or upgrade is done: a bell, twice.
+  hideout: { wave: 'triangle', notes: [[1047, 0, 0.25], [1568, 0.02, 0.2], [1047, 0.4, 0.25], [1568, 0.42, 0.2]] },
 };
 
 let ctx: AudioContext | null = null;
