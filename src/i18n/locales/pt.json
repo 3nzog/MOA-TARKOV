@@ -1263,5 +1263,14 @@
     "added_other": "Print da tela Tarefas: {{count}} missões marcadas como ativas:",
     "allKnown_one": "Print da tela Tarefas: a {{count}} missão ativa já estava no MoA.",
     "allKnown_other": "Print da tela Tarefas: as {{count}} missões ativas já estavam no MoA."
+  },
+  "startup": {
+    "title": "Iniciar",
+    "withWindows": "Iniciar com o Windows (escondido, esperando o Tarkov)",
+    "withWindowsHint": "Quando o PC liga, o Tarkov MoA inicia escondido: só o ícone perto do relógio, sem janela. Ele aparece quando o Tarkov abrir (ou quando você clicar no ícone).",
+    "showOnGame": "Abrir quando o Tarkov abrir",
+    "showOnGameHint": "A janela aparece sozinha quando o Tarkov abre. Num segundo PC ligado ao PC do jogo ela aparece também, então as duas telas abrem juntas.",
+    "gameLaunched": "O Tarkov abriu",
+    "failed": "Não deu para mudar: {{error}}"
   }
 }

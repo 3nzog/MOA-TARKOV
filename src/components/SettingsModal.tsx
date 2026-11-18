@@ -18,6 +18,7 @@ import LinkSettings from '../link/LinkSettings';
 import ConnectionTest from '../net/ConnectionTest';
 import SoundSettings from '../sound/SoundSettings';
 import { setRoutePrefs, useRoutePrefs } from '../route/routePrefs';
+import StartupSettings from './StartupSettings';
 import {
   Desktop,
   Info,
@@ -293,6 +294,8 @@ export default function SettingsModal({
           </div>
           <Toggle checked={routeOn} onChange={(on) => setRoutePrefs({ on })} label={t('route.settingsOn')} />
         </div>
+
+        <StartupSettings />
 
         <SectionLabel help={t('sounds.help')}>{t('sounds.title')}</SectionLabel>
         <SoundSettings />

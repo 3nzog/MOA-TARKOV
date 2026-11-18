@@ -510,6 +510,15 @@ pub fn restart(app: AppHandle, logs_dir: PathBuf) {
         // offset ensures we don't re-emit events for sessions already processed.
         scan_existing(&app, &state_path, &offsets, &tailed, &logs_dir, cancel.clone());
 
+        // The game's session folders already there: a new one means the game
+        // has just started (EFT makes one each time it starts).
+        let sessions: Arc<Mutex<std::collections::HashSet<PathBuf>>> = Arc::new(Mutex::new(
+            fs::read_dir(&logs_dir)
+                .map(|it| it.flatten().map(|e| e.path()).filter(|p| p.is_dir()).collect())
+                .unwrap_or_default(),
+        ));
+        let root_for_watcher = logs_dir.clone();
+
         // Watch for newly-created log files.
         let app_for_watcher = app.clone();
         let state_for_watcher = state_path.clone();
@@ -519,6 +528,14 @@ pub fn restart(app: AppHandle, logs_dir: PathBuf) {
         let mut watcher = match notify::recommended_watcher(
             move |res: notify::Result<notify::Event>| match res {
                 Ok(ev) => {
+                    if matches!(ev.kind, EventKind::Create(_)) {
+                        for path in &ev.paths {
+                            let Some(dir) = crate::startup::session_dir(&root_for_watcher, path) else { continue };
+                            if sessions.lock().unwrap().insert(dir) {
+                                let _ = app_for_watcher.emit(crate::startup::GAME_LAUNCHED, serde_json::json!({}));
+                            }
+                        }
+                    }
                     if matches!(ev.kind, EventKind::Create(_) | EventKind::Modify(_)) {
                         for path in ev.paths {
                             if is_application_log(&path) {

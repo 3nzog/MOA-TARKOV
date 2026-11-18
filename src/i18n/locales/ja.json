@@ -1263,5 +1263,14 @@
     "added_other": "タスク画面のスクリーンショット：{{count}}件を進行中にしました：",
     "allKnown_one": "タスク画面のスクリーンショット：進行中の{{count}}件はすべてMoAに登録済みです。",
     "allKnown_other": "タスク画面のスクリーンショット：進行中の{{count}}件はすべてMoAに登録済みです。"
+  },
+  "startup": {
+    "title": "起動",
+    "withWindows": "Windows と一緒に起動（非表示で Tarkov を待つ）",
+    "withWindowsHint": "PC の起動時に Tarkov MoA は非表示で起動します（時計の横のアイコンのみ）。Tarkov が起動すると（またはアイコンをクリックすると）表示されます。",
+    "showOnGame": "Tarkov の起動時に開く",
+    "showOnGameHint": "Tarkov が起動するとウィンドウが自動で表示されます。ゲーム PC にリンクした 2 台目の PC でも表示され、両方の画面が一緒に開きます。",
+    "gameLaunched": "Tarkov が起動しました",
+    "failed": "変更できませんでした: {{error}}"
   }
 }

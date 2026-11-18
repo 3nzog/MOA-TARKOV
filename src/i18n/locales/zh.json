@@ -1263,5 +1263,14 @@
     "added_other": "任务界面截图：已将 {{count}} 个任务标记为进行中：",
     "allKnown_one": "任务界面截图：{{count}} 个进行中的任务都已在 MoA 中。",
     "allKnown_other": "任务界面截图：{{count}} 个进行中的任务都已在 MoA 中。"
+  },
+  "startup": {
+    "title": "启动",
+    "withWindows": "随 Windows 启动（隐藏，等待 Tarkov）",
+    "withWindowsHint": "电脑开机时 Tarkov MoA 隐藏启动：只有时钟旁的图标，没有窗口。Tarkov 启动时（或点击图标时）才会显示。",
+    "showOnGame": "Tarkov 启动时打开",
+    "showOnGameHint": "Tarkov 启动时窗口会自动出现。与游戏电脑连接的第二台电脑也会出现，两个屏幕一起打开。",
+    "gameLaunched": "Tarkov 已启动",
+    "failed": "无法更改：{{error}}"
   }
 }

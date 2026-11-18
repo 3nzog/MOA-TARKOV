@@ -1263,5 +1263,14 @@
     "added_other": "Tasks screen screenshot: {{count}} quests marked active:",
     "allKnown_one": "Tasks screen screenshot: the {{count}} active quest was already in MoA.",
     "allKnown_other": "Tasks screen screenshot: all {{count}} active quests were already in MoA."
+  },
+  "startup": {
+    "title": "Starting up",
+    "withWindows": "Start with Windows (hidden, waiting for Tarkov)",
+    "withWindowsHint": "When the PC starts, Tarkov MoA starts hidden: only its icon by the clock, no window. It comes up when Tarkov starts (or when you click the icon).",
+    "showOnGame": "Open when Tarkov starts",
+    "showOnGameHint": "The window comes up on its own when Tarkov starts. On a second PC linked to the game PC it comes up too, so both screens open together.",
+    "gameLaunched": "Tarkov started",
+    "failed": "Could not change it: {{error}}"
   }
 }

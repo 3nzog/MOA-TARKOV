@@ -51,6 +51,7 @@ import { usePois } from './app/usePois';
 import { useDrawing } from './app/useDrawing';
 import { useSquadSync } from './app/useSquadSync';
 import { useAppUpdate } from './app/useAppUpdate';
+import { useShowOnGameLaunch } from './app/startup';
 import { usePlanner, useRaidHistory } from './app/usePlanner';
 import { useTracker } from './app/useTracker';
 import { useProgressionData, useQuestStatuses } from './app/useProgression';
@@ -321,6 +322,8 @@ function App() {
     selectedMapId,
   });
   const update = useAppUpdate(setToast);
+  // The game started (here or on the linked game PC): the window comes up.
+  useShowOnGameLaunch(setToast, t('startup.gameLaunched'));
   const questStatuses = useQuestStatuses(
     quests.tasks,
     progressionLoad.state === 'ready' ? progressionLoad.data : null,

@@ -12,6 +12,7 @@ mod party;
 mod phone;
 mod screenshots;
 mod self_update;
+mod startup;
 mod tracker;
 mod weblinks;
 
@@ -43,6 +44,17 @@ fn main() {
         })
         .setup(move |app| {
             let handle = app.handle().clone();
+
+            // Started by Windows at log-in: only the tray icon until the game
+            // starts (or a click on the icon). Otherwise the window, as always.
+            if startup::started_in_tray() {
+                if let Err(e) = startup::add_tray(&handle) {
+                    eprintln!("[startup] no tray icon: {e}");
+                    startup::show_main(&handle);
+                }
+            } else {
+                startup::show_main(&handle);
+            }
 
             // Connection log (conexao.log), for "it doesn't connect" reports.
             if let Ok(dir) = app.path().app_log_dir() {
@@ -118,6 +130,9 @@ fn main() {
             link::link_find,
             link::link_connect,
             link::link_disconnect,
+            startup::startup_get,
+            startup::startup_set,
+            startup::main_show,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -33,7 +33,9 @@ pub const LINK_DISCOVERY_PORT: u16 = 8790;
 const QUERY: &[u8] = b"MOA-LINK?1";
 const VERSION: u64 = 1;
 /// Events the main PC's readers emit that the linked PC replays.
-pub const FORWARDED: [&str; 7] = [
+pub const FORWARDED: [&str; 8] = [
+    // The game started on the main PC: the linked PC shows its window too.
+    "game-launched",
     "raid-started",
     "raid-ended",
     "group-raid-side",
