@@ -15,6 +15,19 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "0.11.0",
+    date: "2026-11-18",
+    changes: [
+      "Starts with Windows, hidden: only an icon by the clock, no window, until Tarkov starts (seen in its logs) — then it comes up on its own. On a second PC linked to the game PC it comes up too, so both screens open together. Settings → General → Starting up.",
+      "Exits: what each one asks for, in your language — paracord, Red Rebel ice pick, no armour vest, no backpack, green flare, the code-word note, the minefield map, co-op, paid, power, lever, key or keycard, not always open, single use — on the exit's hover text, its card, the route and the phone. Fixed: Customs' exits all said they needed the power switch.",
+      "Bosses: each boss's chance on the map and where it appears, on its spots and in the route window, and a new route goal to hunt them (Discreet leaves the busy spots out). Fixed: a boss whose spawn zone is certain (the Goons) showed as 100%.",
+      "An inventory screenshot counts toward what quests and the hideout still need (Planner → Items): counters only go up, to what was seen; one item counts once.",
+      "Scav wait: a Scav raid's end starts the countdown (set its length once in Settings → General → Scav), shown at the bottom of the map, with a sound when the Scav is ready.",
+      "Hideout timers: tap ▶ when you start an upgrade or a craft in Planner → Hideout; the time comes from the game data and can be corrected, and a sound plays when it is done (an upgrade also raises the station's level).",
+      "Squad Mode: no change to the squad protocol; 0.10.x and 0.11.0 see each other.",
+    ],
+  },
+  {
     version: "0.10.1",
     date: "2026-11-18",
     changes: [
