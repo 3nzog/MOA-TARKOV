@@ -579,19 +579,6 @@ button:disabled {
 .tc-tools-dock > button:active:not(:disabled) { transform: scale(0.9); }
 .tc-tools-dock > button:disabled { opacity: 0.35; cursor: not-allowed; }
 /* pen engaged — brass well; icon color is the user's ink (inline style) */
-.tc-tools-dock__switch {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 0 8px;
-  border-bottom: 1px solid var(--border);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
 .tc-tools-dock > button.active { background: var(--accent-soft); }
 
 /* ------- Player position marker (live signal) ------- */

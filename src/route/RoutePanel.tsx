@@ -57,14 +57,19 @@ export default function RoutePanel({ route, inSquad, names }: { route: RaidRoute
         <div className="route-card__title">
           <strong>{t('route.title')}</strong>
           <small>
-            {plan
-              ? `${planWorth(plan, goal, t, lang)} · ~${mins(plan.total)} min`
-              : t('route.budget', { min: mins(route.budget) })}
+            {!route.on
+              ? t('route.offShort')
+              : plan
+                ? `${planWorth(plan, goal, t, lang)} · ~${mins(plan.total)} min`
+                : t('route.budget', { min: mins(route.budget) })}
           </small>
         </div>
         <HelpTip>{t('route.help')}</HelpTip>
-        <Toggle size="sm" checked onChange={route.setOn} label={t('route.switch')} />
+        {/* All the routes on or off; the route button on the map only shows or hides this window. */}
+        <Toggle size="sm" checked={route.on} onChange={route.setOn} label={t('route.switch')} />
       </header>
+
+      {route.on && (
 
       <div className="route-card__body">
         <Segmented
@@ -273,6 +278,7 @@ export default function RoutePanel({ route, inSquad, names }: { route: RaidRoute
           </Button>
         )}
       </div>
+      )}
     </aside>
   );
 }

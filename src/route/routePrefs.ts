@@ -8,6 +8,8 @@ import { ROUTE_GOALS, WEAPON_KINDS, type RouteGoal, type WeaponKind } from './ta
 
 export interface RoutePrefs {
   on: boolean;
+  /** The route window open on the map (the route button), apart from on/off. */
+  panel: boolean;
   party: boolean;
   goal: RouteGoal;
   /** The weapons goal: which of guns, ammo and parts count. */
@@ -24,6 +26,7 @@ export interface RoutePrefs {
 const KEY = 'tc_route_v1';
 export const DEFAULT_ROUTE_PREFS: RoutePrefs = {
   on: false,
+  panel: false,
   party: true,
   goal: 'quests',
   weaponKinds: [...WEAPON_KINDS],
@@ -40,6 +43,8 @@ export function parseRoutePrefs(raw: string | null): RoutePrefs {
     const kinds = Array.isArray(v.weaponKinds) ? v.weaponKinds.filter((k): k is WeaponKind => WEAPON_KINDS.includes(k as WeaponKind)) : null;
     return {
       on: v.on === true,
+      // Before the window had its own button, it was open whenever the route was on.
+      panel: typeof v.panel === 'boolean' ? v.panel : v.on === true,
       party: v.party !== false,
       goal: ROUTE_GOALS.includes(v.goal as RouteGoal) ? (v.goal as RouteGoal) : 'quests',
       weaponKinds: kinds && kinds.length > 0 ? kinds : [...WEAPON_KINDS],

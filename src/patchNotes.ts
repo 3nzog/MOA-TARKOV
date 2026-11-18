@@ -29,7 +29,7 @@ export const PATCH_NOTES: PatchNote[] = [
       "Linking PCs: a PC outside your home network (Radmin, internet) that nobody clicked no longer pops up \"Link a PC?\" on yours; it is turned away quietly. A request made with a click still asks. Over Radmin, the PC that asks needs 0.10.0 too.",
       "Map on the phone, faster: a screenshot's position now goes straight to the phone (it used to wait for the app's window, which runs slowly behind the game, and the PC waited 150 ms before reading each screenshot), the phone's Wi-Fi is kept awake while the map is on screen, and the map glides to you in 0.1 s. The bar shows how long a screenshot took to get there. Fixed: the phone could stop getting positions after its screen went off; it now reconnects on its own. New: a full-screen button (Android; iPhone Safari does not allow it).",
       "The map on the phone now shows everything the PC's map shows: the exits, spawns, loot and other map intel you have switched on, quest pins (with names), sniper and minefield zones, place names, the grid, your markers and drawings, the party's markers, drawings and quest pins, and the hot zones. Only as a map: tapping shows a name, never location pictures or wiki links.",
-      "The raid route has a \"Routes\" switch at the top of the map tools (and in Settings → General): on shows the routes, off turns them off.",
+      "Routes: the route button on the map opens and closes the route window; the \"Routes\" switch inside it (and in Settings → General) turns every route on or off. Closing the window keeps the routes as they are.",
       "Squad Mode: no change to the squad protocol; 0.9.0 and 0.10.0 still see each other.",
     ],
   },

@@ -1120,8 +1120,8 @@
   },
   "route": {
     "title": "Raid route",
-    "show": "Turn the raid route on",
-    "hide": "Turn the raid route off",
+    "show": "Show the route window",
+    "hide": "Hide the route window",
     "you": "You",
     "help": "Plans the raid for the goal you pick: Quests (the order that finishes the most objectives), Loot (the areas that pay the most in money, the items your hideout still needs, or guns, ammo and attachments) or Scavs (where they spawn). It always starts from where you are now (your last screenshot) and ends at an exit of your side. The 4 styles show side by side: Direct goes straight; Balanced and Discreet walk around the hot zones (where players tend to be at that moment of the raid: spawns early, loot mid-raid, exits late) and Discreet leaves out what is very busy; Aggressive goes where PMCs are but keeps out of mines and snipers. Hot zones and detours are estimates: MoA does not know where walls are or where players really are.",
     "summary_one": "{{count}} objective · ~{{min}} min",
@@ -1232,8 +1232,9 @@
     },
     "off": "Turn the route off",
     "switch": "Routes",
+    "offShort": "Off: no route on the map, minimap or phone",
     "settingsOn": "Routes",
-    "settingsHint": "Off, nothing of the route shows up: not on the map, the minimap or the phone, and its sounds (route stop done, hot zone) stay quiet. The route button in the corner of the map turns it on and off too."
+    "settingsHint": "Off, nothing of the routes shows: not on the map, the minimap or the phone, and their sounds (route stop done, hot zone) stay quiet. The switch in the route window (route button on the map) turns them on and off too."
   },
   "sounds": {
     "title": "Sound alerts",

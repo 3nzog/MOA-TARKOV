@@ -35,7 +35,7 @@ import { useItemNames } from './route/itemNames';
 import RoutePanel from './route/RoutePanel';
 import { useRaidRoute } from './route/useRaidRoute';
 import { questDoneSound, useSoundAlerts } from './sound/useSoundAlerts';
-import { useRoutePrefs } from './route/routePrefs';
+import { setRoutePrefs, useRoutePrefs } from './route/routePrefs';
 import { hideoutNeedIds } from './route/routeData';
 import { aggregateNeeds } from './progression/needs';
 import { useQuestScreen } from './quests/useQuestScreen';
@@ -186,6 +186,7 @@ function App() {
   // Also needed on the map: which quests the player can take now (upcoming pins).
   // The raid route's hideout goal needs it too (what the hideout still misses).
   const routePrefs = useRoutePrefs();
+  const routePanel = routePrefs.panel;
   const progressionLoad = useProgressionData(
     railSection === 'planner' || appearance.upcomingQuests || (routePrefs.on && routePrefs.goal === 'hideout'),
   );
@@ -1146,10 +1147,10 @@ function App() {
                     onRelief={(on) => setAppearance({ mapStyle: on ? 'relief' : 'vector' })}
                     artCount={ART_MAPS[canonicalMapId(selectedMapId)]?.length ?? 0}
                     onArt={() => setArtOpen(true)}
-                    route={route.on}
-                    onRoute={route.setOn}
+                    route={routePanel}
+                    onRoute={(open) => setRoutePrefs({ panel: open })}
                   />
-                  {route.on && <RoutePanel route={route} inSquad={squad.inSquad} names={routeItemNames} />}
+                  {routePanel && <RoutePanel route={route} inSquad={squad.inSquad} names={routeItemNames} />}
                   {artOpen && ART_MAPS[canonicalMapId(selectedMapId)] && (
                     <Suspense fallback={null}>
                       <ArtMapViewer

@@ -2,8 +2,7 @@
 // zoom dock. Two controls only (Moacir's spec): toggle the pen, and clear all
 // your drawings on this map (the eraser icon — per-stroke erasing is gone).
 
-import { PencilSimple, Eraser, Mountains, Cube } from "@phosphor-icons/react";
-import { Toggle } from "../ui";
+import { PencilSimple, Eraser, Mountains, Cube, Path } from "@phosphor-icons/react";
 import { useTranslation } from "react-i18next";
 import type { DrawTool } from "./DrawLayer";
 
@@ -21,7 +20,7 @@ interface MapToolsDockProps {
   /** Hand-made 2D / 3D maps for this map (opens the viewer). */
   artCount?: number;
   onArt?: () => void;
-  /** The raid route (most objectives before the raid ends): on, and its switch. */
+  /** The route window: open, and its button. */
   route?: boolean;
   onRoute?: (on: boolean) => void;
 }
@@ -45,11 +44,17 @@ export default function MapToolsDock({
   return (
     <div className="tc-tools-dock">
       {onRoute && (
-        // The routes' switch: on shows them, off turns them off.
-        <div className="tc-tools-dock__switch" title={route ? t('route.hide') : t('route.show')}>
-          <span>{t('route.switch')}</span>
-          <Toggle size="sm" checked={route} onChange={onRoute} label={t('route.switch')} />
-        </div>
+        // Opens and closes the route window (the routes' on/off is inside it).
+        <button
+          type="button"
+          aria-pressed={route}
+          title={route ? t('route.hide') : t('route.show')}
+          aria-label={t('route.title')}
+          className={route ? "active" : undefined}
+          onClick={() => onRoute(!route)}
+        >
+          <Path weight={route ? "bold" : "regular"} />
+        </button>
       )}
       <button
         type="button"

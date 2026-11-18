@@ -5,7 +5,13 @@ import type { ItemNeed } from '../progression/needs';
 
 describe('parseRoutePrefs', () => {
   it('reads what the older version saved (on and party only) with the new defaults', () => {
-    expect(parseRoutePrefs(JSON.stringify({ on: true, party: false }))).toEqual({ ...DEFAULT_ROUTE_PREFS, on: true, party: false });
+    // The window was open whenever the route was on, back then.
+    expect(parseRoutePrefs(JSON.stringify({ on: true, party: false }))).toEqual({ ...DEFAULT_ROUTE_PREFS, on: true, panel: true, party: false });
+  });
+
+  it('the window open and the routes on are two choices', () => {
+    expect(parseRoutePrefs(JSON.stringify({ on: false, panel: true }))).toMatchObject({ on: false, panel: true });
+    expect(parseRoutePrefs(JSON.stringify({ on: true, panel: false }))).toMatchObject({ on: true, panel: false });
   });
 
   it('keeps valid choices and drops broken ones', () => {
