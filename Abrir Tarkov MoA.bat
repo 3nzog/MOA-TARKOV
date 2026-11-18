@@ -8,7 +8,8 @@ rem    - Node.js LTS                 (roda a interface)
 rem    - Rust (rustup)               (compila o nucleo do app)
 rem    - Visual Studio Build Tools   (compilador C++ que o Rust usa no Windows)
 rem    - WebView2 Runtime            (motor da janela; ja vem no Windows 11)
-rem  Antes de abrir, busca a versao mais nova no GitHub (git pull). Depois baixa
+rem  Antes de tudo, pega no GitHub o .bat mais novo e passa a vez para ele (veja
+rem  o passo 0). Depois busca a versao mais nova no GitHub (git pull), baixa
 rem  as dependencias (npm), compila a versao final uma vez e abre o MoA sem
 rem  deixar terminal aberto. Nas proximas vezes so confere e abre; recompila
 rem  sozinho quando o codigo do projeto mudar.
@@ -19,8 +20,62 @@ rem ============================================================================
 setlocal EnableExtensions
 chcp 65001 >nul
 title Tarkov MoA
-cd /d "%~dp0"
-set "SELF=%~f0"
+
+rem ---- 0. Sempre o .bat mais novo ----------------------------------------------------
+rem  Antes de tudo, este arquivo busca no GitHub o .bat mais novo e passa a vez
+rem  para ele: grava a versao nova numa copia em %TEMP% e roda a copia (--copia).
+rem  A copia atualiza a pasta, e com isso o .bat velho daqui e trocado pelo novo
+rem  (mesmo nome, entao o atalho do Menu Iniciar e o .exe continuam achando), e
+rem  segue com tudo. Assim quem roda e sempre o .bat mais novo, mesmo num PC que
+rem  ficou com um velho, e o cmd nunca le um arquivo que esta sendo trocado no
+rem  meio. Quando a copia termina, este arquivo a apaga. Sem Git, sem internet ou
+rem  sem login no GitHub, segue com este mesmo arquivo (o passo 1 diz o motivo).
+set "PROJECT=%~dp0"
+set "LAUNCHER_COPY="
+set "FETCHED="
+if /i "%~1"=="--copia" (
+  set "PROJECT=%~2"
+  set "LAUNCHER_COPY=%~f0"
+  if /i "%~3"=="buscado" set "FETCHED=1"
+)
+cd /d "%PROJECT%"
+set "SELF=%CD%\Abrir Tarkov MoA.bat"
+if defined LAUNCHER_COPY goto :handover_done
+if /i "%~1"=="--atualizado" goto :handover_done
+if not exist ".git" goto :handover_done
+where git >nul 2>&1
+if errorlevel 1 goto :handover_done
+rem  No login window here: if GitHub wants one, step 1 below asks for it.
+set "GIT_TERMINAL_PROMPT=0"
+set "GCM_INTERACTIVE=never"
+git remote get-url origin >nul 2>&1 && git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" >nul 2>&1
+git -c credential.helper= -c credential.helper=manager fetch --quiet --prune origin >nul 2>&1
+if errorlevel 1 goto :handover_skip
+set "UP0="
+for /f "delims=" %%U in ('git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2^>nul') do set "UP0=%%U"
+if not defined UP0 git rev-parse --verify --quiet origin/main >nul 2>&1 && set "UP0=origin/main"
+if not defined UP0 goto :handover_skip
+set "NEWBAT=%TEMP%\TarkovMoA-abrir-%RANDOM%%RANDOM%.bat"
+git cat-file --filters "%UP0%:Abrir Tarkov MoA.bat" > "%NEWBAT%" 2>nul
+if errorlevel 1 goto :handover_failed
+rem  Only a .bat that knows how to run as a copy takes over.
+findstr /c:"--copia" "%NEWBAT%" >nul 2>&1
+if errorlevel 1 goto :handover_failed
+rem  One block: cmd reads it whole before running it, so nothing of this file
+rem  (which the copy replaces) is read again: run the copy, delete it, leave.
+(
+  set "GIT_TERMINAL_PROMPT="
+  set "GCM_INTERACTIVE="
+  call "%NEWBAT%" --copia "%CD%" buscado
+  del "%NEWBAT%" >nul 2>&1
+  exit /b
+)
+:handover_failed
+del "%NEWBAT%" >nul 2>&1
+:handover_skip
+set "GIT_TERMINAL_PROMPT="
+set "GCM_INTERACTIVE="
+:handover_done
 set "EXE=src-tauri\target\release\tarkov-companion.exe"
 call :ui_init
 call :banner
@@ -35,8 +90,9 @@ rem  abrir. Tudo o que o Git responde fica em %TEMP%\TarkovMoA-atualizacao.log.
 rem  Arquivos mudados aqui (o npm costuma mexer no package-lock.json) sao
 rem  guardados com "git stash" antes; se o historico daqui divergiu do GitHub,
 rem  uma copia fica num branch "moa-backup-..." e esta pasta segue o GitHub.
-rem  Nada se perde. Se a atualizacao trouxer um .bat novo, este arquivo
-rem  reinicia com ele (--atualizado evita repetir a busca).
+rem  Nada se perde. Rodando como copia (passo 0), a busca ja foi feita e a
+rem  atualizacao troca o .bat da pasta pelo novo. Um .bat de versao antiga que
+rem  traga um novo reinicia com ele (--atualizado evita repetir a busca).
 call :section "1/4" "Atualização"
 call :note "Pasta: %CD%"
 set "NOUPDATE="
@@ -45,6 +101,8 @@ if /i "%~1"=="--atualizado" (
   call :ok "Atualizado para a versão mais nova"
   goto :updated
 )
+if defined LAUNCHER_COPY call :note "Rodando o .bat mais novo do GitHub"
+
 if not exist ".git" (
   set "NOUPDATE=Esta pasta não veio do GitHub, então ela não se atualiza sozinha."
   set "NOUPDATE2=Rode o Instalar Tarkov MoA.bat: ele troca por uma instalação que se atualiza."
@@ -67,8 +125,14 @@ set "LOGINRETRY="
 rem  A half set-up Git (no branch ever fetched) is repaired first.
 git remote get-url origin >nul 2>&1 && git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" >>"%GITLOG%" 2>&1
 :update_fetch
+rem  The copy of step 0 has just fetched: no need to ask GitHub twice.
+if defined FETCHED (
+  set "FETCHED="
+  goto :update_fetched
+)
 git -c credential.helper= -c credential.helper=manager fetch --prune origin >>"%GITLOG%" 2>&1
 if errorlevel 1 goto :update_fetch_failed
+:update_fetched
 set "UPSTREAM="
 for /f "delims=" %%U in ('git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2^>nul') do set "UPSTREAM=%%U"
 if not defined UPSTREAM git rev-parse --verify --quiet origin/main >nul 2>&1 && set "UPSTREAM=origin/main"
@@ -106,16 +170,20 @@ rem  este arquivo no meio da atualizacao nao atrapalha o que vem depois.
     call :note "O histórico desta pasta tinha divergido: uma cópia ficou em moa-backup-%STAMP%."
   )
   git branch --set-upstream-to="%UPSTREAM%" >>"%GITLOG%" 2>&1
-  for /f %%H in ('git rev-parse HEAD 2^>nul') do (
-    if /i "%%H"=="%NEWHEAD%" (
-      call :ok "Versão nova baixada" "reiniciando com ela"
-      call "%~f0" --atualizado
-      exit /b
-    )
+  set "MERGED="
+  for /f %%H in ('git rev-parse HEAD 2^>nul') do if /i "%%H"=="%NEWHEAD%" set "MERGED=1"
+  rem  As the copy of step 0, this file is not the one the update replaced: go on.
+  if defined MERGED if defined LAUNCHER_COPY call :ok "Versão nova baixada" "o .bat antigo da pasta foi trocado pelo novo"
+  if defined MERGED if not defined LAUNCHER_COPY (
+    call :ok "Versão nova baixada" "reiniciando com ela"
+    call "%~f0" --atualizado
+    exit /b
   )
-  set "NOUPDATE=A versão nova foi baixada, mas não deu para aplicar nesta pasta."
-  set "NOUPDATE2=Rode o Instalar Tarkov MoA.bat, ou mande o arquivo %GITLOG% para quem te ajuda."
-  call :warn "Não deu para aplicar a versão nova"
+  if not defined MERGED (
+    set "NOUPDATE=A versão nova foi baixada, mas não deu para aplicar nesta pasta."
+    set "NOUPDATE2=Rode o Instalar Tarkov MoA.bat, ou mande o arquivo %GITLOG% para quem te ajuda."
+    call :warn "Não deu para aplicar a versão nova"
+  )
 )
 goto :updated
 
