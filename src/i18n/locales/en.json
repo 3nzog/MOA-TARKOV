@@ -633,6 +633,8 @@
       "objectivesTitle": "Objectives"
     },
     "items": {
+      "counted_one": "Inventory screenshot: {{count}} item still needed counted ({{list}}). See Planner → Items.",
+      "counted_other": "Inventory screenshot: {{count}} items still needed counted ({{list}}). See Planner → Items.",
       "anyOf": "Any of {{count}} items",
       "scopeActive": "Active",
       "scopeAvailable": "+ Available",

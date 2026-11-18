@@ -38,6 +38,8 @@ import { questDoneSound, useSoundAlerts } from './sound/useSoundAlerts';
 import { setRoutePrefs, useRoutePrefs } from './route/routePrefs';
 import { hideoutNeedIds } from './route/routeData';
 import { aggregateNeeds } from './progression/needs';
+import { countInventory, type SeenItems } from './progression/inventoryCount';
+import { makeNames } from './planner/names';
 import { useQuestScreen } from './quests/useQuestScreen';
 import SquadQuestSummary from './components/SquadQuestSummary';
 import { useSettings } from './app/useSettings';
@@ -188,8 +190,10 @@ function App() {
   // The raid route's hideout goal needs it too (what the hideout still misses).
   const routePrefs = useRoutePrefs();
   const routePanel = routePrefs.panel;
+  // Items read from an inventory screenshot, waiting to be counted toward the needs.
+  const [stashSeen, setStashSeen] = useState<SeenItems | null>(null);
   const progressionLoad = useProgressionData(
-    railSection === 'planner' || appearance.upcomingQuests || (routePrefs.on && routePrefs.goal === 'hideout'),
+    railSection === 'planner' || appearance.upcomingQuests || (routePrefs.on && routePrefs.goal === 'hideout') || stashSeen !== null,
   );
   const tracker = useTracker({
     progress: quests.progress,
@@ -519,6 +523,39 @@ function App() {
     });
     return hideoutNeedIds(needs, planner.planner.collected);
   }, [routePrefs.on, routePrefs.goal, progressionData, quests.tasks, questStatuses, planner.checkedObjectives, planner.planner]);
+  // An inventory screenshot counts toward what quests and the hideout still
+  // need (Planner → Items): the counters only go up, to what was seen.
+  const scanResult = priceScan.result;
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (scanResult?.mode === 'inventory') setStashSeen(scanResult.items);
+  }, [scanResult]);
+  const { update: updatePlanner, checkedObjectives: plannerChecked } = planner;
+  const { needsScope, stationLevels, collected } = planner.planner;
+  useEffect(() => {
+    if (!stashSeen || !progressionData) return;
+    const needs = aggregateNeeds({
+      tasks: quests.tasks,
+      meta: progressionData.tasks,
+      statuses: questStatuses,
+      scope: needsScope,
+      checkedObjectives: plannerChecked,
+      includeHideout: true,
+      stations: progressionData.stations,
+      stationLevels,
+    });
+    const { updates, lines } = countInventory(needs, stashSeen, collected);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStashSeen(null);
+    if (lines.length === 0) return;
+    updatePlanner((p) => ({ ...p, collected: { ...p.collected, ...updates } }));
+    const names = makeNames(progressionData, quests.tasks, '?');
+    const list = lines
+      .slice(0, 3)
+      .map((l) => `${l.itemId ? names.item(l.itemId) : '…'} ${l.have}/${l.need}`)
+      .join(', ');
+    setToast(t('planner.items.counted', { count: lines.length, list }));
+  }, [stashSeen, progressionData, quests.tasks, questStatuses, needsScope, plannerChecked, stationLevels, collected, updatePlanner, t]);
   const route = useRaidRoute({
     mapId: selectedMapId,
     own: questState,

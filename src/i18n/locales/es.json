@@ -633,6 +633,8 @@
       "objectivesTitle": "Objetivos"
     },
     "items": {
+      "counted_one": "Captura del inventario: se contó {{count}} objeto que falta ({{list}}). Mira Planificador → Objetos.",
+      "counted_other": "Captura del inventario: se contaron {{count}} objetos que faltan ({{list}}). Mira Planificador → Objetos.",
       "anyOf": "Cualquiera de {{count}} objetos",
       "scopeActive": "Activas",
       "scopeAvailable": "+ Disponibles",

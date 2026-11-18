@@ -633,6 +633,8 @@
       "objectivesTitle": "目標"
     },
     "items": {
+      "counted_one": "インベントリのスクショ：必要なアイテム {{count}} 件を数えました（{{list}}）。プランナー → アイテム を確認。",
+      "counted_other": "インベントリのスクショ：必要なアイテム {{count}} 件を数えました（{{list}}）。プランナー → アイテム を確認。",
       "anyOf": "{{count}} 種のうちいずれか",
       "scopeActive": "進行中",
       "scopeAvailable": "+ 受注可能",

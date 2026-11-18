@@ -633,6 +633,8 @@
       "objectivesTitle": "目标"
     },
     "items": {
+      "counted_one": "库存截图：已计入 {{count}} 种仍需要的物品（{{list}}）。见 规划 → 物品。",
+      "counted_other": "库存截图：已计入 {{count}} 种仍需要的物品（{{list}}）。见 规划 → 物品。",
       "anyOf": "{{count}} 种物品中任意一种",
       "scopeActive": "进行中",
       "scopeAvailable": "+ 可接取",
