@@ -55,6 +55,19 @@ export function phoneSocketUrl(loc: { host: string; search: string }): string | 
   return `ws://${loc.host}/ws?k=${k}`;
 }
 
+const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
+/** A screenshot's position sent on its own (`{"pos":{…}}`), ahead of the next map state. */
+export function parsePosFrame(raw: string): NonNullable<PhoneState['pos']> | null {
+  try {
+    const p = (JSON.parse(raw) as { pos?: Record<string, unknown> } | null)?.pos;
+    if (!p || !num(p.x) || !num(p.y) || !num(p.z) || !num(p.rotation) || !num(p.ts) || !num(p.seq)) return null;
+    return { x: p.x, y: p.y, z: p.z, rotation: p.rotation, ts: p.ts, seq: p.seq };
+  } catch {
+    return null;
+  }
+}
+
 /** A frame from the PC, checked enough to draw (anything else is ignored). */
 export function parsePhoneState(raw: unknown): PhoneState | null {
   if (typeof raw !== 'string' || raw.length > 600_000) return null;

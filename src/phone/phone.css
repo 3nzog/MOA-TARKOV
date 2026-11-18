@@ -53,6 +53,21 @@ html.phone-root #root {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+.phone-bar__btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: -4px -4px -4px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 18px;
+}
+.phone-bar__speed { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+.phone-bar__speed.is-slow { color: #ffb35a; }
 .phone-bar__clock { font-size: 15px; font-weight: 700; color: var(--text); }
 .phone-bar__clock.is-low { color: #ff6b5a; }
 .phone-map { flex: 1; width: 100%; background: var(--bg-sunken); }

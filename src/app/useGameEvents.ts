@@ -32,7 +32,7 @@ import {
   type RaidHistory,
 } from '../state/raidHistory';
 
-export type PlayerPos = { x: number; y: number; z: number; rotation: number; ts: number };
+export type PlayerPos = { x: number; y: number; z: number; rotation: number; ts: number; seq?: number };
 
 interface Options {
   setProgress: Dispatch<SetStateAction<LocalProgress>>;

@@ -55,6 +55,8 @@ export interface PlayerPositionPayload {
   y: number;
   z: number;
   rotation: number;
+  /** Counts the screenshots since the app started (the phone orders positions by it). */
+  seq?: number;
 }
 
 export function subscribeRaidStarted(cb: (e: RaidStartedPayload) => void): Promise<UnlistenFn> {

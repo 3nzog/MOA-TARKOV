@@ -1102,6 +1102,10 @@
     "waitingPc": "Conectando ao PC… Confira se o celular está na mesma Wi‑Fi e se o Tarkov MoA está aberto.",
     "waitingMap": "Conectado. Esperando o PC escolher um mapa (tire uma print no jogo).",
     "ago": "posição de {{min}} min atrás",
+    "lag": "{{ms}} ms do print até aqui",
+    "rtt": "Wi-Fi {{ms}} ms",
+    "fullscreen": "Tela cheia",
+    "exitFullscreen": "Sair da tela cheia",
     "follow": "Seguir",
     "err": {
       "port_busy": "Outro programa está usando a porta 8791.",

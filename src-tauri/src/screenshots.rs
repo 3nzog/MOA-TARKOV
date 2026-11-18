@@ -12,6 +12,7 @@
 // `rotation` is yaw in degrees, computed from the quaternion. EFT world is Y-up.
 
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -30,7 +31,14 @@ struct PlayerPosition {
     y: f64,
     z: f64,
     rotation: f64,
+    /// Counts the screenshots: the phone keeps the newest position when the
+    /// watcher's own frame and the app's map state arrive out of order.
+    seq: u64,
+    /// When the screenshot was seen (PC clock, ms).
+    ts: u64,
 }
+
+static SEQ: AtomicU64 = AtomicU64::new(0);
 
 fn default_screenshots_dir() -> Option<PathBuf> {
     dirs::document_dir().map(|d| d.join("Escape from Tarkov").join("Screenshots"))
@@ -59,6 +67,8 @@ fn parse_filename(name: &str, re: &Regex) -> Option<PlayerPosition> {
         y,
         z,
         rotation: yaw_degrees(qx, qy, qz, qw),
+        seq: 0,
+        ts: 0,
     })
 }
 
@@ -71,11 +81,21 @@ fn process_screenshot(app: &AppHandle, path: &Path, re: &Regex) {
     }
     // In a raid the name carries the position; in the stash or the hideout it
     // may not, and the picture is still worth reading for prices.
-    if let Some(pos) = parse_filename(name, re) {
+    // The name is all the position needs: it goes out at once, to the app and
+    // straight to the phones (their map no longer waits for the app's window,
+    // which runs slowly behind the game).
+    if let Some(mut pos) = parse_filename(name, re) {
+        pos.seq = SEQ.fetch_add(1, Ordering::Relaxed) + 1;
+        pos.ts = crate::phone::now_ms();
+        if let Ok(frame) = serde_json::to_string(&serde_json::json!({ "pos": &pos })) {
+            crate::phone::publish_pos(frame);
+        }
         if let Err(e) = app.emit("player-position", pos) {
             eprintln!("[screenshots] emit failed: {}", e);
         }
     }
+    // The picture itself may still be being written: a moment before reading it.
+    thread::sleep(Duration::from_millis(150));
     let game_lang = crate::game_lang::get_game_language();
     // O+O: if the extract list was open, its text is in the top-right corner.
     // Two lines minimum — every raid has at least two exits, and it keeps a
@@ -164,11 +184,9 @@ pub fn start(app: AppHandle, state: Arc<Mutex<Option<PathBuf>>>) {
                 Ok(ev) => {
                     if matches!(ev.kind, EventKind::Create(_)) {
                         for path in ev.paths {
-                            // Small delay: notify fires Create before the writer
-                            // finishes flushing. The filename is what we need
-                            // (not the bytes), so this is usually fine, but a
-                            // brief sleep avoids racing on rename-on-close.
-                            thread::sleep(Duration::from_millis(150));
+                            // No wait here: the position is in the name. The
+                            // reading of the picture waits for the game to finish
+                            // writing it (in process_screenshot).
                             process_screenshot(&app_for_watcher, &path, &re_for_watcher);
                         }
                     }

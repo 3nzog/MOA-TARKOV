@@ -1,12 +1,12 @@
 // The map on a phone (opened from the QR code, ?view=phone&k=…): a full-screen
 // map fed live by the PC over the home Wi-Fi. It only shows; nothing on the
 // phone changes anything on the PC.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CircleMarker, ImageOverlay, MapContainer, Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Crosshair, WifiHigh, WifiSlash } from '@phosphor-icons/react';
+import { CornersIn, CornersOut, Crosshair, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import { MAPS, SUPPORTED_MAP_NAMES, getGameToLatLng, getMapDef, leafletBounds, makeCRS } from '../map/mapDefs';
 import { canonicalMapId } from '../map/canonicalMap';
 import FloorVisualOverlay from '../map/FloorVisualOverlay';
@@ -17,14 +17,12 @@ import { clock } from '../map/raidDuration';
 import { TOKEN_HEX } from '../ui/tokens';
 import { MARKER_COLORS } from '../poi/registry';
 import { headingAngle, ROUTE_COLOR, type MinimapPoint } from '../minimap/protocol';
-import { parsePhoneState, phoneSocketUrl, type PhoneState } from './phoneApi';
+import type { PhoneState } from './phoneApi';
+import { usePhoneFeed, type LinkStats } from './usePhoneFeed';
 import '../App.css';
 import './phone.css';
 
 const STALE_MS = 90_000;
-const RETRY_MS = 2500;
-
-type Conn = 'connecting' | 'live' | 'down' | 'nokey';
 
 const colorOf = (p: MinimapPoint) =>
   p.kind === 'route'
@@ -36,65 +34,6 @@ const colorOf = (p: MinimapPoint) =>
         : p.kind === 'transit'
           ? MARKER_COLORS.O
           : MARKER_COLORS.G;
-
-/** The PC's state over the socket, reconnecting on its own. */
-function usePhoneFeed(): { state: PhoneState | null; conn: Conn } {
-  const [state, setState] = useState<PhoneState | null>(null);
-  const [conn, setConn] = useState<Conn>(() => (phoneSocketUrl(window.location) ? 'connecting' : 'nokey'));
-  useEffect(() => {
-    const url = phoneSocketUrl(window.location);
-    // In development a page can feed a state by hand
-    // (window.dispatchEvent(new CustomEvent('phone-demo', { detail: JSON.stringify(state) }))).
-    const onDemo = (e: Event) => {
-      const s = parsePhoneState((e as CustomEvent<string>).detail);
-      if (s) {
-        setState(s);
-        setConn('live');
-      }
-    };
-    if (import.meta.env.DEV) window.addEventListener('phone-demo', onDemo);
-    if (!url) {
-      return () => {
-        if (import.meta.env.DEV) window.removeEventListener('phone-demo', onDemo);
-      };
-    }
-    let ws: WebSocket | null = null;
-    let timer: number | undefined;
-    let alive = true;
-    const open = () => {
-      if (!alive) return;
-      setConn((c) => (c === 'live' ? 'down' : c));
-      ws = new WebSocket(url);
-      ws.onopen = () => alive && setConn('live');
-      ws.onmessage = (ev) => {
-        const s = parsePhoneState(ev.data);
-        if (s && alive) setState(s);
-      };
-      ws.onclose = () => {
-        if (!alive) return;
-        setConn('down');
-        timer = window.setTimeout(open, RETRY_MS);
-      };
-    };
-    open();
-    // Back from the lock screen: reconnect at once instead of waiting.
-    const onVisible = () => {
-      if (document.visibilityState === 'visible' && ws && ws.readyState > WebSocket.OPEN) {
-        window.clearTimeout(timer);
-        open();
-      }
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      alive = false;
-      window.clearTimeout(timer);
-      document.removeEventListener('visibilitychange', onVisible);
-      if (import.meta.env.DEV) window.removeEventListener('phone-demo', onDemo);
-      ws?.close();
-    };
-  }, []);
-  return { state, conn };
-}
 
 /** Keeps the player centered while "follow" is on; a drag with the finger turns it off. */
 function Follow({ mapId, pos, on, onDrag }: { mapId: string; pos: PhoneState['pos']; on: boolean; onDrag: () => void }) {
@@ -112,7 +51,8 @@ function Follow({ mapId, pos, on, onDrag }: { mapId: string; pos: PhoneState['po
     if (!on || !pos || !toLatLng) return;
     const z = first.current ? Math.max(map.getZoom(), 2.5) : map.getZoom();
     first.current = false;
-    map.setView(toLatLng(pos.x, pos.z), z, { animate: true });
+    // A short glide: the map keeps up with the screenshot instead of trailing it.
+    map.setView(toLatLng(pos.x, pos.z), z, { animate: true, duration: 0.1 });
   }, [map, mapId, pos, on]);
   return null;
 }
@@ -142,6 +82,52 @@ function MateMarker({ mate, at, heading }: { mate: NonNullable<PhoneState['mates
   );
 }
 
+/** How fast the link is: screenshot → here for a recent one, else the Wi-Fi round trip. */
+function LinkSpeed({ link }: { link: RefObject<LinkStats> }) {
+  const [text, setText] = useState<{ key: 'phone.lag' | 'phone.rtt'; ms: number } | null>(null);
+  useEffect(() => {
+    const tick = () => {
+      const l = link.current;
+      const next =
+        l.lag !== null && Date.now() - l.lagAt < 20_000
+          ? { key: 'phone.lag' as const, ms: Math.round(l.lag) }
+          : l.rtt !== null
+            ? { key: 'phone.rtt' as const, ms: Math.round(l.rtt) }
+            : null;
+      setText((cur) => (cur?.key === next?.key && cur?.ms === next?.ms ? cur : next));
+    };
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [link]);
+  const { t } = useTranslation();
+  if (!text) return null;
+  return <span className={`phone-bar__speed mono${text.ms > 300 ? ' is-slow' : ''}`}>{t(text.key, { ms: text.ms })}</span>;
+}
+
+/** Full screen: hides the browser's address bar (and the phone's bars, on Android). */
+function FullscreenButton() {
+  const { t } = useTranslation();
+  const [full, setFull] = useState(() => !!document.fullscreenElement);
+  useEffect(() => {
+    const h = () => setFull(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', h);
+    return () => document.removeEventListener('fullscreenchange', h);
+  }, []);
+  // iPhone Safari has no full screen for a page: no button there.
+  if (!document.fullscreenEnabled) return null;
+  const toggle = () => {
+    const p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    void p.catch(() => undefined);
+  };
+  const label = t(full ? 'phone.exitFullscreen' : 'phone.fullscreen');
+  return (
+    <button type="button" className="phone-bar__btn" onClick={toggle} aria-label={label} title={label}>
+      {full ? <CornersIn weight="bold" /> : <CornersOut weight="bold" />}
+    </button>
+  );
+}
+
 function RaidClock({ c }: { c: NonNullable<PhoneState['raidClock']> }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -154,7 +140,7 @@ function RaidClock({ c }: { c: NonNullable<PhoneState['raidClock']> }) {
 
 export default function PhoneApp() {
   const { t } = useTranslation();
-  const { state, conn } = usePhoneFeed();
+  const { state, conn, link } = usePhoneFeed();
   const [follow, setFollow] = useState(true);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -179,8 +165,10 @@ export default function PhoneApp() {
           {conn === 'live' ? <WifiHigh weight="bold" /> : <WifiSlash weight="bold" />}
           {t(`phone.conn.${conn}`)}
         </span>
+        {conn === 'live' && <LinkSpeed link={link} />}
         <strong className="phone-bar__map">{state?.mapName ?? (mapId ? SUPPORTED_MAP_NAMES[mapId] : null) ?? t('phone.noMap')}</strong>
         {state?.raidClock && <RaidClock c={state.raidClock} />}
+        <FullscreenButton />
       </header>
 
       {conn === 'nokey' ? (

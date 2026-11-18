@@ -26,7 +26,9 @@ export const PATCH_NOTES: PatchNote[] = [
       "Faster: the minimap window loads only its own code, panels load when first opened, the raid clock no longer redraws the whole app every second, and only your language is loaded (the other five come when you switch), which halves the main script and makes the phone page quicker to open. Fixed: quest and exit dots on the minimap could be hidden under the map art.",
       "Fixed: the map on the phone could stay blank. The PC cut each connection short, so the app's script never arrived whole; now every file arrives complete.",
       "The raid route can be turned off in Settings → General too (or with the route button on the map, or the X on its panel). Off means off: nothing of it on the map, minimap or phone, and no route sounds. Fixed: the hot-zone and \"route stop done\" sounds played in raids even with the route off.",
-      "Linking PCs: a PC outside your home network (Radmin, internet) that nobody clicked no longer pops up \"Link a PC?\" on yours; it is turned away quietly. A request made with a click still asks. Over Radmin, the PC that asks needs 0.10.0 too.",      "Squad Mode: no change to the squad protocol; 0.9.0 and 0.10.0 still see each other.",
+      "Linking PCs: a PC outside your home network (Radmin, internet) that nobody clicked no longer pops up \"Link a PC?\" on yours; it is turned away quietly. A request made with a click still asks. Over Radmin, the PC that asks needs 0.10.0 too.",
+      "Map on the phone, faster: a screenshot's position now goes straight to the phone (it used to wait for the app's window, which runs slowly behind the game, and the PC waited 150 ms before reading each screenshot), the phone's Wi-Fi is kept awake while the map is on screen, and the map glides to you in 0.1 s. The bar shows how long a screenshot took to get there. Fixed: the phone could stop getting positions after its screen went off; it now reconnects on its own. New: a full-screen button (Android; iPhone Safari does not allow it).",
+      "Squad Mode: no change to the squad protocol; 0.9.0 and 0.10.0 still see each other.",
     ],
   },
   {

@@ -6,9 +6,16 @@
 //   internet.
 // - The page itself is the app's bundle (public anyway); the live data needs
 //   the key carried by the QR code. A new key cuts off every phone.
-// - Read-only: a phone only receives; whatever it sends is ignored.
+// - Read-only: a phone only receives. All it may send is a tiny ping, answered
+//   at once with the PC's clock: the page measures the delay with it, and the
+//   steady trickle keeps the phone's Wi-Fi from dozing between screenshots
+//   (a dozing phone gets each packet up to a few hundred ms late).
+// - A screenshot's position also comes straight from the screenshot watcher
+//   (`publish_pos`), not only inside the app's next map state: the app's window
+//   sits behind the game, where its page runs slowly, and that cost the phone
+//   most of a second.
 
-use futures_util::{SinkExt, StreamExt};
+use futures_util::{Sink, SinkExt, StreamExt};
 use serde::Serialize;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
@@ -32,6 +39,23 @@ const HEAD_MAX: usize = 8 * 1024;
 const HEAD_WAIT: Duration = Duration::from_secs(5);
 /// How long a finished reply waits for the browser to close its side.
 const CLOSE_WAIT: Duration = Duration::from_secs(3);
+/// With nothing new to send, a phone still hears from the PC this often. The
+/// page takes a long silence for a dead link: a phone asleep while the PC gave
+/// up on it is never told, and would wait forever on a link that is gone. It
+/// also keeps phones' Wi-Fi from dropping an idle socket.
+#[cfg(not(test))]
+const HEARTBEAT: Duration = Duration::from_secs(10);
+#[cfg(test)]
+const HEARTBEAT: Duration = Duration::from_millis(150);
+/// The heartbeat. Not a map state (no points), so any page, old ones too, skips it.
+const HEARTBEAT_FRAME: &str = r#"{"hb":1}"#;
+/// Biggest message a phone may send (a ping is ~25 bytes).
+const PING_MAX: usize = 64;
+/// A phone that stops reading (a frozen page) is let go after this long.
+#[cfg(not(test))]
+const SEND_WAIT: Duration = Duration::from_secs(15);
+#[cfg(test)]
+const SEND_WAIT: Duration = Duration::from_millis(300);
 
 /// An app file by path ("index.html", "assets/x.js") → (bytes, mime type).
 pub type AssetsFn = Arc<dyn Fn(&str) -> Option<(Vec<u8>, String)> + Send + Sync>;
@@ -41,6 +65,7 @@ pub type AllowFn = Arc<dyn Fn(&IpAddr) -> bool + Send + Sync>;
 pub struct Handle {
     stop: watch::Sender<bool>,
     state: watch::Sender<Arc<String>>,
+    pos: watch::Sender<Arc<String>>,
     clients: Arc<AtomicUsize>,
     #[cfg_attr(not(test), allow(dead_code))]
     pub port: u16,
@@ -52,6 +77,10 @@ impl Handle {
     }
     pub fn publish(&self, json: String) {
         let _ = self.state.send(Arc::new(json));
+    }
+    /// A position frame (`{"pos":{…}}`), sent to the phones ahead of the next map state.
+    pub fn publish_pos(&self, json: String) {
+        let _ = self.pos.send(Arc::new(json));
     }
     pub fn clients(&self) -> usize {
         self.clients.load(Ordering::Relaxed)
@@ -78,6 +107,7 @@ pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, all
     let port = listener.local_addr().map(|a| a.port()).unwrap_or(port);
     let (stop, stop_rx) = watch::channel(false);
     let (state, state_rx) = watch::channel(Arc::new(String::new()));
+    let (pos, pos_rx) = watch::channel(Arc::new(String::new()));
     let clients = Arc::new(AtomicUsize::new(0));
     let key = Arc::new(key);
     let c2 = clients.clone();
@@ -91,13 +121,20 @@ pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, all
                     if !allow(&peer.ip()) {
                         continue;
                     }
-                    let (assets, key, state_rx, stop_rx, clients) = (assets.clone(), key.clone(), state_rx.clone(), stop_rx.clone(), c2.clone());
-                    tauri::async_runtime::spawn(serve(stream, assets, key, state_rx, stop_rx, clients));
+                    let feeds = Feeds { state: state_rx.clone(), pos: pos_rx.clone(), stop: stop_rx.clone() };
+                    tauri::async_runtime::spawn(serve(stream, assets.clone(), key.clone(), feeds, c2.clone()));
                 }
             }
         }
     });
-    Ok(Handle { stop, state, clients, port })
+    Ok(Handle { stop, state, pos, clients, port })
+}
+
+/// What a phone's link listens to: map states, positions, and the stop.
+struct Feeds {
+    state: watch::Receiver<Arc<String>>,
+    pos: watch::Receiver<Arc<String>>,
+    stop: watch::Receiver<bool>,
 }
 
 /// Reads the request head without consuming it (a WebSocket handshake reads it
@@ -147,8 +184,7 @@ async fn serve(
     stream: TcpStream,
     assets: AssetsFn,
     key: Arc<String>,
-    state_rx: watch::Receiver<Arc<String>>,
-    stop_rx: watch::Receiver<bool>,
+    feeds: Feeds,
     clients: Arc<AtomicUsize>,
 ) {
     let _ = stream.set_nodelay(true);
@@ -162,7 +198,7 @@ async fn serve(
         l.starts_with("upgrade:") && l.contains("websocket")
     });
     if upgrade {
-        serve_ws(stream, key, state_rx, stop_rx, clients).await;
+        serve_ws(stream, key, feeds, clients).await;
     } else {
         serve_http(stream, method, target, head_len, assets).await;
     }
@@ -209,10 +245,10 @@ async fn serve_http(mut stream: TcpStream, method: &str, target: &str, head_len:
 async fn serve_ws(
     stream: TcpStream,
     key: Arc<String>,
-    mut state_rx: watch::Receiver<Arc<String>>,
-    mut stop_rx: watch::Receiver<bool>,
+    feeds: Feeds,
     clients: Arc<AtomicUsize>,
 ) {
+    let Feeds { state: mut state_rx, pos: mut pos_rx, stop: mut stop_rx } = feeds;
     let check = |req: &Request, resp: Response| -> Result<Response, ErrorResponse> {
         if ws_key_ok(req.uri(), &key) && clients.load(Ordering::Relaxed) < MAX_CLIENTS {
             Ok(resp)
@@ -227,7 +263,9 @@ async fn serve_ws(
     net::log("celular: um celular abriu o mapa");
     let (mut sink, mut source) = ws.split();
     let first = state_rx.borrow_and_update().clone();
-    let mut ok = first.is_empty() || sink.send(Message::text(first.as_str())).await.is_ok();
+    // The first state already holds the latest position.
+    pos_rx.borrow_and_update();
+    let mut ok = first.is_empty() || send_within(&mut sink, Message::text(first.as_str())).await;
     while ok {
         tokio::select! {
             _ = stop_rx.changed() => break,
@@ -236,21 +274,63 @@ async fn serve_ws(
                     break;
                 }
                 let s = state_rx.borrow_and_update().clone();
-                ok = sink.send(Message::text(s.as_str())).await.is_ok();
+                ok = send_within(&mut sink, Message::text(s.as_str())).await;
+            }
+            r = pos_rx.changed() => {
+                if r.is_err() {
+                    break;
+                }
+                let p = pos_rx.borrow_and_update().clone();
+                ok = send_within(&mut sink, Message::text(p.as_str())).await;
             }
             m = source.next() => match m {
-                // Read-only: text/binary from the phone is ignored; pings are answered by the library.
                 Some(Ok(Message::Close(_))) | None | Some(Err(_)) => break,
+                // The page's ping: answered at once. Anything else is ignored
+                // (WebSocket pings are answered by the library).
+                Some(Ok(Message::Text(t))) => {
+                    if let Some(pong) = pong_for(t.as_str(), now_ms()) {
+                        ok = send_within(&mut sink, Message::text(pong)).await;
+                    }
+                }
                 Some(Ok(_)) => {}
             },
-            // Keeps phones' Wi-Fi from dropping an idle socket.
-            _ = tokio::time::sleep(Duration::from_secs(20)) => {
-                ok = sink.send(Message::Ping(Vec::new().into())).await.is_ok();
+            // Nothing new for a while: the phone still hears that the link is there.
+            _ = tokio::time::sleep(HEARTBEAT) => {
+                ok = send_within(&mut sink, Message::text(HEARTBEAT_FRAME)).await;
             }
         }
     }
-    let _ = sink.send(Message::Close(None)).await;
+    let _ = tokio::time::timeout(Duration::from_secs(1), sink.send(Message::Close(None))).await;
     clients.fetch_sub(1, Ordering::Relaxed);
+}
+
+/// `{"ping":N}` from a page → `{"pong":N,"t":<PC clock, ms>}`; anything else → None.
+fn pong_for(text: &str, now: u64) -> Option<String> {
+    if text.len() > PING_MAX {
+        return None;
+    }
+    let v: serde_json::Value = serde_json::from_str(text).ok()?;
+    let n = v.get("ping")?.as_f64().filter(|n| n.is_finite())?;
+    Some(serde_json::json!({ "pong": n, "t": now }).to_string())
+}
+
+pub fn now_ms() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
+}
+
+/// A screenshot's position (`{"pos":{…}}`), straight to the phones when the server is on.
+pub fn publish_pos(json: String) {
+    if let Some(h) = cell().lock().ok().as_ref().and_then(|g| g.as_ref()) {
+        h.publish_pos(json);
+    }
+}
+
+/// Sends one frame, or gives up on a phone that has stopped reading (SEND_WAIT).
+async fn send_within<S: Sink<Message> + Unpin>(sink: &mut S, m: Message) -> bool {
+    matches!(tokio::time::timeout(SEND_WAIT, sink.send(m)).await, Ok(Ok(())))
 }
 
 // ---- app commands -----------------------------------------------------------------
@@ -419,6 +499,102 @@ mod tests {
         out
     }
 
+    /// The next map state, past any heartbeat.
+    async fn next_state(ws: &mut tokio_tungstenite::WebSocketStream<TcpStream>) -> String {
+        loop {
+            let m = ws.next().await.unwrap().unwrap();
+            let t = m.to_text().unwrap();
+            if t != HEARTBEAT_FRAME {
+                return t.to_string();
+            }
+        }
+    }
+
+    /// Nothing new to send (no screenshot for a while): the phone still hears
+    /// from the PC, so a page can tell a quiet link from a dead one.
+    #[test]
+    fn a_quiet_link_still_hears_from_the_pc() {
+        tauri::async_runtime::block_on(async {
+            let h = start(Ipv4Addr::LOCALHOST, 0, "abcdef0123456789".into(), assets(), Arc::new(|_: &IpAddr| true)).await.unwrap();
+            h.publish(r#"{"points":[]}"#.into());
+            let mut ws = ws(h.port, "/ws?k=abcdef0123456789").await.unwrap();
+            assert_eq!(next_state(&mut ws).await, r#"{"points":[]}"#);
+            for _ in 0..3 {
+                let m = tokio::time::timeout(HEARTBEAT * 4, ws.next()).await.expect("a heartbeat in time").unwrap().unwrap();
+                assert_eq!(m.to_text().unwrap(), HEARTBEAT_FRAME);
+            }
+            // A new state still goes out as soon as it comes.
+            h.publish(r#"{"points":[1]}"#.into());
+            assert_eq!(next_state(&mut ws).await, r#"{"points":[1]}"#);
+            h.stop();
+        });
+    }
+
+    /// The page's ping comes back at once with the PC's clock; nothing else is answered.
+    #[test]
+    fn a_ping_is_answered_with_the_pc_clock() {
+        assert_eq!(pong_for(r#"{"ping":1234.5}"#, 99).as_deref(), Some(r#"{"pong":1234.5,"t":99}"#));
+        assert_eq!(pong_for(r#"{"ping":"x"}"#, 99), None);
+        assert_eq!(pong_for(r#"{"points":[]}"#, 99), None);
+        assert_eq!(pong_for(&format!(r#"{{"ping":1,"pad":"{}"}}"#, "x".repeat(80)), 99), None);
+        tauri::async_runtime::block_on(async {
+            let h = start(Ipv4Addr::LOCALHOST, 0, "abcdef0123456789".into(), assets(), Arc::new(|_: &IpAddr| true)).await.unwrap();
+            h.publish(r#"{"points":[]}"#.into());
+            let mut ws = ws(h.port, "/ws?k=abcdef0123456789").await.unwrap();
+            assert_eq!(next_state(&mut ws).await, r#"{"points":[]}"#);
+            ws.send(Message::text(r#"{"ping":7}"#)).await.unwrap();
+            let pong = next_state(&mut ws).await;
+            assert!(pong.starts_with(r#"{"pong":7.0,"t":"#), "{pong}");
+            h.stop();
+        });
+    }
+
+    /// A screenshot's position reaches a connected phone on its own frame, at
+    /// once; a phone that connects later gets the map state instead.
+    #[test]
+    fn a_position_goes_straight_to_the_phones() {
+        tauri::async_runtime::block_on(async {
+            let h = start(Ipv4Addr::LOCALHOST, 0, "abcdef0123456789".into(), assets(), Arc::new(|_: &IpAddr| true)).await.unwrap();
+            h.publish(r#"{"points":[]}"#.into());
+            h.publish_pos(r#"{"pos":{"x":0}}"#.into());
+            let mut ws = ws(h.port, "/ws?k=abcdef0123456789").await.unwrap();
+            assert_eq!(next_state(&mut ws).await, r#"{"points":[]}"#);
+            let t0 = std::time::Instant::now();
+            h.publish_pos(r#"{"pos":{"x":1}}"#.into());
+            assert_eq!(next_state(&mut ws).await, r#"{"pos":{"x":1}}"#);
+            assert!(t0.elapsed() < Duration::from_millis(100), "{:?}", t0.elapsed());
+            h.stop();
+        });
+    }
+
+    /// A phone whose page froze and stopped reading does not hold its place
+    /// forever: once a frame cannot go out for SEND_WAIT, it is let go.
+    #[test]
+    fn a_phone_that_stops_reading_is_let_go() {
+        tauri::async_runtime::block_on(async {
+            let h = start(Ipv4Addr::LOCALHOST, 0, "abcdef0123456789".into(), assets(), Arc::new(|_: &IpAddr| true)).await.unwrap();
+            let _frozen = ws(h.port, "/ws?k=abcdef0123456789").await.unwrap();
+            let deadline = tokio::time::Instant::now() + Duration::from_secs(20);
+            let mut seen = false;
+            let mut i = 0u32;
+            while tokio::time::Instant::now() < deadline {
+                if h.clients() == 1 {
+                    seen = true;
+                }
+                if seen && h.clients() == 0 {
+                    break;
+                }
+                // Big states, never read: the socket fills up and a send stalls.
+                i += 1;
+                h.publish(format!(r#"{{"points":[],"n":{i},"pad":"{}"}}"#, "x".repeat(4 * 1024 * 1024)));
+                tokio::time::sleep(Duration::from_millis(50)).await;
+            }
+            assert!(seen, "the phone connected");
+            assert_eq!(h.clients(), 0, "a phone that stopped reading is let go");
+            h.stop();
+        });
+    }
+
     /// A big file asked for the way a browser does (many header lines), read to
     /// the end: the whole file must arrive, not a connection reset half way.
     #[test]
@@ -490,8 +666,7 @@ mod tests {
             // Right key: the latest state at once, then every change.
             h.publish(r#"{"mapId":"a"}"#.into());
             let mut ws = ws(port, "/ws?k=abcdef0123456789").await.unwrap();
-            let first = ws.next().await.unwrap().unwrap();
-            assert_eq!(first.to_text().unwrap(), r#"{"mapId":"a"}"#);
+            assert_eq!(next_state(&mut ws).await, r#"{"mapId":"a"}"#);
             for _ in 0..50 {
                 if h.clients() == 1 {
                     break;
@@ -500,8 +675,7 @@ mod tests {
             }
             assert_eq!(h.clients(), 1);
             h.publish(r#"{"mapId":"b"}"#.into());
-            let next = ws.next().await.unwrap().unwrap();
-            assert_eq!(next.to_text().unwrap(), r#"{"mapId":"b"}"#);
+            assert_eq!(next_state(&mut ws).await, r#"{"mapId":"b"}"#);
             // Stopping closes it.
             h.stop();
             let end = tokio::time::timeout(Duration::from_secs(3), async {

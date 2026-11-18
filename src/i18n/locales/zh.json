@@ -1102,6 +1102,10 @@
     "waitingPc": "正在连接电脑… 请确认手机在同一 Wi‑Fi 且 Tarkov MoA 已打开。",
     "waitingMap": "已连接。等待电脑选择地图（在游戏中截图）。",
     "ago": "{{min}} 分钟前的位置",
+    "lag": "截图到这里 {{ms}} 毫秒",
+    "rtt": "Wi-Fi {{ms}} 毫秒",
+    "fullscreen": "全屏",
+    "exitFullscreen": "退出全屏",
     "follow": "跟随",
     "err": {
       "port_busy": "端口 8791 被其他程序占用。",

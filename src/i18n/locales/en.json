@@ -1102,6 +1102,10 @@
     "waitingPc": "Connecting to the PC… Check the phone is on the same Wi‑Fi and Tarkov MoA is open.",
     "waitingMap": "Connected. Waiting for the PC to pick a map (take a screenshot in game).",
     "ago": "position from {{min}} min ago",
+    "lag": "{{ms}} ms screenshot→here",
+    "rtt": "Wi-Fi {{ms}} ms",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Leave full screen",
     "follow": "Follow",
     "err": {
       "port_busy": "Another program is using port 8791.",

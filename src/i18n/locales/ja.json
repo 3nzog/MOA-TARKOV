@@ -1102,6 +1102,10 @@
     "waitingPc": "PCに接続中… スマホが同じWi‑Fiにあり、Tarkov MoAが開いているか確認してください。",
     "waitingMap": "接続しました。PCが地図を選ぶのを待っています(ゲーム内でスクリーンショット)。",
     "ago": "{{min}} 分前の位置",
+    "lag": "スクショから {{ms}} ms",
+    "rtt": "Wi-Fi {{ms}} ms",
+    "fullscreen": "全画面",
+    "exitFullscreen": "全画面を終了",
     "follow": "追従",
     "err": {
       "port_busy": "ポート8791は他のプログラムが使用中です。",

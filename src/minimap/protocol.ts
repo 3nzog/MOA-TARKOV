@@ -184,7 +184,8 @@ export function distanceLabel(from: { x: number; z: number } | null, to: { x: nu
 export interface MinimapState {
   mapId: string | null;
   /** Last screenshot fix; ts = when it arrived (ms). */
-  pos: { x: number; y: number; z: number; rotation: number; ts: number } | null;
+  /** `seq` counts the PC's screenshots (absent from old apps). */
+  pos: { x: number; y: number; z: number; rotation: number; ts: number; seq?: number } | null;
   activeFloorId: string | null;
   points: MinimapPoint[];
   /** Your marker: the symbol you picked and your colour. */
