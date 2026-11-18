@@ -122,14 +122,8 @@ goto :i_shortcut
 
 :i_update
 call :section "2/4" "Atualizando o Tarkov MoA"
-rem  O MoA aberto segura os arquivos: fecha (o que foi marcado ja esta salvo).
-tasklist /fi "imagename eq tarkov-companion.exe" 2>nul | find /i "tarkov-companion.exe" >nul
-if not errorlevel 1 (
-  call :run "Fechando o Tarkov MoA aberto"
-  taskkill /im tarkov-companion.exe >>"%LOG%" 2>&1
-  timeout /t 4 >nul
-  taskkill /f /im tarkov-companion.exe >>"%LOG%" 2>&1
-)
+rem  O MoA aberto fica aberto: atualizar o codigo nao mexe no .exe. A abertura
+rem  so fecha ele se precisar compilar a versao nova (e abre ela no fim).
 call :run "Já instalado: buscando a versão mais nova"
 set "LOGINRETRY="
 rem  A folder whose Git is half set up (seen: no branch ever fetched, no
