@@ -1231,9 +1231,8 @@
       "btr": "BTR"
     },
     "off": "Desligar a rota",
-    "free": "Jogar livre",
-    "offHint": "Desliga a rota: nada dela no mapa, no minimapa nem no celular, e sem os sons dela. O botão de rota no mapa liga de novo.",
-    "settingsOn": "Usar a rota da raid (desligada = jogar livre)",
+    "switch": "Rotas",
+    "settingsOn": "Rotas",
     "settingsHint": "Desligada, nada da rota aparece: nem no mapa, nem no minimapa, nem no celular, e os sons dela (parada da rota concluída, zona quente) não tocam. O botão de rota no canto do mapa também liga e desliga."
   },
   "sounds": {

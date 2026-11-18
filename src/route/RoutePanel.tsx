@@ -4,7 +4,7 @@
 // the stops in order (whose they are, the walk to each, ⚠ when hot), the exit
 // and what did not fit; and the extras (hot zones, loot on the way, the car).
 import { useTranslation } from 'react-i18next';
-import { ArrowCounterClockwise, Check, MapPin, Path, SignOut, Warning, X } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, Check, MapPin, Path, SignOut, Warning } from '@phosphor-icons/react';
 import { Button, Chip, HelpTip, IconButton, Segmented, Spinner, Toggle } from '../ui';
 import type { RaidRoute } from './useRaidRoute';
 import { ROUTE_STYLES, type RoutePlan } from './plan';
@@ -63,9 +63,7 @@ export default function RoutePanel({ route, inSquad, names }: { route: RaidRoute
           </small>
         </div>
         <HelpTip>{t('route.help')}</HelpTip>
-        <Button size="sm" variant="secondary" icon={<X weight="bold" />} title={t('route.offHint')} onClick={() => route.setOn(false)}>
-          {t('route.free')}
-        </Button>
+        <Toggle size="sm" checked onChange={route.setOn} label={t('route.switch')} />
       </header>
 
       <div className="route-card__body">

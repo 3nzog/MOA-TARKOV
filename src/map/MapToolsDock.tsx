@@ -2,7 +2,8 @@
 // zoom dock. Two controls only (Moacir's spec): toggle the pen, and clear all
 // your drawings on this map (the eraser icon — per-stroke erasing is gone).
 
-import { PencilSimple, Eraser, Mountains, Cube, Path } from "@phosphor-icons/react";
+import { PencilSimple, Eraser, Mountains, Cube } from "@phosphor-icons/react";
+import { Toggle } from "../ui";
 import { useTranslation } from "react-i18next";
 import type { DrawTool } from "./DrawLayer";
 
@@ -44,16 +45,11 @@ export default function MapToolsDock({
   return (
     <div className="tc-tools-dock">
       {onRoute && (
-        <button
-          type="button"
-          aria-pressed={route}
-          title={route ? t('route.hide') : t('route.show')}
-          aria-label={t('route.title')}
-          className={route ? "active" : undefined}
-          onClick={() => onRoute(!route)}
-        >
-          <Path weight={route ? "bold" : "regular"} />
-        </button>
+        // The routes' switch: on shows them, off turns them off.
+        <div className="tc-tools-dock__switch" title={route ? t('route.hide') : t('route.show')}>
+          <span>{t('route.switch')}</span>
+          <Toggle size="sm" checked={route} onChange={onRoute} label={t('route.switch')} />
+        </div>
       )}
       <button
         type="button"
