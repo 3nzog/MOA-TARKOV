@@ -12,7 +12,7 @@ import { canonicalMapId } from '../map/canonicalMap';
 import { heatSources } from './heat';
 import { itemKinds, lootForMap } from './lootData';
 import { buildStops, type Point, type RouteStop, type RouteWho } from './plan';
-import { lootStops, scavStops, type RouteGoal, type WeaponKind } from './targets';
+import { bossStops, lootStops, scavStops, type RouteGoal, type WeaponKind } from './targets';
 import { pmcExits } from './exits';
 import { loadRouteData, type RouteData } from './routeData';
 import { computeInBackground } from './routeClient';
@@ -75,6 +75,7 @@ export function stopsForMap(
   }
   const me = people.slice(0, 1).map((p) => p.who);
   if (goal === 'scavs') return scavStops(pois, me);
+  if (goal === 'bosses') return bossStops(pois, me);
   if (!data?.loot) return [];
   return lootStops(goal, { loot: lootForMap(data.loot, mapId), prices: data.prices, itemKinds: itemKinds(data.loot), hideoutNeeds, weaponKinds }, me);
 }

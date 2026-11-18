@@ -1157,7 +1157,8 @@
       "scavs": "Scav",
       "money": "金钱",
       "hideout": "藏身处",
-      "weapons": "武器"
+      "weapons": "武器",
+      "bosses": "Boss"
     },
     "weapon": {
       "guns": "武器",
@@ -1198,7 +1199,10 @@
       "scavs_one": "{{count}} 个 Scav 刷新点",
       "scavs_other": "{{count}} 个 Scav 刷新点",
       "areas_one": "{{count}} 处",
-      "areas_other": "{{count}} 处"
+      "areas_other": "{{count}} 处",
+      "bosses_one": "{{count}} 个 Boss 点",
+      "bosses_other": "{{count}} 个 Boss 点",
+      "bossChance": "遇到概率 {{pct}}%"
     },
     "loot": {
       "area": "物资点",
@@ -1237,7 +1241,13 @@
     "switch": "路线",
     "offShort": "已关闭：地图、小地图和手机上都不显示",
     "settingsOn": "路线",
-    "settingsHint": "关闭后路线在任何地方都不显示：地图、小地图和手机上都没有，路线提示音（站点完成、热区）也不响。路线窗口里的开关（地图上的路线按钮）也可以打开和关闭。"
+    "settingsHint": "关闭后路线在任何地方都不显示：地图、小地图和手机上都没有，路线提示音（站点完成、热区）也不响。路线窗口里的开关（地图上的路线按钮）也可以打开和关闭。",
+    "bosses": {
+      "area": "Boss 点",
+      "roster": "本地图的 Boss",
+      "none": "本地图没有已知出现地点的 Boss。",
+      "here": "此处：{{list}}"
+    }
   },
   "sounds": {
     "title": "声音提醒",

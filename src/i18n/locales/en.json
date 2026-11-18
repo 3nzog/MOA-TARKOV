@@ -1157,7 +1157,8 @@
       "scavs": "Scavs",
       "money": "Money",
       "hideout": "Hideout",
-      "weapons": "Weapons"
+      "weapons": "Weapons",
+      "bosses": "Bosses"
     },
     "weapon": {
       "guns": "Guns",
@@ -1198,7 +1199,10 @@
       "scavs_one": "{{count}} Scav spawn",
       "scavs_other": "{{count}} Scav spawns",
       "areas_one": "{{count}} area",
-      "areas_other": "{{count}} areas"
+      "areas_other": "{{count}} areas",
+      "bosses_one": "{{count}} boss spot",
+      "bosses_other": "{{count}} boss spots",
+      "bossChance": "{{pct}}% to meet one"
     },
     "loot": {
       "area": "Loot area",
@@ -1237,7 +1241,13 @@
     "switch": "Routes",
     "offShort": "Off: no route on the map, minimap or phone",
     "settingsOn": "Routes",
-    "settingsHint": "Off, nothing of the routes shows: not on the map, the minimap or the phone, and their sounds (route stop done, hot zone) stay quiet. The switch in the route window (route button on the map) turns them on and off too."
+    "settingsHint": "Off, nothing of the routes shows: not on the map, the minimap or the phone, and their sounds (route stop done, hot zone) stay quiet. The switch in the route window (route button on the map) turns them on and off too.",
+    "bosses": {
+      "area": "Boss spot",
+      "roster": "Bosses on this map",
+      "none": "No boss here comes to a known place.",
+      "here": "Here: {{list}}"
+    }
   },
   "sounds": {
     "title": "Sound alerts",

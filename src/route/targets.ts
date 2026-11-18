@@ -16,8 +16,8 @@ import { containerIntel } from './lootIntel';
 import type { MapLoot } from './lootData';
 import type { RouteStop, RouteWho, StopInfo } from './plan';
 
-export type RouteGoal = 'quests' | 'money' | 'hideout' | 'weapons' | 'scavs';
-export const ROUTE_GOALS: readonly RouteGoal[] = ['quests', 'money', 'hideout', 'weapons', 'scavs'];
+export type RouteGoal = 'quests' | 'money' | 'hideout' | 'weapons' | 'scavs' | 'bosses';
+export const ROUTE_GOALS: readonly RouteGoal[] = ['quests', 'money', 'hideout', 'weapons', 'scavs', 'bosses'];
 export type LootGoal = 'money' | 'hideout' | 'weapons';
 export type WeaponKind = 'guns' | 'ammo' | 'parts';
 export const WEAPON_KINDS: readonly WeaponKind[] = ['guns', 'ammo', 'parts'];
@@ -207,6 +207,68 @@ export function scavStops(pois: Poi[], who: RouteWho[], labels?: PlaceLabel[], m
       value: g.members.length,
       info: { kind: 'scavs', spawns: g.members.length, boss: g.members.some((m) => m.boss), place: nearestPlace(labels, g.x, g.z) } as StopInfo,
     }))
+    .sort((p, q) => q.value - p.value)
+    .slice(0, max)
+    .sort((p, q) => (p.id < q.id ? -1 : p.id > q.id ? 1 : 0));
+}
+
+export interface BossChance {
+  name: string;
+  /** 0–1. */
+  chance: number;
+}
+
+const hereOf = (p: Poi): BossChance[] => {
+  const h = (p.meta as { here?: BossChance[] } | undefined)?.here;
+  return Array.isArray(h) ? h : [];
+};
+
+/** The map's bosses and their chance to be in a raid (from the boss spawn points' roster). */
+export function mapBosses(pois: Poi[]): BossChance[] {
+  const best = new Map<string, number>();
+  for (const p of pois) {
+    if (p.category !== 'boss') continue;
+    const roster = (p.meta as { roster?: { name: string; chance: number; zones?: unknown[] }[] } | undefined)?.roster ?? [];
+    for (const r of roster) {
+      // Only bosses that come to a known place (event mobs roam the whole map).
+      if (!r.zones || r.zones.length === 0 || !(r.chance > 0)) continue;
+      best.set(r.name, Math.max(best.get(r.name) ?? 0, r.chance));
+    }
+  }
+  return [...best].map(([name, chance]) => ({ name, chance })).sort((a, b) => b.chance - a.chance);
+}
+
+/**
+ * Where to hunt bosses: their spawn points, grouped into places. A place is
+ * worth the chance of meeting a boss there (each boss counted once, at its
+ * best spot in the place), in percent.
+ */
+export function bossStops(pois: Poi[], who: RouteWho[], labels?: PlaceLabel[], max = 20): RouteStop[] {
+  const spots = pois.filter((p) => p.category === 'boss' && hereOf(p).length > 0);
+  const groups = cluster(
+    spots.map((p) => ({ x: p.position.x, z: p.position.z, y: p.position.y, here: hereOf(p) })),
+    60,
+  );
+  return groups
+    .map((g) => {
+      const byBoss = new Map<string, number>();
+      for (const m of g.members) for (const h of m.here) byBoss.set(h.name, Math.max(byBoss.get(h.name) ?? 0, h.chance));
+      const bosses = [...byBoss].map(([name, chance]) => ({ name, chance })).sort((a, b) => b.chance - a.chance);
+      // Meeting at least one of them.
+      const any = 1 - bosses.reduce((q, b) => q * (1 - b.chance), 1);
+      return {
+        id: `bosses:${Math.round(g.x)}:${Math.round(g.z)}`,
+        x: g.x,
+        y: median(g.members.map((m) => m.y)),
+        z: g.z,
+        items: [],
+        who,
+        work: 90,
+        value: Math.round(any * 100),
+        info: { kind: 'bosses', bosses, place: nearestPlace(labels, g.x, g.z) } as StopInfo,
+      };
+    })
+    .filter((s) => s.value > 0)
     .sort((p, q) => q.value - p.value)
     .slice(0, max)
     .sort((p, q) => (p.id < q.id ? -1 : p.id > q.id ? 1 : 0));

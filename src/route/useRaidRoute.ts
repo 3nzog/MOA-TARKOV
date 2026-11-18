@@ -30,7 +30,7 @@ import {
   type RouteStyle,
   type RouteWho,
 } from './plan';
-import { lootStops, scavStops, type LootContext, type RouteGoal, type WeaponKind } from './targets';
+import { bossStops, lootStops, mapBosses, scavStops, type BossChance, type LootContext, type RouteGoal, type WeaponKind } from './targets';
 import { loadRouteData, type RouteData } from './routeData';
 import { setRoutePrefs, useRoutePrefs } from './routePrefs';
 import { exitOf, factionOf } from './exits';
@@ -44,7 +44,7 @@ const MARGIN_S = 90;
 /** Outside a raid, a position this old is not where you are any more. */
 const STALE_OUT_OF_RAID_MS = 15 * 60_000;
 /** A loot run fills the bag long before the time runs out; Scav hunts tire too. */
-export const MAX_STOPS: Record<RouteGoal, number | undefined> = { quests: undefined, money: 10, hideout: 10, weapons: 10, scavs: 8 };
+export const MAX_STOPS: Record<RouteGoal, number | undefined> = { quests: undefined, money: 10, hideout: 10, weapons: 10, scavs: 8, bosses: 4 };
 /** "Loot on the way": worth at most this many extra seconds of walking. */
 const ON_WAY_S = 25;
 const ON_WAY_MAX = 12;
@@ -75,6 +75,8 @@ export interface RaidRoute {
   setParty: (on: boolean) => void;
   goal: RouteGoal;
   setGoal: (g: RouteGoal) => void;
+  /** The map's bosses and their chance to be in a raid. */
+  bosses: BossChance[];
   weaponKinds: WeaponKind[];
   setWeaponKinds: (k: WeaponKind[]) => void;
   style: RouteStyle;
@@ -228,9 +230,11 @@ export function useRaidRoute(o: Options): RaidRoute {
     [mapLoot, data, labels, locks, kinds, o.hideoutNeeds, prefs.weaponKinds],
   );
 
+  const bosses = useMemo(() => mapBosses(pois), [pois]);
   const goalStops = useMemo<RouteStop[]>(() => {
     if (prefs.goal === 'quests') return questStops;
     if (prefs.goal === 'scavs') return scavStops(pois, [self], labels);
+    if (prefs.goal === 'bosses') return bossStops(pois, [self], labels);
     return lootCtx ? lootStops(prefs.goal, lootCtx, [self]) : [];
   }, [prefs.goal, questStops, pois, self, labels, lootCtx]);
 
@@ -378,6 +382,7 @@ export function useRaidRoute(o: Options): RaidRoute {
     party: prefs.party,
     setParty: (on) => setRoutePrefs({ party: on }),
     goal: prefs.goal,
+    bosses,
     setGoal: (goal) => setRoutePrefs({ goal }),
     weaponKinds: prefs.weaponKinds,
     setWeaponKinds: (weaponKinds) => setRoutePrefs({ weaponKinds }),

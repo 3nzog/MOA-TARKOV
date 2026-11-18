@@ -1157,7 +1157,8 @@
       "scavs": "Scavs",
       "money": "Dinero",
       "hideout": "Refugio",
-      "weapons": "Armas"
+      "weapons": "Armas",
+      "bosses": "Jefes"
     },
     "weapon": {
       "guns": "Armas",
@@ -1198,7 +1199,10 @@
       "scavs_one": "{{count}} spawn de scav",
       "scavs_other": "{{count}} spawns de scav",
       "areas_one": "{{count}} zona",
-      "areas_other": "{{count}} zonas"
+      "areas_other": "{{count}} zonas",
+      "bosses_one": "{{count}} punto de jefe",
+      "bosses_other": "{{count}} puntos de jefe",
+      "bossChance": "{{pct}}% de encontrar uno"
     },
     "loot": {
       "area": "Zona de botín",
@@ -1237,7 +1241,13 @@
     "switch": "Rutas",
     "offShort": "Apagadas: nada en el mapa, el minimapa ni el móvil",
     "settingsOn": "Rutas",
-    "settingsHint": "Apagadas, nada de las rutas aparece: ni en el mapa, ni en el minimapa, ni en el móvil, y sus sonidos (parada completada, zona caliente) no suenan. El interruptor de la ventana de rutas (botón de rutas del mapa) también las enciende y apaga."
+    "settingsHint": "Apagadas, nada de las rutas aparece: ni en el mapa, ni en el minimapa, ni en el móvil, y sus sonidos (parada completada, zona caliente) no suenan. El interruptor de la ventana de rutas (botón de rutas del mapa) también las enciende y apaga.",
+    "bosses": {
+      "area": "Punto de jefe",
+      "roster": "Jefes en este mapa",
+      "none": "Ningún jefe de este mapa tiene un lugar conocido.",
+      "here": "Aquí: {{list}}"
+    }
   },
   "sounds": {
     "title": "Alertas sonoras",

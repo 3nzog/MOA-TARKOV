@@ -24,6 +24,8 @@ export default function BestMaps({ ranks, computing, goal, selectedMapId, onPick
         ? t('route.worth.money', { value: shortNumber(r.value, i18n.language) })
         : goal === 'scavs'
           ? t('route.worth.scavs', { count: Math.round(r.value) })
+          : goal === 'bosses'
+            ? t('route.worth.bossChance', { pct: Math.round(r.value) })
           : `${Math.round((100 * r.value) / (top || 1))}%`;
 
   return (

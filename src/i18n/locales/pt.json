@@ -1157,7 +1157,8 @@
       "scavs": "Scavs",
       "money": "Dinheiro",
       "hideout": "Hideout",
-      "weapons": "Armas"
+      "weapons": "Armas",
+      "bosses": "Chefes"
     },
     "weapon": {
       "guns": "Armas",
@@ -1198,7 +1199,10 @@
       "scavs_one": "{{count}} spawn de scav",
       "scavs_other": "{{count}} spawns de scav",
       "areas_one": "{{count}} área",
-      "areas_other": "{{count}} áreas"
+      "areas_other": "{{count}} áreas",
+      "bosses_one": "{{count}} ponto de chefe",
+      "bosses_other": "{{count}} pontos de chefe",
+      "bossChance": "{{pct}}% de achar um"
     },
     "loot": {
       "area": "Área de loot",
@@ -1237,7 +1241,13 @@
     "switch": "Rotas",
     "offShort": "Desligadas: nada no mapa, no minimapa nem no celular",
     "settingsOn": "Rotas",
-    "settingsHint": "Desligadas, nada das rotas aparece: nem no mapa, nem no minimapa, nem no celular, e os sons delas (parada da rota concluída, zona quente) não tocam. A chave na janela de rotas (botão de rotas no mapa) também liga e desliga."
+    "settingsHint": "Desligadas, nada das rotas aparece: nem no mapa, nem no minimapa, nem no celular, e os sons delas (parada da rota concluída, zona quente) não tocam. A chave na janela de rotas (botão de rotas no mapa) também liga e desliga.",
+    "bosses": {
+      "area": "Ponto de chefe",
+      "roster": "Chefes neste mapa",
+      "none": "Nenhum chefe deste mapa tem lugar conhecido.",
+      "here": "Aqui: {{list}}"
+    }
   },
   "sounds": {
     "title": "Alertas sonoros",

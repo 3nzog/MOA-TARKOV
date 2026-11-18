@@ -10,14 +10,14 @@ import type { RaidRoute } from './useRaidRoute';
 import { ROUTE_STYLES, type RoutePlan } from './plan';
 import { useCountUp } from '../ui/useCountUp';
 import { WEAPON_KINDS, type RouteGoal, type WeaponKind } from './targets';
-import { hotShare, planWorth, shortNumber, stopDetail, stopHotReason, stopTitle } from './describe';
+import { bossList, hotShare, planWorth, shortNumber, stopDetail, stopHotReason, stopTitle } from './describe';
 import './route.css';
 
 const mins = (s: number) => Math.max(1, Math.round(s / 60));
 /** Objectives listed per stop; the rest are on the map pin's tooltip. */
 const MAX_ITEMS = 3;
 
-type GoalTab = 'quests' | 'loot' | 'scavs';
+type GoalTab = 'quests' | 'loot' | 'scavs' | 'bosses';
 
 /** A style card's numbers, counting to their new values when the route changes. */
 function StyleNumbers({ plan, goal }: { plan: RoutePlan; goal: RouteGoal }) {
@@ -34,9 +34,20 @@ function StyleNumbers({ plan, goal }: { plan: RoutePlan; goal: RouteGoal }) {
     </>
   );
 }
-const tabOf = (g: RouteGoal): GoalTab => (g === 'quests' || g === 'scavs' ? g : 'loot');
+const tabOf = (g: RouteGoal): GoalTab => (g === 'quests' || g === 'scavs' || g === 'bosses' ? g : 'loot');
 
-export default function RoutePanel({ route, inSquad, names }: { route: RaidRoute; inSquad: boolean; names: Record<string, string> }) {
+export default function RoutePanel({
+  route,
+  inSquad,
+  names,
+  exitNote,
+}: {
+  route: RaidRoute;
+  inSquad: boolean;
+  names: Record<string, string>;
+  /** The exit's side and what it asks for, in the player's language (null: the data's own note). */
+  exitNote?: (exitId: string) => string | null;
+}) {
   const { t, i18n } = useTranslation();
   const { plan, goal } = route;
   const tab = tabOf(goal);
@@ -80,8 +91,14 @@ export default function RoutePanel({ route, inSquad, names }: { route: RaidRoute
             { id: 'quests', label: t('route.goal.quests') },
             { id: 'loot', label: t('route.goal.loot') },
             { id: 'scavs', label: t('route.goal.scavs') },
+            { id: 'bosses', label: t('route.goal.bosses') },
           ]}
         />
+        {tab === 'bosses' && (
+          <p className="route-card__muted">
+            {route.bosses.length > 0 ? `${t('route.bosses.roster')}: ${bossList(route.bosses)}` : t('route.bosses.none')}
+          </p>
+        )}
         {tab === 'loot' && (
           <Segmented
             fullWidth
@@ -253,7 +270,7 @@ export default function RoutePanel({ route, inSquad, names }: { route: RaidRoute
                         {plan.exit.price ? ` · ${shortNumber(plan.exit.price, lang)} ₽` : ''}
                       </span>
                     )}
-                    {plan.exit.note && <span>{plan.exit.note}</span>}
+                    {(exitNote?.(plan.exit.id) ?? plan.exit.note) && <span>{exitNote?.(plan.exit.id) ?? plan.exit.note}</span>}
                   </div>
                 </div>
                 <span className="route-stop__meta">

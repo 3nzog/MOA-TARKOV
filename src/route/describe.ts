@@ -57,6 +57,7 @@ export function shortNumber(n: number, lang: string): string {
 export function stopTitle(s: RouteStop, t: TFunction): string {
   if (s.info?.kind === 'loot') return s.info.place ?? t('route.loot.area');
   if (s.info?.kind === 'scavs') return s.info.place ?? t('route.scavs.area');
+  if (s.info?.kind === 'bosses') return s.info.place ?? t('route.bosses.area');
   return s.items[0]?.task.name ?? '';
 }
 
@@ -65,6 +66,7 @@ export function stopDetail(s: RouteStop, t: TFunction, names: Record<string, str
   const info = s.info;
   if (!info) return '';
   if (info.kind === 'scavs') return t('route.scavs.spawns', { count: info.spawns ?? 0 }) + (info.boss ? ` · ${t('route.scavs.boss')}` : '');
+  if (info.kind === 'bosses') return bossList(info.bosses ?? []);
   const parts = containerGroups(info.containers).map((g) => `${t(`route.cg.${g.group}`)} ${g.n}`);
   if (info.loose) parts.push(`${t('route.cg.loose')} ${info.loose}`);
   const items = (info.items ?? []).map((id) => names[id]).filter(Boolean).slice(0, 3);
@@ -83,10 +85,16 @@ export function planWorth(plan: RoutePlan, goal: RouteGoal, t: TFunction, lang: 
   if (goal === 'quests') return t('route.worth.quests', { count: plan.stops.reduce((n, s) => n + Math.max(1, s.items.length), 0) });
   if (goal === 'money') return t('route.worth.money', { value: shortNumber(plan.value, lang) });
   if (goal === 'scavs') return t('route.worth.scavs', { count: Math.round(plan.value) });
+  if (goal === 'bosses') return t('route.worth.bosses', { count: plan.stops.length });
   return t('route.worth.areas', { count: plan.stops.length });
 }
 
 /** Share of the route's time spent in hot places, 0–100. */
 export function hotShare(plan: RoutePlan): number {
   return plan.total > 0 ? Math.round((100 * Math.min(plan.hot, plan.total)) / plan.total) : 0;
+}
+
+/** "Reshala 20% · Goons 7%". */
+export function bossList(list: { name: string; chance: number }[]): string {
+  return list.map((b) => `${b.name} ${Math.max(1, Math.round(b.chance * 100))}%`).join(' · ');
 }

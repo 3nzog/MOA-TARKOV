@@ -109,7 +109,10 @@ function catMatch(cats: string[] | undefined, re: RegExp): boolean {
 interface RosterEntry {
   name: string;
   normalizedName: string;
+  /** Chance the boss is in the raid at all. */
   chance: number;
+  /** Where it appears when it does: spawn zone and the share of raids it uses it. */
+  zones: { zone: string; chance: number }[];
 }
 
 function bossRoster(bosses?: BossSpawnRaw[]): RosterEntry[] {
@@ -117,12 +120,17 @@ function bossRoster(bosses?: BossSpawnRaw[]): RosterEntry[] {
   return bosses
     .filter((b) => b.boss?.name)
     .map((b) => {
-      const locChance =
-        b.spawnLocations?.reduce((m, l) => Math.max(m, l.chance ?? 0), 0) ?? 0;
+      const zones = (b.spawnLocations ?? [])
+        .filter((l) => !!l.name)
+        .map((l) => ({ zone: l.name!, chance: l.chance ?? 0 }));
+      // The boss's own chance; a zone's chance is where it goes once it is in
+      // the raid (a zone at 100% does not make the boss certain).
+      const chance = b.spawnChance ?? zones.reduce((m, z) => Math.max(m, z.chance), 0);
       return {
         name: b.boss!.name,
         normalizedName: b.boss!.normalizedName ?? "",
-        chance: Math.max(b.spawnChance ?? 0, locChance),
+        chance,
+        zones,
       };
     });
 }
@@ -157,6 +165,11 @@ function spawnsToPois(
     if (isBoss) {
       // Coords are real; the specific boss is unknowable per-coordinate (see
       // header note), so label generically and carry the roster in the tooltip.
+      // Which bosses use this spot's zone, and how likely each is to be here.
+      const here = roster
+        .map((r) => ({ name: r.name, chance: r.chance * (r.zones.find((z) => z.zone === s.zoneName)?.chance ?? 0) }))
+        .filter((h) => h.chance > 0)
+        .sort((a, b) => b.chance - a.chance);
       out.push({
         id: `boss:${mapId}:${i}`,
         category: "boss",
@@ -166,7 +179,7 @@ function spawnsToPois(
         label: "Boss spawn",
         note: rosterNote,
         source: "tarkov-dev",
-        meta: { zoneName: s.zoneName, categories: s.categories, roster },
+        meta: { zoneName: s.zoneName, categories: s.categories, roster, here },
       });
       return;
     }

@@ -57,6 +57,7 @@ import { useShowOnGameLaunch } from './app/startup';
 import { useScavTimer } from './scav/scavTimer';
 import ScavChip from './scav/ScavChip';
 import { reqLabels, useExitReqs } from './map/extractReqs';
+import { bossList } from './route/describe';
 import { useHideoutAlarms, type HideoutTimer } from './hideout/timers';
 import { usePlanner, useRaidHistory } from './app/usePlanner';
 import { useTracker } from './app/useTracker';
@@ -708,6 +709,10 @@ function App() {
     () =>
       exitReqsOf
         ? (p: Poi) => {
+            if (p.category === 'boss') {
+              const here = (p.meta as { here?: { name: string; chance: number }[] } | undefined)?.here ?? [];
+              return here.length > 0 ? t('route.bosses.here', { list: bossList(here) }) : null;
+            }
             if (p.category !== 'extract') return null;
             const faction = typeof p.meta?.faction === 'string' ? t(`mapCard.faction.${p.meta.faction}`, { defaultValue: '' }) : '';
             const reqs = exitReqsOf([...(exitAliases[p.id] ?? []), p.label]);
@@ -717,6 +722,14 @@ function App() {
           }
         : undefined,
     [exitReqsOf, exitAliases, t],
+  );
+  const currentPois = pois.currentPois;
+  const routeExitNote = useCallback(
+    (id: string) => {
+      const p = currentPois.find((x) => x.id === id);
+      return p && describePoi ? describePoi(p) : null;
+    },
+    [currentPois, describePoi],
   );
   const heatOn = route.on && route.heat.on;
   const { sources: heatSources, phase: heatPhase } = route.heat;
@@ -1234,7 +1247,7 @@ function App() {
                     route={routePanel}
                     onRoute={(open) => setRoutePrefs({ panel: open })}
                   />
-                  {routePanel && <RoutePanel route={route} inSquad={squad.inSquad} names={routeItemNames} />}
+                  {routePanel && <RoutePanel route={route} inSquad={squad.inSquad} names={routeItemNames} exitNote={routeExitNote} />}
                   {artOpen && ART_MAPS[canonicalMapId(selectedMapId)] && (
                     <Suspense fallback={null}>
                       <ArtMapViewer

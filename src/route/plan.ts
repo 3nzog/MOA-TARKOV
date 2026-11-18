@@ -50,7 +50,7 @@ export interface RouteStop extends Point {
 
 /** What a loot or Scav stop holds, for the list and the map. */
 export interface StopInfo {
-  kind: 'loot' | 'scavs';
+  kind: 'loot' | 'scavs' | 'bosses';
   /** Containers by kind ("safe": 2, …). */
   containers?: Record<string, number>;
   /** Loose-loot spots. */
@@ -67,6 +67,8 @@ export interface StopInfo {
   roubles?: number;
   /** A boss can spawn there (Scav goal). */
   boss?: boolean;
+  /** The bosses that can be there and how likely (boss goal). */
+  bosses?: { name: string; chance: number }[];
 }
 
 export interface RouteExit extends Point {
