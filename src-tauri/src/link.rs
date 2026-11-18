@@ -75,11 +75,44 @@ pub struct Device {
 /// A PC on this PC's own home network (same router) links without a question:
 /// it is the player's other PC. Radmin (other people's PCs too) still asks.
 pub fn auto_accepts(peer: &std::net::IpAddr, nets: &[LocalNet], enabled: bool) -> bool {
-    if !enabled {
-        return false;
-    }
+    enabled && on_home_network(peer, nets)
+}
+
+/// A PC on this PC's own home network (same router), whatever the settings say.
+fn on_home_network(peer: &std::net::IpAddr, nets: &[LocalNet]) -> bool {
     let std::net::IpAddr::V4(v4) = peer else { return false };
     nets.iter().any(|n| n.kind == net::NetKind::Lan && n.contains(*v4))
+}
+
+/// What the main PC does with a link request from a PC it does not know yet.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FirstContact {
+    /// Linked at once, no question.
+    Accept,
+    /// The "Link a PC?" window: the player here says yes or no.
+    Ask,
+    /// Refused without a window.
+    Ignore,
+}
+
+/// - Home network (same router) with "accept my PCs" on: linked at once.
+/// - Asked for by hand (someone clicked this PC on the other one): asked.
+/// - Automatic (the other PC's search found this one) from outside the home
+///   network (Radmin, internet): ignored. Nobody clicked, so nobody gets a
+///   window: a friend's MoA looking for a game PC of its own must never pop
+///   up on yours.
+/// - Automatic on the home network with "accept my PCs" off: asked, unless
+///   this PC was refused before.
+fn first_contact(home: bool, auto_accept: bool, manual: bool, refused_before: bool) -> FirstContact {
+    if home && auto_accept {
+        FirstContact::Accept
+    } else if manual {
+        FirstContact::Ask
+    } else if !home || refused_before {
+        FirstContact::Ignore
+    } else {
+        FirstContact::Ask
+    }
 }
 
 /// "Accept my PCs on the home network on their own" (Settings; on by default).
@@ -375,24 +408,29 @@ async fn serve(stream: TcpStream, peer: SocketAddr, state: Arc<Mutex<ServerState
         return;
     };
 
-    // 2. allowed already, on the home network (accepted on its own), or ask
-    //    the player on this PC.
+    // 2. allowed already, on the home network (accepted on its own), asked
+    //    for by hand (ask the player on this PC), or neither: refused quietly
+    //    (see first_contact).
     let known = state.lock().unwrap().devices.iter().any(|d| d.device == hello.device);
-    let auto = !known && auto_accepts(&peer.ip(), &(cfg.nets)(), AUTO_ACCEPT_LAN.load(Ordering::Relaxed));
-    if auto {
+    let first = (!known).then(|| {
+        let home = on_home_network(&peer.ip(), &(cfg.nets)());
+        let refused_before = state.lock().unwrap().blocked.iter().any(|d| d == &hello.device);
+        first_contact(home, AUTO_ACCEPT_LAN.load(Ordering::Relaxed), hello.manual, refused_before)
+    });
+    if first == Some(FirstContact::Accept) {
         net::log(format!("anexar: {} ({}) anexado sozinho (rede de casa)", hello.name, peer.ip()));
         (cfg.notify)("link-auto", json!({ "name": hello.name, "ip": peer.ip().to_string() }));
         let mut st = state.lock().unwrap();
         st.devices.retain(|d| d.device != hello.device);
         st.devices.push(Device { device: hello.device.clone(), name: hello.name.clone() });
         save_devices(&cfg.store, &st.devices);
-    } else if !known && !hello.manual && state.lock().unwrap().blocked.iter().any(|d| d == &hello.device) {
-        net::log(format!("anexar: {} ({}) já foi recusado; pedido automático ignorado", hello.name, peer.ip()));
+    } else if first == Some(FirstContact::Ignore) {
+        net::log(format!("anexar: {} ({}) pediu sozinho, sem ninguém clicar; ignorado sem perguntar", hello.name, peer.ip()));
         let _ = tx.send(text(json!({ "t": "refused" })));
         let _ = tx.send(Message::Close(None));
         let _ = writer.await;
         return;
-    } else if !known {
+    } else if first == Some(FirstContact::Ask) {
         let id = uuid::Uuid::new_v4().simple().to_string();
         let (otx, mut orx) = oneshot::channel::<bool>();
         let full = {
@@ -968,7 +1006,14 @@ mod tests {
         Server::start(cfg, Ipv4Addr::LOCALHOST, 0, 0).await.expect("server")
     }
 
+    /// A PC that asks to link because someone clicked the main PC on it (the
+    /// tests' main PC has no home network, like a link over Radmin).
     fn screen_pc(rec: &Arc<Rec>, port: u16, device: &str) -> ClientHandle {
+        start_client("127.0.0.1".into(), port, ClientCfg { device: device.into(), name: "PC-DO-MAPA".into(), emit: rec.notify(), manual: true })
+    }
+
+    /// The same PC asking on its own (its search found the main PC; nobody clicked).
+    fn auto_screen_pc(rec: &Arc<Rec>, port: u16, device: &str) -> ClientHandle {
         start_client("127.0.0.1".into(), port, ClientCfg { device: device.into(), name: "PC-DO-MAPA".into(), emit: rec.notify(), manual: false })
     }
 
@@ -1077,40 +1122,65 @@ mod tests {
     }
 
     #[test]
-    fn a_refused_pc_is_not_asked_about_again_unless_it_asks_by_hand() {
+    fn a_pc_nobody_clicked_never_pops_up_from_outside_the_home_network() {
         tauri::async_runtime::block_on(async {
             let dir = std::env::temp_dir().join(format!("moa-link-test-{}", uuid::Uuid::new_v4().simple()));
             let store = Some(dir.join("link-devices.json"));
             let main_rec = Rec::new();
             let server = main_pc(&main_rec, store.clone()).await;
-            // First automatic request: asked, refused.
+            // A friend's MoA finds this PC on its own (over Radmin): refused at
+            // once, and nobody here is asked.
             let rec1 = Rec::new();
-            let c1 = screen_pc(&rec1, server.tcp_port, DEV);
-            let req = main_rec.wait_for("link-request", |_| true).await;
-            server.answer(req["id"].as_str().unwrap(), false);
+            let c1 = auto_screen_pc(&rec1, server.tcp_port, DEV);
             rec1.wait_for("link-client", |v| v["state"] == "refused").await;
             c1.stop();
-            // Its automatic search tries again: refused at once, nobody is asked.
+            assert!(main_rec.all("link-request").is_empty(), "no window for a request nobody clicked");
+            assert!(server.status().devices.is_empty());
+            // Asked by hand: the window comes; refused, it is remembered.
             let rec2 = Rec::new();
             let c2 = screen_pc(&rec2, server.tcp_port, DEV);
+            let req = main_rec.wait_for("link-request", |_| true).await;
+            server.answer(req["id"].as_str().unwrap(), false);
             rec2.wait_for("link-client", |v| v["state"] == "refused").await;
             c2.stop();
-            assert_eq!(main_rec.all("link-request").len(), 1, "a refused PC does not pop up again");
             assert!(dir.join("link-blocked.json").exists(), "the refusal is remembered");
-            // Asked by hand on that PC: the question comes back, and allowing it unblocks it.
+            // By hand again: asked again; allowed, it is known and no longer refused.
             let rec3 = Rec::new();
-            let _c3 = start_client(
-                "127.0.0.1".into(),
-                server.tcp_port,
-                ClientCfg { device: DEV.into(), name: "PC-DO-MAPA".into(), emit: rec3.notify(), manual: true },
-            );
+            let c3 = screen_pc(&rec3, server.tcp_port, DEV);
             let req3 = main_rec.wait_for("link-request", |v| v["id"] != req["id"]).await;
             server.answer(req3["id"].as_str().unwrap(), true);
             rec3.wait_for("link-client", |v| v["state"] == "linked").await;
+            c3.stop();
+            rec3.wait_for("link-client", |v| v["state"] == "off").await;
             assert!(load_blocked(&store).is_empty());
+            // Known now: its own search links again without a window.
+            let rec4 = Rec::new();
+            let _c4 = auto_screen_pc(&rec4, server.tcp_port, DEV);
+            rec4.wait_for("link-client", |v| v["state"] == "linked").await;
+            assert_eq!(main_rec.all("link-request").len(), 2, "only the two requests made by hand asked");
             server.stop();
             let _ = std::fs::remove_dir_all(dir);
         });
+    }
+
+    #[test]
+    fn only_a_click_or_the_home_network_brings_the_window() {
+        use FirstContact::*;
+        // (home network, "accept my PCs" on, asked by hand, refused before) → what happens
+        let cases = [
+            ((true, true, false, false), Accept),
+            ((true, true, true, true), Accept),
+            ((false, true, false, false), Ignore), // Radmin / internet, nobody clicked
+            ((false, false, false, false), Ignore),
+            ((false, true, true, false), Ask), // Radmin, clicked
+            ((false, true, true, true), Ask), // clicked again after a refusal
+            ((true, false, false, false), Ask), // home network, accepting by hand
+            ((true, false, false, true), Ignore), // ... refused before, nobody clicked
+            ((true, false, true, true), Ask),
+        ];
+        for ((home, auto, manual, refused), want) in cases {
+            assert_eq!(first_contact(home, auto, manual, refused), want, "home={home} auto={auto} manual={manual} refused={refused}");
+        }
     }
 
     #[test]
@@ -1271,7 +1341,9 @@ mod tests {
                 let found = ask(vec![(n.ip, vec![SocketAddr::from((n.broadcast(), server.udp_port)), SocketAddr::from((n.ip, server.udp_port))])], Duration::from_millis(800), nets.clone(), true).await;
                 println!("{}: found {:?}", n.ip, found);
                 assert!(found.iter().any(|f| f.host == n.ip.to_string()), "found on {}", n.ip);
-                let client = start_client(n.ip.to_string(), server.tcp_port, ClientCfg { device: DEV.into(), name: "PC-DO-MAPA".into(), emit: screen_rec.notify(), manual: false });
+                // Outside the home network a link starts with a click.
+                let manual = n.kind != net::NetKind::Lan;
+                let client = start_client(n.ip.to_string(), server.tcp_port, ClientCfg { device: DEV.into(), name: "PC-DO-MAPA".into(), emit: screen_rec.notify(), manual });
                 if n.kind == net::NetKind::Lan {
                     // Same router: links on its own, no question.
                     main_rec.wait_for("link-auto", |_| true).await;
