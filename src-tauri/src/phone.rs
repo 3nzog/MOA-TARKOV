@@ -117,9 +117,21 @@ pub fn phone_urls(nets: &[LocalNet], port: u16, key: &str) -> Vec<String> {
 }
 
 pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, allow: AllowFn) -> Result<Handle, String> {
-    let listener = TcpListener::bind(SocketAddr::from((bind, port)))
-        .await
-        .map_err(|e| if e.kind() == std::io::ErrorKind::AddrInUse { "port_busy".to_string() } else { e.to_string() })?;
+    // Restarting (a new key, off and on again): the old server lets go of the
+    // port a moment after it is told to stop, so a busy port is tried again
+    // for a little while before it counts as another program's.
+    let mut tries = 0;
+    let listener = loop {
+        match TcpListener::bind(SocketAddr::from((bind, port))).await {
+            Ok(l) => break l,
+            Err(e) if e.kind() == std::io::ErrorKind::AddrInUse && tries < 15 => {
+                tries += 1;
+                tokio::time::sleep(Duration::from_millis(200)).await;
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::AddrInUse => return Err("port_busy".to_string()),
+            Err(e) => return Err(e.to_string()),
+        }
+    };
     let port = listener.local_addr().map(|a| a.port()).unwrap_or(port);
     let (stop, stop_rx) = watch::channel(false);
     let (state, state_rx) = watch::channel(Arc::new(String::new()));
@@ -450,7 +462,16 @@ async fn status_now(firewall: bool) -> PhoneStatus {
     PhoneStatus { running: true, urls, qr, clients, firewall, remote_url, remote_qr, remote_firewall }
 }
 
+/// One start at a time: two at once (the app turning it on as it opens while
+/// the player taps the switch) would both find it off, and the second would
+/// find the port taken by the first ("another program is using port 8791").
+fn start_lock() -> &'static tokio::sync::Mutex<()> {
+    static L: OnceLock<tokio::sync::Mutex<()>> = OnceLock::new();
+    L.get_or_init(|| tokio::sync::Mutex::new(()))
+}
+
 async fn start_for(app: tauri::AppHandle, fresh_key: bool) -> Result<PhoneStatus, String> {
+    let _one_at_a_time = start_lock().lock().await;
     if fresh_key {
         if let Some(h) = cell().lock().unwrap().take() {
             h.stop();
@@ -644,6 +665,20 @@ mod tests {
         assert!(phone_peer(&phone_ts, &nets, ts));
         assert!(!phone_peer(&phone_ts, &nets, None));
         assert!(!phone_peer(&stranger, &nets, ts));
+    }
+
+    /// Stopped and started again at once (a new key): the port is free again by
+    /// the time the new server asks, instead of "another program is using it".
+    #[test]
+    fn a_restart_gets_its_port_back() {
+        tauri::async_runtime::block_on(async {
+            let a = start(Ipv4Addr::LOCALHOST, 0, "abcdef0123456789".into(), assets(), Arc::new(|_: &IpAddr| true)).await.unwrap();
+            let port = a.port;
+            a.stop();
+            let b = start(Ipv4Addr::LOCALHOST, port, "abcdef0123456789".into(), assets(), Arc::new(|_: &IpAddr| true)).await;
+            assert!(b.is_ok(), "{:?}", b.err());
+            b.unwrap().stop();
+        });
     }
 
     /// The map's layers reach a phone that connects later (after its state) and every phone when they change.

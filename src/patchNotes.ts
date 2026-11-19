@@ -21,6 +21,7 @@ export const PATCH_NOTES: PatchNote[] = [
       "Fixed: most raids never ended in the app (no Scav wait, deaths unseen). The end came from one log line the game writes only now and then (6 raids out of 50 in a real log folder); it now comes from the backend log, which has it every time, and coming back to the menus closes a raid still open.",
       "PMC or Scav: the logs tell your two profiles apart but not which is the Scav. While a raid is on and the app does not know yet, the map asks once (\"This raid is: PMC / Scav\"); the other profile is known from then on.",
       "Map on the phone away from home (4G/5G): with Tailscale (free) on the PC and the phone, the phone window shows a second QR code that works on mobile data. Only your own devices on Tailscale get in, and the key is still needed; the firewall rule for it covers Tailscale's addresses only.",
+      "Fixed: turning on the map on the phone could say that another program was using port 8791 when it was the app itself (two starts at once, or a restart before the old one let go of the port).",
     ],
   },
   {
