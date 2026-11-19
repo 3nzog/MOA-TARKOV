@@ -54,6 +54,8 @@ if not defined MOA_TESTE call "%DEST%\Abrir Tarkov MoA.bat" --atualizado
 rem  Feito: este arquivo se apaga (dai em diante, o atalho Tarkov MoA). Fica
 rem  se estiver dentro da pasta do programa.
 if /i "%~dp0"=="%DEST%\" exit /b 0
+rem  Nor in a copy of the project (a developer folder: it is part of it).
+if exist "%~dp0package.json" exit /b 0
 (goto) 2>nul & del "%~f0"
 exit /b 0
 

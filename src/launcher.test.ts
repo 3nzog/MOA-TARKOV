@@ -33,6 +33,9 @@ describe('the .bat launchers', () => {
     it('opens through the launcher and then deletes itself (unless it sits in the program folder)', () => {
       expect(text).toContain('call "%DEST%\\Abrir Tarkov MoA.bat" --atualizado');
       expect(text).toContain('(goto) 2>nul & del "%~f0"');
+      const keep = text.indexOf('if exist "%~dp0package.json" exit /b 0');
+      expect(keep).toBeGreaterThan(0);
+      expect(text.indexOf('(goto) 2>nul & del "%~f0"')).toBeGreaterThan(keep);
     });
   });
 
