@@ -478,3 +478,79 @@
   .titlebar__update { animation: none; }
 }
 .raid-pill__clock { flex: none; font-size: var(--fs-caption); color: var(--text); }
+
+/* ============================================================================
+   Pages (planner, weapon bench, ammo): a spine tab that takes the map's place
+   next to the spine, instead of a window over everything. The spine stays, so
+   another tab is one click away.
+   ========================================================================== */
+.shell--page { position: relative; }
+.page-view {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  z-index: var(--z-rail);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  color: var(--text);
+  overflow: hidden;
+  animation: page-view-in var(--dur-slow) var(--ease-out) both;
+}
+@keyframes page-view-in { from { opacity: 0; transform: translateY(6px); } }
+:root[data-layout='floating'] .page-view {
+  border-radius: var(--r-xl);
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  box-shadow: var(--glass-shadow), var(--elev-3);
+}
+/* Docked: the map is not beside a page, it waits behind it. */
+:root:not([data-layout='floating']) .shell--page .map-stage {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* The bench and the ammo table fill the page instead of floating over the app. */
+.page-view > .gs {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  flex: 1;
+  min-height: 0;
+  border-radius: inherit;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  animation: none;
+}
+.page-view > .spinner, .page-view > [role='status'] { margin: auto; }
+
+.page-view__planner { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.page-view__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+.page-view__head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-display-sm);
+  letter-spacing: 0.04em;
+}
+.page-view__map { flex: 0 1 320px; min-width: 0; margin-left: auto; }
+.page-view__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  /* The planner's parts size themselves to this box, as in the side panel. */
+  container: rail / inline-size;
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+.page-view__body > * { max-width: 1180px; margin-inline: auto; }

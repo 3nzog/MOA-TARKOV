@@ -24,7 +24,7 @@ import { Tooltip } from '../ui';
 
 // The map is NOT a section: it's the top-level selection, pinned above every
 // section's panel body (see .rail-panel__map in App.tsx).
-export type RailSection = 'quests' | 'intel' | 'squad' | 'planner';
+export type RailSection = 'quests' | 'intel' | 'squad' | 'planner' | 'gunsmith' | 'ballistics';
 
 export interface SpineProps {
   side: 'left' | 'right';
@@ -43,10 +43,6 @@ export interface SpineProps {
   onFeedback: () => void;
   onHowTo: () => void;
   onSettings: () => void;
-  /** Opens the weapon bench. */
-  onGunsmith?: () => void;
-  /** Opens the ballistics table. */
-  onBallistics?: () => void;
   /** Opens "map on the phone" (QR code). */
   onPhone?: () => void;
   /** Hotkey hints shown in tooltips, keyed by section / tool. */
@@ -103,8 +99,6 @@ export default function Spine({
   onFeedback,
   onHowTo,
   onSettings,
-  onGunsmith,
-  onBallistics,
   onPhone,
   hints,
   onCompact,
@@ -151,16 +145,8 @@ export default function Spine({
         t('rail.planner'),
         <ListChecks weight={activeSection === 'planner' ? 'fill' : 'regular'} />,
       )}
-      {onGunsmith && (
-        <SpineButton label={t('rail.gunsmith')} side={side} onClick={onGunsmith}>
-          <Wrench weight="regular" />
-        </SpineButton>
-      )}
-      {onBallistics && (
-        <SpineButton label={t('rail.ballistics')} side={side} onClick={onBallistics}>
-          <Target weight="regular" />
-        </SpineButton>
-      )}
+      {section('gunsmith', t('rail.gunsmith'), <Wrench weight={activeSection === 'gunsmith' ? 'fill' : 'regular'} />)}
+      {section('ballistics', t('rail.ballistics'), <Target weight={activeSection === 'ballistics' ? 'fill' : 'regular'} />)}
       {onPhone && (
         <SpineButton label={t('rail.phone')} side={side} onClick={onPhone}>
           <DeviceMobile weight="regular" />

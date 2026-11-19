@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { ArrowsClockwise, ArrowsOutSimple } from '@phosphor-icons/react';
+import { ArrowsClockwise, ArrowsOutSimple, X } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import './App.css';
 import './shell/shell.css';
@@ -14,6 +14,7 @@ import MapEmptyState from './components/MapEmptyState';
 import QuestSidebar from './components/QuestSidebar';
 import { Toast, IconButton, Spinner } from './ui';
 import Spine, { type RailSection } from './shell/Spine';
+import { isPageSection } from './shell/sections';
 import RailResizer from './shell/RailResizer';
 import { useRelativeTime } from './hooks/useRelativeTime';
 import Onboarding, { ONBOARDED_KEY } from './onboarding/Onboarding';
@@ -157,8 +158,6 @@ function App() {
   );
   const [patchNotesOpen, setPatchNotesOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [gunsmithOpen, setGunsmithOpen] = useState(false);
-  const [ballisticsOpen, setBallisticsOpen] = useState(false);
   const [phoneOpen, setPhoneOpen] = useState(false);
   // The card over the map for a clicked quest pin or extraction.
   const [mapCard, setMapCard] = useState<MapCard | null>(null);
@@ -242,8 +241,13 @@ function App() {
     mapId: string | null;
     raidStartedAt: number | null;
   } | null>(null);
-  // A screenshot of the flea market's ammo list (3+ cartridges named) opens
-  // the ballistics table on them.
+  // Ammo on a screenshot: on the ammo page, any cartridge named there is put
+  // in the table and ranked; elsewhere a list of 3+ (the flea market's) opens
+  // the ammo page on them.
+  const onAmmoPage = useRef(false);
+  useEffect(() => {
+    onAmmoPage.current = railSection === 'ballistics';
+  }, [railSection]);
   useEffect(() => {
     let un: (() => void) | undefined;
     let alive = true;
@@ -251,9 +255,9 @@ function App() {
       void import('./ballistics/screenAmmo')
         .then((m) => m.ammoOnScreen(text))
         .then((ids) => {
-          if (!alive || ids.length < 3) return;
+          if (!alive || ids.length < (onAmmoPage.current ? 1 : 3)) return;
           setScreenAmmo(ids);
-          setBallisticsOpen(true);
+          setRailSection('ballistics');
         })
         .catch(() => undefined);
     })
@@ -839,9 +843,20 @@ function App() {
 
   // Spine section clicks toggle the rail panel section (click the active
   // icon again to collapse the panel and give the map the full width).
+  // A page (planner, weapon bench, ammo) clicked again goes back to the side
+  // panel that was open before it, instead of an empty map.
+  const lastPanel = useRef<RailSection | null>('quests');
+  useEffect(() => {
+    if (!isPageSection(railSection)) lastPanel.current = railSection;
+  }, [railSection]);
   const handleToggleSection = useCallback((s: RailSection) => {
-    setRailSection((cur) => (cur === s ? null : s));
+    setRailSection((cur) => (cur === s ? (isPageSection(s) ? lastPanel.current : null) : s));
   }, []);
+  const closePage = useCallback(() => {
+    setRailSection(lastPanel.current);
+    setScreenAmmo(null);
+  }, []);
+  const pageOpen = isPageSection(railSection) && !compact.compact;
 
   const { setFollowCenter } = settings;
   const { toggleGrid } = pois;
@@ -914,7 +929,7 @@ function App() {
   const chromeWidth =
     appearance.layout !== 'floating' || compact.compact
       ? 0
-      : 10 + 64 + 10 + (railSection ? railWidth.width + 10 : 0);
+      : 10 + 64 + 10 + (railSection && !pageOpen ? railWidth.width + 10 : 0);
 
   return (
     <div className="app-container">
@@ -930,7 +945,7 @@ function App() {
       <Toast message={toast} onDismiss={() => setToast(null)} />
       {priceScan.result && !onMarketTab && <PriceScanCard result={priceScan.result} onClose={priceScan.clear} />}
       <div
-        className={`shell shell--${settings.railSide}${compact.compact ? ' shell--compact' : ''}`}
+        className={`shell shell--${settings.railSide}${compact.compact ? ' shell--compact' : ''}${pageOpen ? ' shell--page' : ''}`}
         style={{ '--chrome-w': `${chromeWidth}px` } as CSSProperties}
       >
         {!compact.compact && (
@@ -955,8 +970,6 @@ function App() {
             setSettingsTab('general');
             setSettingsOpen(true);
           }}
-          onGunsmith={() => setGunsmithOpen(true)}
-          onBallistics={() => setBallisticsOpen(true)}
           onPhone={phone.available ? () => setPhoneOpen(true) : undefined}
           onCompact={toggleCompact}
           hints={{
@@ -969,7 +982,7 @@ function App() {
         />
         )}
 
-        {railSection && !compact.compact && (
+        {railSection && !pageOpen && !compact.compact && (
           <aside
             className="rail-panel"
             style={{ '--rail-w': `${railWidth.width}px` } as CSSProperties}
@@ -1024,9 +1037,7 @@ function App() {
                   ? t('rail.quests')
                   : railSection === 'intel'
                     ? t('rail.intel')
-                    : railSection === 'planner'
-                      ? t('rail.plannerTitle')
-                      : t('rail.squad')}
+                    : t('rail.squad')}
               </h2>
               {railSection === 'quests' && (
                 <IconButton
@@ -1039,37 +1050,7 @@ function App() {
               )}
             </div>
             <div className="rail-panel__body">
-              {railSection === 'planner' ? (
-                <Suspense fallback={<Spinner size="md" />}>
-                  <PlannerPanel
-                    scanned={onMarketTab ? scannedItems(priceScan.result) : null}
-                    onClearScan={priceScan.clear}
-                    load={progressionLoad}
-                    tasks={quests.tasks}
-                    statuses={questStatuses}
-                    progress={quests.progress}
-                    setProgress={quests.setProgress}
-                    planner={planner}
-                    history={raidHistory.history}
-                    onClearHistory={raidHistory.clear}
-                    questState={questState}
-                    selectedMapId={selectedMapId}
-                    selectedMapName={selectedMapName}
-                    ranking={mapRanking}
-                    routeObjectives={routeObjectives}
-                    mapPois={pois.currentPois}
-                    squadQuestStates={squadSync.squadQuestStates}
-                    raidSide={liveRaidSide}
-                    raidSideSource={liveRaidSideSource}
-                    raidInProgress={!!liveRaid}
-                    canSetRaidSide={!!liveRaid?.profileKey}
-                    onSetRaidSide={setLiveRaidSide}
-                    panelExits={panelExitNames}
-                    tab={plannerTab}
-                    onTab={setPlannerTab}
-                  />
-                </Suspense>
-              ) : railSection === 'squad' ? (
+              {railSection === 'squad' ? (
                 <>
                   <SquadSection sharedQuestNames={squadSync.sharedQuestNames} />
                   <SquadQuestSummary
@@ -1119,6 +1100,72 @@ function App() {
                   Settings → About, so the footer stays a single clean line. */}
             </div>
           </aside>
+        )}
+
+        {pageOpen && (
+          <main className={`page-view page-view--${railSection}`}>
+            {railSection === 'planner' ? (
+              <div className="page-view__planner">
+                <header className="page-view__head">
+                  <h2>{t('rail.plannerTitle')}</h2>
+                  {questState && (
+                    <div className="page-view__map">
+                      <MapPicker
+                        availableObjectivesByMap={questState.availableObjectivesByMap}
+                        availableTasksByMap={questState.availableTasksByMap}
+                        selectedMapId={selectedMapId}
+                        onSelect={setSelectedMapId}
+                      />
+                    </div>
+                  )}
+                  <IconButton size="sm" icon={<X weight="bold" />} label={t('common.close')} onClick={closePage} />
+                </header>
+                <div className="page-view__body">
+                  <Suspense fallback={<Spinner size="md" />}>
+                    <PlannerPanel
+                      scanned={onMarketTab ? scannedItems(priceScan.result) : null}
+                      onClearScan={priceScan.clear}
+                      load={progressionLoad}
+                      tasks={quests.tasks}
+                      statuses={questStatuses}
+                      progress={quests.progress}
+                      setProgress={quests.setProgress}
+                      planner={planner}
+                      history={raidHistory.history}
+                      onClearHistory={raidHistory.clear}
+                      questState={questState}
+                      selectedMapId={selectedMapId}
+                      selectedMapName={selectedMapName}
+                      ranking={mapRanking}
+                      routeObjectives={routeObjectives}
+                      mapPois={pois.currentPois}
+                      squadQuestStates={squadSync.squadQuestStates}
+                      raidSide={liveRaidSide}
+                      raidSideSource={liveRaidSideSource}
+                      raidInProgress={!!liveRaid}
+                      canSetRaidSide={!!liveRaid?.profileKey}
+                      onSetRaidSide={setLiveRaidSide}
+                      panelExits={panelExitNames}
+                      tab={plannerTab}
+                      onTab={setPlannerTab}
+                    />
+                  </Suspense>
+                </div>
+              </div>
+            ) : railSection === 'gunsmith' ? (
+              <Suspense fallback={<Spinner size="md" />}>
+                <GunsmithBench
+                  onClose={closePage}
+                  playerLevel={quests.progress.levelSet ? quests.progress.playerLevel : null}
+                  taskDone={taskDone}
+                />
+              </Suspense>
+            ) : (
+              <Suspense fallback={<Spinner size="md" />}>
+                <BallisticsPanel onClose={closePage} fromScreen={screenAmmo} />
+              </Suspense>
+            )}
+          </main>
         )}
 
         <section
@@ -1337,26 +1384,6 @@ function App() {
           followZoom={settings.followZoom}
           onFollowZoomChange={settings.setFollowZoom}
         />
-      )}
-      {gunsmithOpen && (
-        <Suspense fallback={null}>
-          <GunsmithBench
-            onClose={() => setGunsmithOpen(false)}
-            playerLevel={quests.progress.levelSet ? quests.progress.playerLevel : null}
-            taskDone={taskDone}
-          />
-        </Suspense>
-      )}
-      {ballisticsOpen && (
-        <Suspense fallback={null}>
-          <BallisticsPanel
-            onClose={() => {
-              setBallisticsOpen(false);
-              setScreenAmmo(null);
-            }}
-            fromScreen={screenAmmo}
-          />
-        </Suspense>
       )}
       {phoneOpen && (
         <Suspense fallback={null}>
