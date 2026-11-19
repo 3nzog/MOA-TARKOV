@@ -4,6 +4,7 @@ mod eft_config;
 mod eft_logs;
 mod extract_panel;
 mod game_lang;
+mod instance;
 mod log_watcher;
 mod diag;
 mod link;
@@ -25,6 +26,12 @@ fn main() {
     if self_update::hand_over_if_outdated() {
         return;
     }
+    // Already open (maybe hidden in the tray): that one comes up, this ends.
+    let lock = match instance::claim(instance::INSTANCE_PORT) {
+        instance::Start::Second => return,
+        instance::Start::First(l) => Some(l),
+        instance::Start::Unknown => None,
+    };
     let screenshots_dir = Arc::new(Mutex::new(None));
     let screenshots_state = screenshots::ScreenshotsDir(screenshots_dir.clone());
 
@@ -34,26 +41,44 @@ fn main() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_http::init())
         .manage(screenshots_state)
-        // The minimap overlay is click-through and has no taskbar entry. If it
-        // outlived the main window the app would keep running with no visible
-        // way to close it — so closing the main window ends the app.
+        // Closing the window keeps the app in the tray, waiting for the game
+        // ("Sair" on the tray icon ends it). Without a tray icon, closing ends
+        // the app as before: the click-through minimap must not outlive it.
         .on_window_event(|window, event| {
-            if window.label() == "main" && matches!(event, tauri::WindowEvent::Destroyed) {
-                window.app_handle().exit(0);
+            if window.label() != "main" {
+                return;
+            }
+            match event {
+                tauri::WindowEvent::CloseRequested { api, .. } if startup::tray_up() => {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+                tauri::WindowEvent::Destroyed => window.app_handle().exit(0),
+                _ => {}
             }
         })
         .setup(move |app| {
             let handle = app.handle().clone();
 
-            // Started by Windows at log-in: only the tray icon until the game
-            // starts (or a click on the icon). Otherwise the window, as always.
-            if startup::started_in_tray() {
-                if let Err(e) = startup::add_tray(&handle) {
-                    eprintln!("[startup] no tray icon: {e}");
-                    startup::show_main(&handle);
-                }
-            } else {
+            // The tray icon is always there (closing the window goes to it).
+            // Started by Windows at log-in: only the icon until the game starts
+            // (or a click on it). Otherwise the window, as always.
+            let tray = startup::add_tray(&handle);
+            if let Err(e) = &tray {
+                eprintln!("[startup] no tray icon: {e}");
+            }
+            if !startup::started_in_tray() || tray.is_err() {
                 startup::show_main(&handle);
+            }
+            // A second copy opened later brings this window up instead.
+            if let Some(lock) = lock {
+                let h = handle.clone();
+                instance::serve(lock, move || startup::show_main(&h));
+            }
+            // Starting with Windows is on from the first run (once: turned off
+            // in Settings, it stays off).
+            if let Ok(dir) = app.path().app_config_dir() {
+                std::thread::spawn(move || startup::apply_default(&dir));
             }
 
             // Connection log (conexao.log), for "it doesn't connect" reports.

@@ -11,6 +11,7 @@
 //   That event also goes to a linked second PC (link.rs), so both screens open
 //   together. Nothing here looks at the game's process or memory.
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::process::Command;
 
 use tauri::menu::{Menu, MenuItem};
@@ -23,6 +24,62 @@ const RUN_KEY: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
 const RUN_VALUE: &str = "Tarkov MoA";
 /// The event the log reader sends when the game starts.
 pub const GAME_LAUNCHED: &str = "game-launched";
+
+static TRAY_UP: AtomicBool = AtomicBool::new(false);
+
+/// The tray icon is there: closing the window hides it in the tray.
+pub fn tray_up() -> bool {
+    TRAY_UP.load(Ordering::SeqCst)
+}
+
+/// The .exe a Run value starts ("\"C:\\…\\tarkov-companion.exe\" --bandeja").
+pub fn run_target(value: &str) -> Option<PathBuf> {
+    let v = value.trim();
+    let path = match v.strip_prefix('"') {
+        Some(rest) => &rest[..rest.find('"')?],
+        None => v.split_whitespace().next()?,
+    };
+    (!path.is_empty()).then(|| PathBuf::from(path))
+}
+
+/// What to do with the Run value on start: the first run turns "start with
+/// Windows" on (the app is meant to wait for the game); a value whose .exe is
+/// gone (a moved or rebuilt folder) is pointed at this one; one turned off in
+/// Settings stays off.
+#[derive(Debug, PartialEq, Eq)]
+pub enum RunFix {
+    Leave,
+    Write,
+}
+
+pub fn run_fix(current: Option<&str>, first_run: bool, target_exists: impl Fn(&Path) -> bool) -> RunFix {
+    match current {
+        None if first_run => RunFix::Write,
+        None => RunFix::Leave,
+        Some(v) => match run_target(v) {
+            Some(p) if target_exists(&p) => RunFix::Leave,
+            _ => RunFix::Write,
+        },
+    }
+}
+
+/// Applies `run_fix` once per start (marker file in the app's config folder).
+pub fn apply_default(config_dir: &Path) {
+    let Ok(exe) = std::env::current_exe() else { return };
+    let marker = config_dir.join("startup-default-v1");
+    let first_run = !marker.exists();
+    let current = read_value(RUN_KEY, RUN_VALUE);
+    if run_fix(current.as_deref(), first_run, |p| p.exists()) == RunFix::Write {
+        if let Err(e) = write_value(RUN_KEY, RUN_VALUE, &run_command(&exe)) {
+            eprintln!("[startup] start with Windows: {e}");
+            return;
+        }
+    }
+    if first_run {
+        let _ = std::fs::create_dir_all(config_dir);
+        let _ = std::fs::write(&marker, b"1");
+    }
+}
 
 /// Started by Windows at log-in: stay in the tray.
 pub fn started_in_tray() -> bool {
@@ -137,6 +194,7 @@ pub fn add_tray(app: &AppHandle) -> tauri::Result<()> {
         tray = tray.icon(icon.clone());
     }
     tray.build(app)?;
+    TRAY_UP.store(true, Ordering::SeqCst);
     Ok(())
 }
 
@@ -152,6 +210,22 @@ pub fn session_dir(root: &Path, path: &Path) -> Option<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn start_with_windows_is_on_from_the_first_run_and_stays_off_when_turned_off() {
+        let exists = |_: &Path| true;
+        assert_eq!(run_fix(None, true, exists), RunFix::Write);
+        assert_eq!(run_fix(None, false, exists), RunFix::Leave);
+        assert_eq!(run_fix(Some(r#""C:\MoA\tarkov-companion.exe" --bandeja"#), false, exists), RunFix::Leave);
+    }
+
+    #[test]
+    fn a_run_value_whose_exe_is_gone_points_at_this_one() {
+        let gone = |_: &Path| false;
+        assert_eq!(run_fix(Some(r#""C:\Old\tarkov-companion.exe" --bandeja"#), false, gone), RunFix::Write);
+        assert_eq!(run_target(r#""C:\Program Files\MoA\a b.exe" --bandeja"#), Some(PathBuf::from(r"C:\Program Files\MoA\a b.exe")));
+        assert_eq!(run_target(r"C:\MoA\x.exe --bandeja"), Some(PathBuf::from(r"C:\MoA\x.exe")));
+    }
 
     #[test]
     fn a_log_belongs_to_its_session_folder() {
