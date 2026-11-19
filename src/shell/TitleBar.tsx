@@ -3,7 +3,7 @@
 // minimize / maximize / close buttons live here, in the app's own look.
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CopySimple, Crosshair, Minus, Square, X } from '@phosphor-icons/react';
+import { ArrowCircleUp, CircleNotch, CopySimple, Crosshair, Minus, Square, X } from '@phosphor-icons/react';
 import LinkChip from '../link/LinkChip';
 
 const inTauri = () => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -14,7 +14,14 @@ async function getWin() {
   return getCurrentWindow();
 }
 
-export default function TitleBar({ onOpenLink }: { onOpenLink?: () => void }) {
+/** A new version waiting: shown loud, right before the window buttons. */
+export interface TitleBarUpdate {
+  label: string;
+  updating: boolean;
+  onUpdate: () => void;
+}
+
+export default function TitleBar({ onOpenLink, update }: { onOpenLink?: () => void; update?: TitleBarUpdate | null }) {
   const { t } = useTranslation();
   const [win, setWin] = useState<Win | null>(null);
   const [maximized, setMaximized] = useState(false);
@@ -48,6 +55,18 @@ export default function TitleBar({ onOpenLink }: { onOpenLink?: () => void }) {
       </span>
       <div className="titlebar__spacer" data-tauri-drag-region />
       <LinkChip onOpen={onOpenLink} />
+      {update && (
+        <button
+          type="button"
+          className={`titlebar__update${update.updating ? ' is-busy' : ''}`}
+          disabled={update.updating}
+          onClick={update.onUpdate}
+          title={update.label}
+        >
+          {update.updating ? <CircleNotch weight="bold" className="titlebar__spin" /> : <ArrowCircleUp weight="fill" />}
+          <span>{update.updating ? t('rail.updating') : update.label}</span>
+        </button>
+      )}
       <button type="button" className="titlebar__btn" aria-label={t('titlebar.minimize')} title={t('titlebar.minimize')} onClick={() => void win?.minimize()}>
         <Minus weight="bold" />
       </button>

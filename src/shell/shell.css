@@ -444,4 +444,37 @@
 }
 .titlebar__btn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
 .titlebar__btn--close:hover:not(:disabled) { background: #d83b3b; color: #fff; }
+/* A new version: loud, right before the window buttons. */
+.titlebar__update {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin-right: 4px;
+  padding: 0 12px 0 9px;
+  border: 1px solid #ffe066;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffd23f, #ff8a1f);
+  color: #1a1206;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(255, 190, 40, 0.7);
+  animation: titlebar-update-pulse 1.6s ease-out infinite;
+}
+.titlebar__update svg { font-size: 17px; }
+.titlebar__update:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+.titlebar__update.is-busy { animation: none; opacity: 0.85; cursor: progress; }
+.titlebar__spin { animation: titlebar-spin 0.9s linear infinite; }
+@keyframes titlebar-update-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 190, 40, 0.75); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 190, 40, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 190, 40, 0); }
+}
+@keyframes titlebar-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .titlebar__update { animation: none; }
+}
 .raid-pill__clock { flex: none; font-size: var(--fs-caption); color: var(--text); }

@@ -919,6 +919,7 @@ function App() {
   return (
     <div className="app-container">
       <TitleBar
+        update={update.label ? { label: update.label, updating: update.updating, onUpdate: () => void update.apply() } : null}
         onOpenLink={() => {
           setSettingsTab('devices');
           setSettingsOpen(true);
