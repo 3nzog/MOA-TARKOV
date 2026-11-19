@@ -161,6 +161,9 @@ function App() {
   const [phoneOpen, setPhoneOpen] = useState(false);
   // The card over the map for a clicked quest pin or extraction.
   const [mapCard, setMapCard] = useState<MapCard | null>(null);
+  // Where the pointer last went down on the map (screen pixels): the card of a
+  // clicked marker opens next to it.
+  const mapPointer = useRef<{ x: number; y: number } | null>(null);
   // Cartridges read from the last flea-market screenshot; opening on them.
   const [screenAmmo, setScreenAmmo] = useState<string[] | null>(null);
   const [plannerTab, setPlannerTab] = useState<PlannerTab>('summary');
@@ -1105,7 +1108,12 @@ function App() {
           </aside>
         )}
 
-        <section className="map-stage map-area">
+        <section
+          className="map-stage map-area"
+          onPointerDownCapture={(e) => {
+            mapPointer.current = { x: e.clientX, y: e.clientY };
+          }}
+        >
           <ScavChip state={scav} />
           {liveRaid?.profileKey && !liveRaidSide && <RaidSideAsk onPick={setLiveRaidSide} />}
               {mapCard && selectedMapId && (
@@ -1148,7 +1156,11 @@ function App() {
                         onHoverObjective={selection.setHoveredObjectiveId}
                         onTogglePin={selection.togglePin}
                         onOpenObjective={(task, objective) =>
-                          setMapCard((c) => (c?.kind === 'quest' && c.objective.id === objective.id ? null : { kind: 'quest', task, objective }))
+                          setMapCard((c) =>
+                            c?.kind === 'quest' && c.objective.id === objective.id
+                              ? null
+                              : { kind: 'quest', task, objective, at: mapPointer.current ?? undefined },
+                          )
                         }
                         sharedQuestIds={squadSync.sharedQuestIds}
                         upcoming={appearance.upcomingQuests ? upcomingObjectives : undefined}
@@ -1196,7 +1208,7 @@ function App() {
                           setMapCard((c) =>
                             c?.kind === 'extract' && c.poi.id === poi.id
                               ? null
-                              : { kind: 'extract', poi, names: [...(exitAliases[poi.id] ?? []), poi.label] },
+                              : { kind: 'extract', poi, names: [...(exitAliases[poi.id] ?? []), poi.label], at: mapPointer.current ?? undefined },
                           );
                         }
                       }}

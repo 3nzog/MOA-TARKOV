@@ -2,7 +2,7 @@
 // clicked: for a quest, its objective, the location screenshots from the wiki
 // guide and a link to the quest's wiki page; for an extraction, its picture
 // from the map's wiki page.
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowSquareOut, CaretLeft, CaretRight, SignOut, Scroll, X } from '@phosphor-icons/react';
 import { IconButton, Modal, Spinner } from '../ui';
@@ -13,11 +13,54 @@ import { useWikiLinks } from '../quests/wikiLinks';
 import type { GuideImage } from '../quests/wikiGuide';
 import { fetchWikiExtracts, findWikiExtract, wikiMapPage, wikiMapUrl } from './wikiExtracts';
 import { exitReqs, reqLabels, type ExitReqs } from './extractReqs';
+import { placeCard, type Point } from './cardPlacement';
 import './mapInfoCard.css';
 
-export type MapCard =
+/** `at`: where the marker was clicked (screen pixels); the card opens there. */
+export type MapCard = (
   | { kind: 'quest'; task: TarkovTask; objective: TaskObjective }
-  | { kind: 'extract'; poi: Poi; names: string[] };
+  | { kind: 'extract'; poi: Poi; names: string[] }
+) & { at?: Point };
+
+/**
+ * Puts the card next to the clicked point, wholly inside the map, and keeps it
+ * there as it grows (pictures loading) or the window changes size. Without a
+ * point it stays in its corner.
+ */
+function useCardPlacement(at: Point | undefined) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [style, setStyle] = useState<CSSProperties | undefined>(at ? { visibility: 'hidden' } : undefined);
+  const ax = at?.x;
+  const ay = at?.y;
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const parent = el?.offsetParent;
+    if (!el || !parent || ax === undefined || ay === undefined) return;
+    const place = () => {
+      const box = parent.getBoundingClientRect();
+      // The map runs under the side panels: the card stays in the part that
+      // shows the map, never over the quest list.
+      let lo = box.left;
+      let hi = box.right;
+      for (const side of document.querySelectorAll('.spine, .rail-panel')) {
+        const r = side.getBoundingClientRect();
+        if (r.width === 0) continue;
+        if (r.left + r.width / 2 < box.left + box.width / 2) lo = Math.max(lo, r.right);
+        else hi = Math.min(hi, r.left);
+      }
+      const p = placeCard({ x: ax - lo, y: ay - box.top }, { w: el.offsetWidth, h: el.offsetHeight }, { w: hi - lo, h: box.height });
+      setStyle({ left: p.left + lo - box.left, top: p.top, right: 'auto', bottom: 'auto' });
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(el);
+    ro.observe(parent);
+    return () => ro.disconnect();
+  }, [ax, ay]);
+
+  return { ref, style };
+}
 
 export default function MapInfoCard({ card, onClose }: { card: MapCard; onClose: () => void }) {
   const { t } = useTranslation();
@@ -26,9 +69,10 @@ export default function MapInfoCard({ card, onClose }: { card: MapCard; onClose:
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+  const { ref, style } = useCardPlacement(card.at);
 
   return (
-    <aside className="map-card" role="dialog" aria-label={card.kind === 'quest' ? card.task.name : card.poi.label}>
+    <aside ref={ref} style={style} className="map-card" role="dialog" aria-label={card.kind === 'quest' ? card.task.name : card.poi.label}>
       <header className="map-card__head">
         <span className={`map-card__icon map-card__icon--${card.kind}`}>{card.kind === 'quest' ? <Scroll weight="fill" /> : <SignOut weight="bold" />}</span>
         <div className="map-card__title">
