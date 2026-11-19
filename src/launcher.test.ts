@@ -49,6 +49,37 @@ describe('the .bat launchers', () => {
     });
   });
 
+  describe('Abrir Tarkov MoA.bat repairs an install that will not update', () => {
+    const text = read('Abrir Tarkov MoA.bat');
+
+    it('Git trusts the program folders (a folder made by another Windows user is "dubious" to it)', () => {
+      expect(text).toContain('set "GIT_CONFIG_KEY_0=safe.directory"');
+      expect(text).toContain('set "GIT_CONFIG_VALUE_0=*"');
+    });
+
+    it('only GitHub\'s own words count as a refused login ("Permission denied" on a file is the folder)', () => {
+      const auth = text.slice(text.indexOf(':auth_error\r\n'), text.indexOf('exit /b', text.indexOf(':auth_error\r\n')));
+      expect(auth).toContain('/c:"returned error: 403"');
+      expect(auth).not.toMatch(/\/c:"403"|\/c:"denied"/);
+    });
+
+    it('a broken install is set aside and downloaded again, once', () => {
+      expect(text).toMatch(/:update_broken\r\ncall :is_install_dir/);
+      expect(text).toMatch(/set "MOA_REPAIR=1"\r\n\s*call "%ICOPY%" --instalar/);
+      expect(text).toMatch(/if not defined REPAIRED \(\r\n\s*set "REPAIRED=1"/);
+    });
+
+    it('closes only the MoA of the folder it replaces, never every MoA by name', () => {
+      expect(text).not.toMatch(/taskkill[^\r\n]*tarkov-companion/i);
+      expect(text).toContain(':close_moa');
+    });
+
+    it('a copy run from outside the program deletes itself when it is done', () => {
+      expect(text).toContain('(goto) 2>nul & del "%~f0"');
+      expect(text).toContain('if /i "%~dp0"=="%DEST%\\" exit /b 0');
+    });
+  });
+
   describe('Abrir Tarkov MoA.bat hands over to the newest launcher first', () => {
     const text = read('Abrir Tarkov MoA.bat');
 

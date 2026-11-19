@@ -22,6 +22,7 @@ export const PATCH_NOTES: PatchNote[] = [
       "PMC or Scav: the logs tell your two profiles apart but not which is the Scav. While a raid is on and the app does not know yet, the map asks once (\"This raid is: PMC / Scav\"); the other profile is known from then on.",
       "Map on the phone away from home (4G/5G): with Tailscale (free) on the PC and the phone, the phone window shows a second QR code that works on mobile data. Only your own devices on Tailscale get in, and the key is still needed; the firewall rule for it covers Tailscale's addresses only.",
       "Fixed: turning on the map on the phone could say that another program was using port 8791 when it was the app itself (two starts at once, or a restart before the old one let go of the port).",
+      "The launcher repairs an install that will not update instead of opening the old version: it trusts its own folder (Git refuses one made by another Windows user), tells a GitHub refusal apart from a file held by OneDrive or an antivirus, shows Git's own error, and if the installed folder still will not update it sets it aside and downloads a fresh one (what the app remembers is kept). It closes only the MoA of that folder. Sent to someone, the .bat installs or repairs and then deletes itself; the Tarkov MoA shortcut takes over.",
     ],
   },
   {

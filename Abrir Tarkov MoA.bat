@@ -23,9 +23,12 @@ rem
 rem  O nome continua "Abrir Tarkov MoA.bat": o .exe, os atalhos e os .bat
 rem  antigos procuram por ele.
 rem
-rem  O repositorio e privado. Este arquivo NAO guarda senha nem token: o Git
-rem  abre o login do GitHub no navegador, e cada pessoa entra com a PROPRIA
-rem  conta, convidada para o repositorio (GitHub > Settings > Collaborators).
+rem  Este arquivo NAO guarda senha nem token. O repositorio e publico: baixar
+rem  e atualizar nao pede login. Se um dia ele voltar a ser privado, o Git abre
+rem  o login do GitHub no navegador e cada pessoa entra com a PROPRIA conta.
+rem
+rem  Mandado para alguem (Downloads, uma mensagem), ele instala ou conserta a
+rem  instalacao e depois se apaga: dai em diante vale o atalho Tarkov MoA.
 rem
 rem  Tudo o que acontece fica anotado em %TEMP%\TarkovMoA.log (e o que o Git
 rem  responde ao abrir, em %TEMP%\TarkovMoA-atualizacao.log).
@@ -45,6 +48,12 @@ if not defined MOA_LOG_ON (
   > "%LOG%" echo Tarkov MoA - %DATE% %TIME%
   >>"%LOG%" ver
 )
+rem  Git refuses a folder another Windows user made, or one copied from another
+rem  PC ("dubious ownership"), and every update then fails. This file only
+rem  works in the program's own folders: Git trusts them while it runs.
+set "GIT_CONFIG_COUNT=1"
+set "GIT_CONFIG_KEY_0=safe.directory"
+set "GIT_CONFIG_VALUE_0=*"
 
 rem ---- Instalar ou abrir --------------------------------------------------------------
 rem  --instalar: instalar (de uma copia em %TEMP%, veja abaixo). --copia e
@@ -102,6 +111,13 @@ rem  Windows). Nada de senha ou token neste arquivo.
 set "GITAUTH=-c credential.helper= -c credential.helper=manager"
 
 rem ---- 2. Baixar ou atualizar -------------------------------------------------------
+set "GLOG=%TEMP%\TarkovMoA-git.log"
+rem  Asked by the opening, when the installed folder would not update: a fresh one.
+if defined MOA_REPAIR (
+  set "MOA_REPAIR="
+  set "REPAIRED=1"
+  if exist "%DEST%\" goto :i_old_copy
+)
 if exist "%DEST%\.git" goto :i_update
 rem  Uma pasta "Tarkov MoA" que nao veio do GitHub (instalador antigo, copia
 rem  manual) nunca se atualiza: ela e guardada com outro nome, nada se apaga,
@@ -113,8 +129,6 @@ if exist "%DEST%\" (
 
 call :section "2/4" "Baixando o Tarkov MoA"
 call :run "Baixando do GitHub"
-call :note "Se abrir uma janela ou o navegador pedindo login, entre com a SUA"
-call :note "conta do GitHub (a que foi convidada para o repositório)."
 git %GITAUTH% clone "%REPO%" "%DEST%" >>"%LOG%" 2>&1
 if errorlevel 1 goto :i_clone_failed
 call :ok "Baixado"
@@ -130,10 +144,14 @@ rem  A folder whose Git is half set up (seen: no branch ever fetched, no
 rem  version checked out) is repaired first: the GitHub address and the
 rem  standard "fetch every branch" rule.
 git -C "%DEST%" remote get-url origin >nul 2>&1 || git -C "%DEST%" remote add origin "%REPO%" >>"%LOG%" 2>&1
+rem  The program's own GitHub address (an old install may point elsewhere).
+git -C "%DEST%" remote set-url origin "%REPO%" >>"%LOG%" 2>&1
 git -C "%DEST%" config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" >>"%LOG%" 2>&1
 :i_update_fetch
-git -C "%DEST%" %GITAUTH% fetch --prune origin >>"%LOG%" 2>&1
-if errorlevel 1 goto :i_update_fetch_failed
+git -C "%DEST%" %GITAUTH% fetch --prune origin > "%GLOG%" 2>&1
+set "FETCHERR=%errorlevel%"
+type "%GLOG%" >>"%LOG%" 2>nul
+if not "%FETCHERR%"=="0" goto :i_update_fetch_failed
 set "UPSTREAM="
 for /f "delims=" %%U in ('git -C "%DEST%" rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2^>nul') do set "UPSTREAM=%%U"
 if not defined UPSTREAM git -C "%DEST%" rev-parse --verify --quiet origin/main >nul 2>&1 && set "UPSTREAM=origin/main"
@@ -185,9 +203,10 @@ goto :i_shortcut
 
 rem  O fetch falhou: login vencido/de outra conta, sem acesso, ou sem internet.
 :i_update_fetch_failed
-findstr /i /c:"Could not resolve host" /c:"timed out" /c:"Failed to connect" "%LOG%" >nul 2>&1
+call :git_error "%GLOG%"
+call :net_error "%GLOG%"
 if not errorlevel 1 goto :i_no_network
-findstr /i /c:"Authentication failed" /c:"Repository not found" /c:"could not read Username" /c:"403" /c:"denied" /c:"terminal prompts disabled" "%LOG%" >nul 2>&1
+call :auth_error "%GLOG%"
 if errorlevel 1 goto :i_update_failed
 if defined LOGINRETRY goto :i_no_access
 set "LOGINRETRY=1"
@@ -204,14 +223,15 @@ goto :i_stop
 
 :i_no_access
 call :err_head "Esta conta do GitHub não tem acesso ao Tarkov MoA"
-call :err "O repositório é privado. Peça ao dono para convidar a sua conta"
-call :err "(GitHub > Settings > Collaborators), aceite o convite que chega no"
-call :err "e-mail e rode este instalador de novo."
+call :err "Peça ao dono do repositório para conferir o acesso da sua conta"
+call :err "e rode o Abrir Tarkov MoA.bat de novo."
 goto :i_stop
 
 rem ---- 3. Atalho na Area de Trabalho -----------------------------------------------
 :i_shortcut
 if defined MOA_SO_ATUALIZAR exit /b 0
+rem  MOA_TESTE (tests): no shortcut on the Desktop and no opening.
+if defined MOA_TESTE goto :i_opening
 call :section "3/4" "Atalho"
 if not exist "%DEST%\Abrir Tarkov MoA.bat" goto :i_broken_copy
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$d = [Environment]::GetFolderPath('Desktop'); $s = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $d 'Tarkov MoA.lnk')); $s.TargetPath = Join-Path $env:DEST 'Abrir Tarkov MoA.bat'; $s.WorkingDirectory = $env:DEST; $s.IconLocation = (Join-Path $env:DEST 'src-tauri\icons\icon.ico') + ',0'; $s.Description = 'Tarkov MoA'; $s.Save()" >>"%LOG%" 2>&1
@@ -222,13 +242,20 @@ if errorlevel 1 (
 )
 
 rem ---- 4. Abrir (o abridor instala o resto e compila na primeira vez) --------------
+:i_opening
 call :section "4/4" "Abrindo"
 call :ok "Instalação pronta"
 call :note "Na primeira vez o programa instala o que falta e compila; leva alguns minutos."
 timeout /t 2 >nul 2>&1
 rem  A copia instalada (a mais nova, recem baixada) segue: requisitos, compilar e abrir.
-call "%DEST%\Abrir Tarkov MoA.bat" --atualizado
-exit /b %errorlevel%
+if not defined MOA_TESTE call "%DEST%\Abrir Tarkov MoA.bat" --atualizado
+rem  This file came from outside (Downloads, a message): its job is done, the
+rem  installed copy and its shortcut take over, so it deletes itself. Not a
+rem  copy in %TEMP% (its caller deletes it) nor the installed one.
+if /i "%~dp0"=="%DEST%\" exit /b 0
+echo "%~n0" | findstr /i /c:"TarkovMoA-instalar" /c:"TarkovMoA-abrir" >nul && exit /b 0
+>>"%LOG%" echo Este arquivo se apagou: use o atalho Tarkov MoA (ou o Abrir Tarkov MoA.bat em %DEST%).
+(goto) 2>nul & del "%~f0"
 
 rem =============================================================================
 rem  ABRIR
@@ -261,6 +288,7 @@ if errorlevel 1 goto :handover_done
 rem  No login window here: if GitHub wants one, step 1 below asks for it.
 set "GIT_TERMINAL_PROMPT=0"
 set "GCM_INTERACTIVE=never"
+call :fix_origin
 git remote get-url origin >nul 2>&1 && git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" >nul 2>&1
 git -c credential.helper= -c credential.helper=manager fetch --quiet --prune origin >nul 2>&1
 if errorlevel 1 goto :handover_skip
@@ -392,30 +420,26 @@ rem  este arquivo no meio da atualizacao nao atrapalha o que vem depois.
     call "%~f0" --atualizado
     exit /b
   )
-  if not defined MERGED (
-    set "NOUPDATE=A versão nova foi baixada, mas não deu para aplicar nesta pasta."
-    set "NOUPDATE2=Rode o Abrir Tarkov MoA.bat de fora desta pasta (Downloads), ou mande o %GITLOG% para quem te ajuda."
-    call :warn "Não deu para aplicar a versão nova"
-  )
+  if not defined MERGED set "APPLYFAIL=1"
+)
+if defined APPLYFAIL (
+  call :git_error "%GITLOG%"
+  goto :update_broken
 )
 goto :updated
 
 :update_fetch_failed
 rem  Diz o motivo pelo que o Git respondeu (o registro completo fica no log).
-findstr /i /c:"Could not resolve host" /c:"timed out" /c:"Failed to connect" "%GITLOG%" >nul 2>&1
+call :git_error "%GITLOG%"
+call :net_error "%GITLOG%"
 if not errorlevel 1 (
   set "NOUPDATE=Sem conexão com o GitHub agora."
   set "NOUPDATE2=Confira a internet e abra de novo."
   call :warn "Sem conexão com o GitHub"
   goto :updated
 )
-findstr /i /c:"Authentication failed" /c:"Repository not found" /c:"could not read Username" /c:"403" /c:"denied" /c:"terminal prompts disabled" "%GITLOG%" >nul 2>&1
-if errorlevel 1 (
-  set "NOUPDATE=O GitHub respondeu com um erro ao procurar a versão nova."
-  set "NOUPDATE2=Mande o arquivo %GITLOG% para quem te ajuda."
-  call :warn "Não deu para procurar a versão nova"
-  goto :updated
-)
+call :auth_error "%GITLOG%"
+if errorlevel 1 goto :update_broken
 rem  Login salvo vencido ou de outra conta: apaga e pede para entrar de novo, uma vez.
 if not defined LOGINRETRY (
   set "LOGINRETRY=1"
@@ -425,9 +449,34 @@ if not defined LOGINRETRY (
   (echo protocol=https& echo host=github.com) | git -c credential.helper= -c credential.helper=manager credential reject >>"%GITLOG%" 2>&1
   goto :update_fetch
 )
-set "NOUPDATE=O GitHub não deixou esta conta baixar o Tarkov MoA (o repositório é privado)."
-set "NOUPDATE2=Peça ao dono para convidar a sua conta do GitHub e aceite o convite no e-mail."
+set "NOUPDATE=O GitHub não deixou esta conta baixar o Tarkov MoA."
+set "NOUPDATE2=Peça ao dono do repositório para conferir o acesso da sua conta."
 call :warn "Esta conta do GitHub não tem acesso ao Tarkov MoA"
+goto :updated
+
+rem  Not the network, not GitHub: something in this folder (files held by
+rem  OneDrive or an antivirus, a damaged Git folder...). The installed copy is
+rem  replaced by a fresh one (the old one is kept aside, nothing is deleted;
+rem  what the app remembers lives in Windows, not in this folder). A folder of
+rem  one's own (not the install) only says why.
+:update_broken
+call :is_install_dir
+if errorlevel 1 goto :update_broken_say
+call :warn "A pasta do programa não se atualiza: baixando uma nova"
+if defined GITERR call :note "Erro do Git: %GITERR%"
+set "ICOPY=%TEMP%\TarkovMoA-instalar-%RANDOM%%RANDOM%.bat"
+copy /y "%~f0" "%ICOPY%" >nul 2>&1
+if errorlevel 1 goto :update_broken_say
+(
+  set "MOA_REPAIR=1"
+  call "%ICOPY%" --instalar
+  del "%ICOPY%" >nul 2>&1
+  exit /b
+)
+:update_broken_say
+set "NOUPDATE=Não deu para atualizar esta pasta."
+set "NOUPDATE2=Erro do Git: %GITERR%"
+call :warn "Não deu para procurar a versão nova"
 :updated
 if defined MOA_SO_ATUALIZAR (
   echo MOA-TESTE NOUPDATE=[%NOUPDATE%]
@@ -532,13 +581,7 @@ if not errorlevel 1 (
 
 rem  Precisa recompilar e o MoA esta aberto: ele segura o .exe, entao fecha
 rem  (o que voce marcou ja esta salvo) e abre a versao nova no fim.
-tasklist /fi "imagename eq tarkov-companion.exe" 2>nul | find /i "tarkov-companion.exe" >nul
-if not errorlevel 1 (
-  call :run "Fechando o MoA aberto para instalar a versão nova"
-  taskkill /im tarkov-companion.exe >nul 2>&1
-  timeout /t 4 >nul
-  taskkill /f /im tarkov-companion.exe >nul 2>&1
-)
+call :close_moa "%CD%" "Fechando o MoA aberto para instalar a versão nova"
 
 call :run "Baixando e conferindo as dependências (npm)"
 echo %DIM%
@@ -721,6 +764,58 @@ where git >nul 2>&1
 if errorlevel 1 exit /b 1
 exit /b 0
 
+rem  :git_error "<log>" - the last "fatal:" / "error:" line Git wrote, in GITERR.
+:git_error
+set "GITERR="
+for /f "usebackq delims=" %%L in (`findstr /i /c:"fatal:" /c:"error:" "%~1" 2^>nul`) do set "GITERR=%%L"
+if not defined GITERR set "GITERR=sem mensagem (veja %~1)"
+>>"%LOG%" echo Erro do Git: %GITERR%
+exit /b 0
+
+rem  :net_error "<log>" - errorlevel 0 when the Internet or GitHub could not be reached.
+:net_error
+findstr /i /c:"Could not resolve host" /c:"timed out" /c:"Failed to connect" /c:"Could not connect" /c:"Connection was reset" /c:"Connection reset" "%~1" >nul 2>&1
+exit /b %errorlevel%
+
+rem  :auth_error "<log>" - errorlevel 0 when GitHub refused the login. Only
+rem  GitHub's own words: "Permission denied" on a file is the folder, not GitHub.
+:auth_error
+findstr /i /c:"Authentication failed" /c:"Repository not found" /c:"could not read Username" /c:"returned error: 403" /c:"returned error: 401" /c:"terminal prompts disabled" "%~1" >nul 2>&1
+exit /b %errorlevel%
+
+rem  :fix_origin - an old install whose GitHub address is not the program's
+rem  own (a renamed repository, an old link) points at it again.
+:fix_origin
+set "ORIGIN="
+for /f "delims=" %%O in ('git remote get-url origin 2^>nul') do set "ORIGIN=%%O"
+if not defined ORIGIN exit /b 0
+if /i "%ORIGIN%"=="%REPO%" exit /b 0
+echo %ORIGIN% | findstr /i /c:"github.com/3nzog/MOA-TARKOV" >nul && exit /b 0
+call :is_install_dir
+if errorlevel 1 exit /b 0
+git remote set-url origin "%REPO%" >nul 2>&1
+exit /b 0
+
+rem  :is_install_dir - errorlevel 0 when this is the installed copy
+rem  (Documentos\Tarkov MoA), not someone's own folder of the code.
+:is_install_dir
+set "IDIR="
+if defined MOA_DEST set "IDIR=%MOA_DEST%"
+if not defined IDIR for /f "usebackq delims=" %%D in (`powershell -NoProfile -Command "[Environment]::GetFolderPath('MyDocuments')"`) do set "IDIR=%%D\Tarkov MoA"
+if /i "%CD%"=="%IDIR%" exit /b 0
+exit /b 1
+
+rem  :close_moa "<folder>" "<message>" - closes the Tarkov MoA that runs from
+rem  that folder (and only that one: another install, or the player's own
+rem  build, stays open), so its files can be replaced.
+:close_moa
+set "KILLDIR=%~1"
+powershell -NoProfile -Command "$d = $env:KILLDIR.TrimEnd('\') + '\'; $p = @(Get-Process tarkov-companion -ErrorAction SilentlyContinue | Where-Object { $_.Path -and $_.Path.StartsWith($d, [StringComparison]::OrdinalIgnoreCase) }); if ($p.Count -eq 0) { exit 1 }; exit 0" >nul 2>&1
+if errorlevel 1 exit /b 0
+call :run "%~2"
+powershell -NoProfile -Command "$d = $env:KILLDIR.TrimEnd('\') + '\'; $p = @(Get-Process tarkov-companion -ErrorAction SilentlyContinue | Where-Object { $_.Path -and $_.Path.StartsWith($d, [StringComparison]::OrdinalIgnoreCase) }); foreach ($x in $p) { [void]$x.CloseMainWindow() }; Start-Sleep -Seconds 4; foreach ($x in $p) { if (-not $x.HasExited) { $x.Kill() } }" >>"%LOG%" 2>&1
+exit /b 0
+
 rem  Recarrega o PATH do registro, para enxergar o que acabou de ser instalado.
 :refresh_path
 for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')"`) do set "PATH=%%P"
@@ -818,12 +913,7 @@ goto :i_stop
 :i_old_copy
 set "OLDDEST=%DEST% (antiga)"
 if exist "%OLDDEST%" set "OLDDEST=%DEST% (antiga %RANDOM%)"
-tasklist /fi "imagename eq tarkov-companion.exe" 2>nul | find /i "tarkov-companion.exe" >nul
-if not errorlevel 1 (
-  taskkill /im tarkov-companion.exe >>"%LOG%" 2>&1
-  timeout /t 4 >nul
-  taskkill /f /im tarkov-companion.exe >>"%LOG%" 2>&1
-)
+call :close_moa "%DEST%" "Fechando o Tarkov MoA desta pasta"
 move "%DEST%" "%OLDDEST%" >>"%LOG%" 2>&1
 if errorlevel 1 goto :i_dest_busy
 call :warn "A pasta antiga não se atualizava sozinha"
@@ -855,10 +945,18 @@ call :err "Depois rode o Abrir Tarkov MoA.bat de novo."
 goto :i_stop
 
 :i_update_failed
+if not defined REPAIRED (
+  set "REPAIRED=1"
+  call :warn "A pasta instalada não se atualiza: guardando ela e baixando uma nova"
+  goto :i_old_copy_note
+)
 call :err_head "Não deu para atualizar"
-call :err "Se você mexeu em arquivos dentro da pasta do programa, o Git não"
-call :err "sobrescreve as suas mudanças. A resposta do Git está no log."
+call :err "Nem uma cópia nova deu certo. Erro do Git:"
+call :err "%GITERR%"
 goto :i_stop
+:i_old_copy_note
+if defined GITERR call :note "Erro do Git: %GITERR%"
+goto :i_old_copy
 
 :i_broken_copy
 call :err_head "A cópia parece incompleta"
