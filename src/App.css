@@ -781,6 +781,40 @@ button:disabled {
   -webkit-text-stroke: 2px var(--map-ink);
   paint-order: stroke fill;
 }
+/* What an exit asks for, after its name: the item's own picture (no
+   background) or a small glyph (key, power, lever, paying…). */
+.tc-exit-reqs {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+  -webkit-text-stroke: 0;
+}
+.tc-exit-req--item {
+  height: 24px;
+  width: auto;
+  max-width: 40px;
+  margin: -4px 0;
+  object-fit: contain;
+  filter: drop-shadow(0 0 1px var(--map-ink)) drop-shadow(0 0 2px var(--map-ink));
+}
+/* A flare is a thin tube: it glows in its signal's colour. */
+.tc-exit-req--greenFlare,
+.tc-exit-req--flareZone {
+  filter: drop-shadow(0 0 1px var(--map-ink)) drop-shadow(0 0 4px #3dff6e);
+}
+.tc-exit-req--redFlare {
+  filter: drop-shadow(0 0 1px var(--map-ink)) drop-shadow(0 0 4px #ff3d3d);
+}
+.tc-poi-glyph .tc-exit-req svg {
+  width: 14px;
+  height: 14px;
+  color: #ffd166;
+}
+.tc-poi-glyph .tc-exit-req svg * {
+  stroke-width: 40px;
+}
 .tc-poi-marker.tc-hl .tc-poi-glyph {
   transform: scale(1.4);
   filter: drop-shadow(0 0 6px var(--accent-glow));

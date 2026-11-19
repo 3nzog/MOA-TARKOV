@@ -52,14 +52,16 @@ export interface PoiLayerProps {
    * side and requirements, from the wiki). null keeps the note.
    */
   describe?: (poi: Poi) => string | null;
+  /** Markup after a named marker's label: an exit's requirement pictures (exitBadges). */
+  badges?: (poi: Poi) => string | null;
 }
 
 // One stable icon per color+glyph combo. Highlight is applied via a ".tc-hl"
 // CSS class on the live marker DOM element inside a useEffect — never via
 // setIcon — so the DOM stays stable and clicks fire reliably.
 const iconCache = new Map<string, L.DivIcon>();
-function getPoiIcon(color: string, glyphSvg: string, label?: string, danger = false): L.DivIcon {
-  const key = `${color}|${glyphSvg}|${label ?? ""}|${danger ? 1 : 0}`;
+function getPoiIcon(color: string, glyphSvg: string, label?: string, danger = false, badges = ""): L.DivIcon {
+  const key = `${color}|${glyphSvg}|${label ?? ""}|${danger ? 1 : 0}|${badges}`;
   const cached = iconCache.get(key);
   if (cached) return cached;
 
@@ -67,7 +69,7 @@ function getPoiIcon(color: string, glyphSvg: string, label?: string, danger = fa
   // label is absolutely positioned to the right in CSS so it never shifts the
   // anchor — the dot stays exactly on the POI.
   const labelHtml = label
-    ? `<span class="tc-poi-label">${escapeHtml(label)}</span>`
+    ? `<span class="tc-poi-label">${escapeHtml(label)}${badges}</span>`
     : "";
   const icon = L.divIcon({
     className: danger ? "tc-poi-marker tc-poi-danger" : "tc-poi-marker",
@@ -79,7 +81,7 @@ function getPoiIcon(color: string, glyphSvg: string, label?: string, danger = fa
   return icon;
 }
 
-function resolvePoiIcon(poi: Poi): L.DivIcon {
+function resolvePoiIcon(poi: Poi, badges = ""): L.DivIcon {
   const facetKey = facetKeyOf(poi);
   // Facet drives the color for tarkov-dev POIs; a per-marker color override is
   // honored only for user markers (kept for the future custom/P2P palette).
@@ -87,7 +89,7 @@ function resolvePoiIcon(poi: Poi): L.DivIcon {
     poi.source === "user" && poi.color ? poi.color : colorForFacet(facetKey);
   const named = isExtractionLike(facetKey) || isDanger(facetKey);
   const label = named ? poiLabel(poi) : undefined;
-  return getPoiIcon(color, svgForFacet(facetKey), label, isDanger(facetKey));
+  return getPoiIcon(color, svgForFacet(facetKey), label, isDanger(facetKey), label ? badges : "");
 }
 
 interface PoiMarkerProps {
@@ -99,6 +101,8 @@ interface PoiMarkerProps {
   onHover?: (poiId: string | null) => void;
   onSelect?: (poi: Poi) => void;
   extra?: string | null;
+  /** Markup shown after the name (an exit's requirement pictures). */
+  badges?: string | null;
 }
 
 function PoiMarker({
@@ -110,6 +114,7 @@ function PoiMarker({
   onHover,
   onSelect,
   extra,
+  badges,
 }: PoiMarkerProps): React.JSX.Element {
   const markerRef = useRef<L.Marker | null>(null);
 
@@ -127,7 +132,7 @@ function PoiMarker({
     <Marker
       ref={markerRef}
       position={latLng as L.LatLngExpression}
-      icon={resolvePoiIcon(poi)}
+      icon={resolvePoiIcon(poi, badges ?? "")}
       eventHandlers={{
         mouseover: () => onHover?.(poi.id),
         mouseout: () => onHover?.(null),
@@ -165,6 +170,7 @@ export default function PoiLayer({
   floors,
   activeFloorId = ALL_FLOORS,
   describe,
+  badges,
 }: PoiLayerProps): React.JSX.Element {
   const toLatLng = getGameToLatLng(mapId);
   if (!toLatLng) return <></>;
@@ -190,6 +196,7 @@ export default function PoiLayer({
             onHover={onHover}
             onSelect={onSelect}
             extra={describe?.(poi) ?? null}
+            badges={badges?.(poi) ?? null}
           />
         );
       })}

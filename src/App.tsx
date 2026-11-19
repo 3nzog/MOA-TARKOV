@@ -58,6 +58,7 @@ import { useScavTimer } from './scav/scavTimer';
 import ScavChip from './scav/ScavChip';
 import RaidSideAsk from './scav/RaidSideAsk';
 import { reqLabels, useExitReqs } from './map/extractReqs';
+import { exitBadges, exitBadgesHtml } from './map/exitBadges';
 import { bossList } from './route/describe';
 import { useHideoutAlarms, type HideoutTimer } from './hideout/timers';
 import { usePlanner, useRaidHistory } from './app/usePlanner';
@@ -727,6 +728,17 @@ function App() {
         : undefined,
     [exitReqsOf, exitAliases, t],
   );
+  // The same requirements as small pictures next to each exit's name.
+  const exitBadgesOf = useMemo(
+    () =>
+      exitReqsOf
+        ? (p: Poi) =>
+            p.category === 'extract'
+              ? exitBadgesHtml(exitBadges(exitReqsOf([...(exitAliases[p.id] ?? []), p.label])), (tag, arg) => t(`exitReq.${tag}`, { arg }))
+              : null
+        : undefined,
+    [exitReqsOf, exitAliases, t],
+  );
   const currentPois = pois.currentPois;
   const routeExitNote = useCallback(
     (id: string) => {
@@ -1202,6 +1214,7 @@ function App() {
                       floors={selectedMapDef?.floors}
                       activeFloorId={floors.activeFloorId}
                       describe={describePoi}
+                      badges={exitBadgesOf}
                       onSelect={(poi) => {
                         pois.togglePoi(poi);
                         if (poi.category === 'extract') {
