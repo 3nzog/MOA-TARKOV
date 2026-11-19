@@ -582,6 +582,9 @@ if not errorlevel 1 (
 rem  Precisa recompilar e o MoA esta aberto: ele segura o .exe, entao fecha
 rem  (o que voce marcou ja esta salvo) e abre a versao nova no fim.
 call :close_moa "%CD%" "Fechando o MoA aberto para instalar a versão nova"
+rem  The old version goes before the new one is built: nothing (a shortcut or a
+rem  pinned icon that opens the .exe directly) can open it any more.
+if exist "%EXE%" del /f /q "%EXE%" >nul 2>&1
 
 call :run "Baixando e conferindo as dependências (npm)"
 echo %DIM%

@@ -10,8 +10,30 @@ const bats = readdirSync('.').filter((f) => /\.(bat|cmd)$/i.test(f));
 const read = (f: string) => readFileSync(f).toString('utf8');
 
 describe('the .bat launchers', () => {
-  it('is one launcher: it installs, updates and opens', () => {
-    expect(bats).toEqual(['Abrir Tarkov MoA.bat']);
+  it('is one launcher (installs, updates, opens) and one diagnosis to send to someone', () => {
+    expect(bats.sort()).toEqual(['Abrir Tarkov MoA.bat', 'Diagnosticar Tarkov MoA.bat']);
+  });
+
+  describe('Diagnosticar Tarkov MoA.bat', () => {
+    const text = read('Diagnosticar Tarkov MoA.bat');
+    const ps = text.slice(text.lastIndexOf('##POWERSHELL##'));
+
+    it('carries its PowerShell after a marker that appears once, and finds it without spelling it out', () => {
+      expect(text.split('##POWERSHELL##')).toHaveLength(2);
+      expect(text).toContain("$m = '##' + 'POWERSHELL' + '##'");
+    });
+
+    it('closes only the MoA of the folder it repairs, keeps folders it replaces, keeps the app data', () => {
+      expect(text).not.toMatch(/taskkill/i);
+      expect(ps).toContain('function Close-MoA-In');
+      expect(ps).toContain("(antiga)");
+      expect(ps).not.toMatch(/Remove-Item[^\r\n]*com\.tarkov-companion/);
+    });
+
+    it('opens through the launcher and then deletes itself (unless it sits in the program folder)', () => {
+      expect(text).toContain('call "%DEST%\\Abrir Tarkov MoA.bat" --atualizado');
+      expect(text).toContain('(goto) 2>nul & del "%~f0"');
+    });
   });
 
   it.each(bats)('%s keeps Windows (CRLF) line endings on every line', (f) => {
