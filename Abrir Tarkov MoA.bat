@@ -597,6 +597,10 @@ call :ok "Dependências prontas"
 call :run "Compilando o Tarkov MoA"
 call :note "Na primeira vez leva alguns minutos; depois só recompila quando o código mudar."
 echo %DIM%
+rem  RC is the path of the resource compiler to Rust (RC.EXE): a leftover RC
+rem  that is not a file (a .bat that kept a result in it) fails the build with
+rem  "Are you sure you have RC.EXE in your $PATH". Rust finds it by itself.
+if defined RC if not exist "%RC%" set "RC="
 call npx tauri build --no-bundle
 set "BUILDERR=%errorlevel%"
 echo %R%

@@ -36,6 +36,20 @@ describe('the .bat launchers', () => {
     });
   });
 
+  // Rust reads RC as the path of its resource compiler (RC.EXE): a .bat that
+  // keeps a result in RC breaks every build it starts ("Are you sure you have
+  // RC.EXE in your $PATH").
+  it.each(bats)('%s never keeps anything in the variable RC', (f) => {
+    expect(read(f)).not.toMatch(/set "?RC=[^"\r\n]/i);
+  });
+
+  it('Abrir Tarkov MoA.bat drops a leftover RC that is not a file before building', () => {
+    const text = read('Abrir Tarkov MoA.bat');
+    const guard = text.indexOf('if defined RC if not exist "%RC%" set "RC="');
+    expect(guard).toBeGreaterThan(0);
+    expect(text.indexOf('call npx tauri build --no-bundle')).toBeGreaterThan(guard);
+  });
+
   it.each(bats)('%s keeps Windows (CRLF) line endings on every line', (f) => {
     const text = read(f);
     const lfOnly = text.split('\r\n').filter((chunk) => chunk.includes('\n')).length;

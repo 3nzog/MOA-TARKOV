@@ -24,13 +24,13 @@ chcp 65001 >nul
 title Tarkov MoA - diagnostico e conserto
 set "MOA_DIAG_FILE=%~f0"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$t = [IO.File]::ReadAllText($env:MOA_DIAG_FILE, [Text.Encoding]::UTF8); $m = '##' + 'POWERSHELL' + '##'; $i = $t.LastIndexOf($m); if ($i -lt 0) { exit 1 }; Invoke-Expression $t.Substring($i + $m.Length)"
-set "RC=%errorlevel%"
+set "DIAG_RC=%errorlevel%"
 
 set "DEST=%MOA_DEST%"
 if not defined DEST for /f "usebackq delims=" %%D in (`powershell -NoProfile -Command "[Environment]::GetFolderPath('MyDocuments')"`) do set "DEST=%%D\Tarkov MoA"
 
-if "%RC%"=="0" goto :open
-if "%RC%"=="2" goto :problems
+if "%DIAG_RC%"=="0" goto :open
+if "%DIAG_RC%"=="2" goto :problems
 echo.
 echo   O Tarkov MoA nao ficou instalado: veja o relatorio (o motivo esta nele),
 echo   resolva e rode este arquivo de novo.
