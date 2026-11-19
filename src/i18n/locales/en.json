@@ -1025,7 +1025,7 @@
     "allOfCaliber": "All cartridges of the caliber",
     "noHits": "Nothing found",
     "empty": "Search the gun you want to use to see every cartridge it fires.",
-    "screenHint": "Or take a screenshot of the flea market's ammo screen: it opens here by itself.",
+    "screenHint": "Or, with this tab open, take a screenshot of your stash or inventory: your ammo shows up here, best first. The market's ammo list opens here by itself.",
     "hideTracers": "Hide tracers",
     "tracer": "tracer",
     "classHint": "Against class {{n}} armor (fresh)",
@@ -1069,7 +1069,13 @@
       "tag": "best value"
     },
     "flea": "flea",
-    "ll": "LL{{n}}"
+    "ll": "LL{{n}}",
+    "owned": {
+      "title": "Your ammo — best first against class {{n}}",
+      "help": "With this tab open, take screenshots of your stash or inventory: the cartridges on them come here, by caliber, the best one first against the armour class picked above (goes through first, then penetration, then damage). Several screenshots add up.",
+      "clear": "Clear",
+      "best": "Best"
+    }
   },
   "mapCard": {
     "quest": "Quest",

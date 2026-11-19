@@ -5,12 +5,12 @@
 // opens it on the cartridges that were on screen.
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Camera, CurrencyCircleDollar, MagnifyingGlass, X } from '@phosphor-icons/react';
-import { HelpTip, IconButton, Input, Segmented, Spinner, Toggle } from '../ui';
+import { Camera, Crown, CurrencyCircleDollar, MagnifyingGlass, Trash, X } from '@phosphor-icons/react';
+import { Button, HelpTip, IconButton, Input, Segmented, Spinner, Toggle } from '../ui';
 import { loadLocale, loadPrices, type Price } from '../prices/usePriceScan';
 import { itemIcon } from '../gunsmith/data';
 import { useTraderLevels } from '../gunsmith/availability';
-import { ammoFor, bestValue, caliberLabel, classEffect, loadAmmoData, roundPrice, search, type ValuePick, type AmmoData, type AmmoStats, type Names, type SearchHit } from './data';
+import { ammoFor, bestValue, caliberLabel, classEffect, loadAmmoData, rankOwned, roundPrice, search, type ValuePick, type AmmoData, type AmmoStats, type Names, type SearchHit } from './data';
 import '../gunsmith/gunsmith.css';
 import './ballistics.css';
 
@@ -25,9 +25,11 @@ export interface BallisticsPanelProps {
   onClose: () => void;
   /** Cartridges read from the last screenshot (flea market ammo list). */
   fromScreen?: string[] | null;
+  /** Forgets the cartridges read from screenshots. */
+  onClearScreen?: () => void;
 }
 
-export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanelProps) {
+export default function BallisticsPanel({ onClose, fromScreen, onClearScreen }: BallisticsPanelProps) {
   const { t, i18n } = useTranslation();
   const [data, setData] = useState<AmmoData | null>(null);
   const [names, setNames] = useState<Names | null>(null);
@@ -124,6 +126,8 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
     };
   }, [data, rows, prices, target, seen, levels]);
   const bestId = value?.all.through?.id ?? null;
+  // The cartridges you have (your screenshots), best first against the target's armour.
+  const owned = useMemo(() => (data && fromScreen?.length ? rankOwned(fromScreen, data, target) : []), [data, fromScreen, target]);
 
   const choose = (h: SearchHit) => {
     setPick(h);
@@ -238,6 +242,55 @@ export default function BallisticsPanel({ onClose, fromScreen }: BallisticsPanel
                 {value.screen && <ValueLine label={t('ballistics.value.onScreen')} pick={value.screen} name={name} onHover={setHover} screen />}
               </div>
             </div>
+          )}
+
+          {owned.length > 0 && (
+            <section className="bl-owned" aria-label={t('ballistics.owned.title', { n: target })}>
+              <header className="bl-owned__head">
+                <Camera weight="fill" />
+                <strong>{t('ballistics.owned.title', { n: target })}</strong>
+                <HelpTip>{t('ballistics.owned.help')}</HelpTip>
+                {onClearScreen && (
+                  <Button size="sm" variant="tertiary" icon={<Trash />} onClick={onClearScreen}>
+                    {t('ballistics.owned.clear')}
+                  </Button>
+                )}
+              </header>
+              {owned.map((g) => (
+                <div key={g.caliber} className={`bl-owned__group${g.caliber === caliber ? ' is-on' : ''}`}>
+                  <button
+                    type="button"
+                    className="bl-owned__cal"
+                    onClick={() => setPick({ kind: 'caliber', id: g.caliber, label: caliberLabel(g.caliber, data, names) })}
+                  >
+                    {caliberLabel(g.caliber, data, names)}
+                  </button>
+                  <ol className="bl-owned__list">
+                    {g.ids.map((id, i) => {
+                      const a = data.ammo[id];
+                      const e = classEffect(a.p, target);
+                      return (
+                        <li
+                          key={id}
+                          className={`${i === 0 ? 'is-best' : ''}${hover === id ? ' is-hover' : ''}`}
+                          title={`${name(id)} · ${t(`ballistics.effect.${e}`)}`}
+                          onMouseEnter={() => setHover(id)}
+                          onMouseLeave={() => setHover(null)}
+                        >
+                          {i === 0 && <Crown weight="fill" className="bl-owned__crown" aria-label={t('ballistics.owned.best')} />}
+                          <img className="gs-img" src={itemIcon(id)} alt="" loading="lazy" />
+                          <span className="bl-owned__name">{short(id)}</span>
+                          <span className="bl-owned__pen">{a.p ?? 0}</span>
+                          <span className="bl-owned__eff" style={{ background: EFFECT_COLORS[e] }}>
+                            {e}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              ))}
+            </section>
           )}
 
           <PenChart data={data} ids={rows} short={short} hover={hover} onHover={setHover} seen={seen} />

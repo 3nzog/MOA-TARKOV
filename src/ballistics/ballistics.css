@@ -159,3 +159,61 @@
 .bl-price { color: var(--text); white-space: nowrap; }
 .bl-price small { display: block; font-size: 10px; color: var(--text-faint); }
 .bl-price.is-locked { opacity: 0.45; }
+
+/* Your ammo (from your screenshots), best first per caliber. */
+.bl-owned {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
+}
+.bl-owned__head { display: flex; align-items: center; gap: var(--sp-2); }
+.bl-owned__head > svg { color: var(--accent); }
+.bl-owned__head > button { margin-left: auto; }
+.bl-owned__group { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.bl-owned__cal {
+  flex: 0 0 auto;
+  min-width: 96px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-dim);
+  font-weight: 700;
+  font-size: var(--fs-caption);
+  cursor: pointer;
+}
+.bl-owned__group.is-on .bl-owned__cal { border-color: var(--accent); color: var(--text); }
+.bl-owned__list { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.bl-owned__list li {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+.bl-owned__list li.is-best {
+  border-color: #ffd23f;
+  box-shadow: 0 0 0 1px rgba(255, 210, 63, 0.35), 0 0 14px rgba(255, 210, 63, 0.18);
+}
+.bl-owned__list li.is-hover { background: var(--surface-3); }
+.bl-owned__list .gs-img { width: 28px; height: 28px; }
+.bl-owned__crown { position: absolute; top: -9px; left: -6px; color: #ffd23f; font-size: 15px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6)); }
+.bl-owned__name { font-weight: 700; }
+.bl-owned__pen { font-family: var(--font-mono); color: var(--text-dim); font-size: var(--fs-caption); }
+.bl-owned__eff {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}

@@ -1025,7 +1025,7 @@
     "allOfCaliber": "Todas as balas do calibre",
     "noHits": "Nada encontrado",
     "empty": "Procure a arma que você quer usar para ver todas as balas compatíveis.",
-    "screenHint": "Ou tire uma print da tela de munição do mercado: ela abre aqui sozinha.",
+    "screenHint": "Ou, com esta aba aberta, tire print do seu estoque ou inventário: suas balas aparecem aqui, da melhor pra pior. A lista de munição do mercado abre aqui sozinha.",
     "hideTracers": "Esconder traçantes",
     "tracer": "traçante",
     "classHint": "Contra blindagem classe {{n}} (nova)",
@@ -1069,7 +1069,13 @@
       "tag": "melhor custo"
     },
     "flea": "flea",
-    "ll": "LL{{n}}"
+    "ll": "LL{{n}}",
+    "owned": {
+      "title": "Suas balas — da melhor pra pior contra classe {{n}}",
+      "help": "Com esta aba aberta, tire prints do seu estoque ou inventário: as balas que aparecem neles vêm pra cá, por calibre, a melhor primeiro contra a classe de colete escolhida acima (atravessa primeiro, depois penetração, depois dano). Vários prints se somam.",
+      "clear": "Limpar",
+      "best": "Melhor"
+    }
   },
   "mapCard": {
     "quest": "Missão",

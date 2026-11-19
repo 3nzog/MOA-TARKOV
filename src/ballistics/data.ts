@@ -190,3 +190,73 @@ export function ammoFromScreen(lines: string[], data: AmmoData, names: Names): s
   }
   return found;
 }
+
+/**
+ * Cartridges named by their SHORT name on a screenshot: the stash and the
+ * inventory show "M855A1", "BP gs", "FMJ" on the cartridge's picture. A short
+ * name of one caliber only counts by itself; one that several calibers share
+ * ("FMJ", "PS") counts only when the screenshot also shows another cartridge
+ * of one of those calibers (`known`: what was found by the full name or by an
+ * unshared short name). One-letter names are too easy to misread and are left
+ * out. Each name set is a language (the game's, then English).
+ */
+export function ammoShortsFromScreen(lines: string[], data: AmmoData, nameSets: Names[], known: string[] = []): string[] {
+  const byShort = new Map<string, Set<string>>();
+  for (const names of nameSets) {
+    for (const id of Object.keys(data.ammo)) {
+      if (data.ammo[id].g) continue;
+      const s = norm(names[id]?.[1] ?? '');
+      if (s.replace(/[^\p{L}\p{N}]/gu, '').length < 2) continue;
+      if (!byShort.has(s)) byShort.set(s, new Set());
+      byShort.get(s)!.add(id);
+    }
+  }
+  const shorts = [...byShort.keys()].sort((a, b) => b.length - a.length);
+  const hits: string[][] = [];
+  for (const line of lines) {
+    let l = ` ${norm(line)} `;
+    for (const s of shorts) {
+      const at = ` ${s} `;
+      while (l.includes(at)) {
+        hits.push([...byShort.get(s)!]);
+        // Taken: "AP 6.3" is not read again as "AP".
+        l = l.replace(at, ' \u0000 ');
+      }
+    }
+  }
+  const found = [...known];
+  const add = (id: string) => !found.includes(id) && found.push(id);
+  const calibers = (ids: string[]) => new Set(ids.map((id) => data.ammo[id].c));
+  for (const ids of hits) if (calibers(ids).size === 1 && ids.length === 1) add(ids[0]);
+  const seenCal = calibers(found);
+  for (const ids of hits) {
+    if (ids.length === 1) continue;
+    const fit = ids.filter((id) => seenCal.has(data.ammo[id].c));
+    if (fit.length === 1) add(fit[0]);
+  }
+  return found.slice(known.length);
+}
+
+/** How good a cartridge is against armour of a class: goes through first, then penetration, then damage. */
+export function ammoScore(a: AmmoStats, armorClass: number): number {
+  return classEffect(a.p, armorClass) * 1e6 + (a.p ?? 0) * 1e3 + (a.d ?? 0) * (a.n ?? 1);
+}
+
+/**
+ * The cartridges you have (from screenshots), by caliber — a gun takes one —
+ * best first against the armour class; the calibers with the best cartridge
+ * first.
+ */
+export function rankOwned(ids: string[], data: AmmoData, armorClass: number): { caliber: string; ids: string[] }[] {
+  const groups = new Map<string, string[]>();
+  for (const id of ids) {
+    const a = data.ammo[id];
+    if (!a || a.g) continue;
+    if (!groups.has(a.c)) groups.set(a.c, []);
+    if (!groups.get(a.c)!.includes(id)) groups.get(a.c)!.push(id);
+  }
+  const score = (id: string) => ammoScore(data.ammo[id], armorClass);
+  return [...groups.entries()]
+    .map(([caliber, list]) => ({ caliber, ids: list.sort((x, y) => score(y) - score(x)) }))
+    .sort((a, b) => score(b.ids[0]) - score(a.ids[0]));
+}

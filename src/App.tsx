@@ -252,11 +252,14 @@ function App() {
     let un: (() => void) | undefined;
     let alive = true;
     subscribeScreenText((text) => {
+      const onPage = onAmmoPage.current;
       void import('./ballistics/screenAmmo')
-        .then((m) => m.ammoOnScreen(text))
+        .then((m) => m.ammoOnScreen(text, onPage))
         .then((ids) => {
-          if (!alive || ids.length < (onAmmoPage.current ? 1 : 3)) return;
-          setScreenAmmo(ids);
+          if (!alive || ids.length < (onPage ? 1 : 3)) return;
+          // On the ammo page the prints add up (one per stash page); a market
+          // list seen elsewhere starts afresh.
+          setScreenAmmo((cur) => (onPage && cur ? [...cur, ...ids.filter((id) => !cur.includes(id))] : ids));
           setRailSection('ballistics');
         })
         .catch(() => undefined);
@@ -1162,7 +1165,7 @@ function App() {
               </Suspense>
             ) : (
               <Suspense fallback={<Spinner size="md" />}>
-                <BallisticsPanel onClose={closePage} fromScreen={screenAmmo} />
+                <BallisticsPanel onClose={closePage} fromScreen={screenAmmo} onClearScreen={() => setScreenAmmo(null)} />
               </Suspense>
             )}
           </main>

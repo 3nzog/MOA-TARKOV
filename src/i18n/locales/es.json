@@ -1025,7 +1025,7 @@
     "allOfCaliber": "Todas las balas del calibre",
     "noHits": "Nada encontrado",
     "empty": "Busca el arma que quieres usar para ver todas las balas compatibles.",
-    "screenHint": "O haz una captura de la pantalla de munición del mercadillo: se abre aquí sola.",
+    "screenHint": "O, con esta pestaña abierta, haz una captura de tu alijo o inventario: tu munición aparece aquí, la mejor primero. La lista de munición del mercado se abre aquí sola.",
     "hideTracers": "Ocultar trazadoras",
     "tracer": "trazadora",
     "classHint": "Contra blindaje clase {{n}} (nuevo)",
@@ -1069,7 +1069,13 @@
       "tag": "mejor precio"
     },
     "flea": "mercadillo",
-    "ll": "NL{{n}}"
+    "ll": "NL{{n}}",
+    "owned": {
+      "title": "Tu munición — de mejor a peor contra clase {{n}}",
+      "help": "Con esta pestaña abierta, haz capturas de tu alijo o inventario: los cartuchos que aparecen vienen aquí, por calibre, el mejor primero contra la clase de blindaje elegida arriba (atraviesa primero, luego penetración, luego daño). Varias capturas se suman.",
+      "clear": "Borrar",
+      "best": "Mejor"
+    }
   },
   "mapCard": {
     "quest": "Misión",

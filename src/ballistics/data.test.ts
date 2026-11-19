@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { ammoFor, ammoFromScreen, bestValue, caliberLabel, classEffect, roundPrice, search, type AmmoData, type Names } from './data';
+import { ammoFor, ammoFromScreen, ammoScore, ammoShortsFromScreen, bestValue, caliberLabel, classEffect, rankOwned, roundPrice, search, type AmmoData, type Names } from './data';
 
 const data = JSON.parse(readFileSync('data/snapshot/ammo.json', 'utf8')) as AmmoData;
 const names = (JSON.parse(readFileSync('data/snapshot/progression-pt.json', 'utf8')) as { items: Names }).items;
@@ -105,5 +105,38 @@ describe('bestValue', () => {
     const v = bestValue(list, data, () => 100, 3);
     expect(v.through).not.toBeNull();
     expect(classEffect(data.ammo[v.through!.id].p, 3)).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('your ammo from a stash screenshot (short names)', () => {
+  const en = (JSON.parse(readFileSync('data/snapshot/progression-en.json', 'utf8')) as { items: Names }).items;
+  const idOf = (short: string, cal: string) => Object.keys(data.ammo).find((id) => data.ammo[id].c === cal && en[id]?.[1] === short)!;
+
+  it('reads the short names on the pictures, several on one line', () => {
+    const got = ammoShortsFromScreen(['M855A1 M995', 'M856A1'], data, [names, en]);
+    expect(got).toContain(idOf('M855A1', 'Caliber556x45NATO'));
+    expect(got).toContain(idOf('M995', 'Caliber556x45NATO'));
+    expect(got).toContain(idOf('M856A1', 'Caliber556x45NATO'));
+  });
+
+  it('a short name several calibers share counts only next to one of those calibers', () => {
+    expect(ammoShortsFromScreen(['FMJ'], data, [en])).toEqual([]);
+    const got = ammoShortsFromScreen(['M855A1 FMJ'], data, [en]);
+    expect(got).toContain(idOf('FMJ', 'Caliber556x45NATO'));
+    expect(got).toHaveLength(2);
+  });
+
+  it('one-letter names do not count, nor words that are no cartridge', () => {
+    expect(ammoShortsFromScreen(['T P', 'Rubles 120000', 'Salewa'], data, [en])).toEqual([]);
+  });
+
+  it('ranks what you have by caliber, best first against the armour class', () => {
+    const m855 = idOf('M855', 'Caliber556x45NATO');
+    const m995 = idOf('M995', 'Caliber556x45NATO');
+    const fmj = idOf('FMJ', 'Caliber556x45NATO');
+    const groups = rankOwned([fmj, m855, m995], data, 4);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].ids[0]).toBe(m995);
+    expect(groups[0].ids).toEqual([m995, m855, fmj].sort((x, y) => ammoScore(data.ammo[y], 4) - ammoScore(data.ammo[x], 4)));
   });
 });
