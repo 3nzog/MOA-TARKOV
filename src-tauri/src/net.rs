@@ -103,6 +103,21 @@ pub fn tailscale_ip() -> Option<Ipv4Addr> {
     route_ip("100.100.100.100:53").filter(|ip| is_tailscale(*ip))
 }
 
+/// Keeps a socket out of the programs this app starts. tokio's sockets (mio)
+/// are made inheritable on Windows, so every program the app started — the
+/// update .bat above all — got a copy of the phone, link and party ports, and
+/// the new app the .bat then opened inherited them too: the old ports stayed
+/// taken inside it ("another program is using port 8791") with nobody
+/// answering. Called on every socket the app listens or connects on.
+#[cfg(windows)]
+pub fn no_inherit(s: &impl std::os::windows::io::AsRawSocket) {
+    use windows::Win32::Foundation::{SetHandleInformation, HANDLE, HANDLE_FLAGS, HANDLE_FLAG_INHERIT};
+    // SAFETY: a socket handle the caller owns, for the length of the call.
+    let _ = unsafe { SetHandleInformation(HANDLE(s.as_raw_socket() as _), HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0)) };
+}
+#[cfg(not(windows))]
+pub fn no_inherit<T>(_: &T) {}
+
 /// The address this PC reaches the internet through: its real network card
 /// (the router's network), not a virtual adapter. None when offline.
 pub fn internet_ip() -> Option<Ipv4Addr> {
@@ -310,6 +325,27 @@ mod tests {
         // Missing prefix or category still parses.
         assert_eq!(parse_nets("192.168.0.7").len(), 1);
         assert_eq!(parse_nets("192.168.0.7/2/").first().map(|n| n.prefix), Some(24));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn the_app_s_sockets_stay_out_of_the_programs_it_starts() {
+        use std::os::windows::io::AsRawSocket;
+        use windows::Win32::Foundation::{GetHandleInformation, HANDLE, HANDLE_FLAG_INHERIT};
+        let inherits = |raw: u64| {
+            let mut flags = 0u32;
+            unsafe { GetHandleInformation(HANDLE(raw as _), &mut flags) }.unwrap();
+            flags & HANDLE_FLAG_INHERIT.0 != 0
+        };
+        tauri::async_runtime::block_on(async {
+            let l = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            assert!(inherits(l.as_raw_socket()), "tokio's own sockets are inheritable (why this exists)");
+            no_inherit(&l);
+            assert!(!inherits(l.as_raw_socket()));
+            let u = tokio::net::UdpSocket::bind("127.0.0.1:0").await.unwrap();
+            no_inherit(&u);
+            assert!(!inherits(u.as_raw_socket()));
+        });
     }
 
     #[test]

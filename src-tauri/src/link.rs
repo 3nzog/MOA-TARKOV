@@ -229,8 +229,10 @@ impl Server {
     pub async fn start(cfg: ServerCfg, bind: Ipv4Addr, tcp_port: u16, udp_port: u16) -> Result<Server, String> {
         let busy = |e: std::io::Error| if e.kind() == std::io::ErrorKind::AddrInUse { "port_busy".to_string() } else { e.to_string() };
         let listener = TcpListener::bind(SocketAddr::from((bind, tcp_port))).await.map_err(busy)?;
+        net::no_inherit(&listener);
         let tcp_port = listener.local_addr().map(|a| a.port()).unwrap_or(tcp_port);
         let udp = UdpSocket::bind(SocketAddr::from((bind, udp_port))).await.map_err(busy)?;
+        net::no_inherit(&udp);
         let udp_port = udp.local_addr().map(|a| a.port()).unwrap_or(udp_port);
         let state = Arc::new(Mutex::new(ServerState { devices: load_devices(&cfg.store), blocked: load_blocked(&cfg.store), ..Default::default() }));
         let (stop, stop_rx) = watch::channel(false);
@@ -318,6 +320,7 @@ async fn accept_loop(listener: TcpListener, state: Arc<Mutex<ServerState>>, cfg:
             _ = stop.changed() => return,
             r = listener.accept() => {
                 let Ok((stream, peer)) = r else { continue };
+                net::no_inherit(&stream);
                 // A linked PC confirms on screen, so a Public home network is fine.
                 if !net::peer_allowed(&peer.ip(), &(cfg.nets)(), true) {
                     net::log(format!("anexar: recusado {} (fora das redes deste PC)", peer.ip()));
@@ -628,7 +631,10 @@ async fn session(
 ) -> End {
     let lost = |reason: &str, was_linked: bool| End::Lost { reason: reason.to_owned(), was_linked };
     let stream = match tokio::time::timeout(Duration::from_secs(4), TcpStream::connect((host, port))).await {
-        Ok(Ok(s)) => s,
+        Ok(Ok(s)) => {
+            net::no_inherit(&s);
+            s
+        }
         Ok(Err(_)) => return lost("refused", false),
         Err(_) => return lost("timeout", false),
     };

@@ -130,7 +130,10 @@ pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, all
     let mut tries = 0;
     let listener = loop {
         match TcpListener::bind(SocketAddr::from((bind, port))).await {
-            Ok(l) => break l,
+            Ok(l) => {
+                net::no_inherit(&l);
+                break l;
+            }
             Err(e) if e.kind() == std::io::ErrorKind::AddrInUse && tries < 15 => {
                 tries += 1;
                 tokio::time::sleep(Duration::from_millis(200)).await;
@@ -154,6 +157,7 @@ pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, all
                 _ = stop_rx2.changed() => break,
                 r = listener.accept() => {
                     let Ok((stream, peer)) = r else { continue };
+                    net::no_inherit(&stream);
                     if !allow(&peer.ip()) {
                         continue;
                     }

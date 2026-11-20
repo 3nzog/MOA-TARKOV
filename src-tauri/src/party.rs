@@ -352,6 +352,7 @@ pub(crate) async fn spawn_host(bind: Vec<Ipv4Addr>, tcp_port: u16, udp_port: u16
     for addr in bind {
         match TcpListener::bind(SocketAddr::from((addr, port))).await {
             Ok(l) => {
+                net::no_inherit(&l);
                 port = l.local_addr().map(|a| a.port()).unwrap_or(port);
                 listeners.push(l);
             }
@@ -367,6 +368,7 @@ pub(crate) async fn spawn_host(bind: Vec<Ipv4Addr>, tcp_port: u16, udp_port: u16
     let udp = UdpSocket::bind(SocketAddr::from((Ipv4Addr::UNSPECIFIED, udp_port)))
         .await
         .map_err(|e| if e.kind() == std::io::ErrorKind::AddrInUse { "port_busy".to_string() } else { e.to_string() })?;
+    net::no_inherit(&udp);
     let udp_port = udp.local_addr().map(|a| a.port()).unwrap_or(udp_port);
     let id = uuid::Uuid::new_v4().simple().to_string();
     let relay = Arc::new(Mutex::new(Relay::default()));
@@ -410,6 +412,7 @@ async fn accept_loop(listener: TcpListener, relay: Arc<Mutex<Relay>>, mut stop: 
             _ = stop.changed() => return,
             r = listener.accept() => {
                 if let Ok((stream, peer)) = r {
+                    net::no_inherit(&stream);
                     if net::peer_allowed(&peer.ip(), &nets, false) {
                         tauri::async_runtime::spawn(handle_socket(stream, relay.clone(), stop.clone()));
                     } else {
