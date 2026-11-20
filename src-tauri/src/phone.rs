@@ -109,10 +109,17 @@ pub fn home_peer(peer: &IpAddr, nets: &[LocalNet]) -> bool {
     net::peer_allowed(peer, &lan, true)
 }
 
-/// The phone page's address on each home network of this PC.
-pub fn phone_urls(nets: &[LocalNet], port: u16, key: &str) -> Vec<String> {
+/// The phone page's address on each home network of this PC, the one the PC
+/// reaches the internet through (`router`: the router's network, where the
+/// phone's Wi-Fi is) first. A virtual adapter (Hyper-V / WSL "Default Switch",
+/// 172.x, VirtualBox…) also looks like a home network but no phone reaches it:
+/// in first place it made the QR code a page that "cannot be reached".
+pub fn phone_urls(nets: &[LocalNet], port: u16, key: &str, router: Option<Ipv4Addr>) -> Vec<String> {
     let mut ips: Vec<Ipv4Addr> = nets.iter().filter(|n| n.kind == NetKind::Lan).map(|n| n.ip).collect();
     ips.dedup();
+    if let Some(r) = router {
+        ips.sort_by_key(|ip| *ip != r);
+    }
     ips.into_iter().map(|ip| format!("http://{ip}:{port}/?view=phone&k={key}")).collect()
 }
 
@@ -449,7 +456,8 @@ async fn status_now(firewall: bool) -> PhoneStatus {
     let Some(clients) = running else { return PhoneStatus::default() };
     let nets = tauri::async_runtime::spawn_blocking(net::local_nets).await.unwrap_or_default();
     let key = current_key().lock().unwrap().clone();
-    let urls = phone_urls(&nets, PHONE_PORT, &key);
+    let router = tauri::async_runtime::spawn_blocking(net::internet_ip).await.ok().flatten();
+    let urls = phone_urls(&nets, PHONE_PORT, &key, router);
     let qr = urls.first().and_then(|u| qr_of(u));
     let tailscale = net::tailscale_ip();
     let remote_url = tailscale.map(|ip| format!("http://{ip}:{PHONE_PORT}/?view=phone&k={key}"));
@@ -764,7 +772,7 @@ mod tests {
     #[test]
     fn urls_and_qr_only_for_the_home_network() {
         let nets = net::parse_nets("26.243.126.84/8 Radmin\n192.168.100.11/24 Wi-Fi\n");
-        let urls = phone_urls(&nets, 8791, "k123");
+        let urls = phone_urls(&nets, 8791, "k123", None);
         assert_eq!(urls, vec!["http://192.168.100.11:8791/?view=phone&k=k123".to_string()]);
         let qr = qr_of(&urls[0]).unwrap();
         assert_eq!(qr.cells.len(), qr.size * qr.size);
@@ -773,6 +781,20 @@ mod tests {
         assert!(home_peer(&"127.0.0.1".parse().unwrap(), &nets));
         assert!(!home_peer(&"26.1.2.3".parse().unwrap(), &nets), "Radmin is not the home Wi-Fi");
         assert!(!home_peer(&"8.8.8.8".parse().unwrap(), &nets));
+    }
+
+    /// A Hyper-V / WSL virtual adapter listed first must not become the QR code.
+    #[test]
+    fn the_qr_is_the_network_the_pc_reaches_the_router_through() {
+        let nets = net::parse_nets("172.31.0.1/20/
+26.243.126.84/8/Public
+192.168.100.11/24/Public
+");
+        let router = Some(Ipv4Addr::new(192, 168, 100, 11));
+        let urls = phone_urls(&nets, 8791, "k", router);
+        assert_eq!(urls[0], "http://192.168.100.11:8791/?view=phone&k=k");
+        assert_eq!(urls.len(), 2, "the other one stays listed, after");
+        assert_eq!(phone_urls(&nets, 8791, "k", None)[0], "http://172.31.0.1:8791/?view=phone&k=k");
     }
 
     #[test]

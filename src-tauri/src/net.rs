@@ -103,6 +103,12 @@ pub fn tailscale_ip() -> Option<Ipv4Addr> {
     route_ip("100.100.100.100:53").filter(|ip| is_tailscale(*ip))
 }
 
+/// The address this PC reaches the internet through: its real network card
+/// (the router's network), not a virtual adapter. None when offline.
+pub fn internet_ip() -> Option<Ipv4Addr> {
+    route_ip("8.8.8.8:53").filter(|ip| kind_of(*ip) == Some(NetKind::Lan))
+}
+
 /// The local address the OS would use to reach `target` (no packet is sent).
 fn route_ip(target: &str) -> Option<Ipv4Addr> {
     let sock = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
