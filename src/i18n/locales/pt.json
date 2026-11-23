@@ -1117,7 +1117,7 @@
     "iosHomeScreen": "No iPhone: toque em Compartilhar → Adicionar à Tela de Início e abra o mapa por lá: ele abre em tela cheia, como um app.",
     "follow": "Seguir",
     "err": {
-      "port_busy": "Outro programa está usando a porta 8791.",
+      "port_busy": "As portas 8791 a 8799 estão todas ocupadas por outros programas.",
       "other": "Não deu para ligar o mapa no celular."
     },
     "conn": {

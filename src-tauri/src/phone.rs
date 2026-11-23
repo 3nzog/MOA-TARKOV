@@ -35,6 +35,10 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 use crate::net::{self, LocalNet, NetKind};
 
 pub const PHONE_PORT: u16 = 8791;
+/// When 8791 is taken (another program, or a port left stuck), the next free
+/// one of these serves the phone; the QR code carries whichever it is. The
+/// firewall rules open the whole range (scripts/party-firewall.ps1).
+pub const PHONE_PORTS: std::ops::RangeInclusive<u16> = 8791..=8799;
 /// Biggest state frame accepted from the app.
 const STATE_MAX: usize = 512 * 1024;
 /// Biggest layers frame (every marker of the map) accepted from the app.
@@ -124,6 +128,24 @@ pub fn phone_urls(nets: &[LocalNet], port: u16, key: &str, router: Option<Ipv4Ad
 }
 
 pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, allow: AllowFn) -> Result<Handle, String> {
+    start_with(bind, port, key, assets, allow, 15).await
+}
+
+/// The first of `ports` that is free: the first one is waited for a moment
+/// (a restart lets go of it a little late), the others are taken as they are.
+pub async fn start_any(bind: Ipv4Addr, ports: std::ops::RangeInclusive<u16>, key: String, assets: AssetsFn, allow: AllowFn) -> Result<Handle, String> {
+    let mut last = Err("port_busy".to_string());
+    for (i, port) in ports.enumerate() {
+        match start_with(bind, port, key.clone(), assets.clone(), allow.clone(), if i == 0 { 15 } else { 0 }).await {
+            Ok(h) => return Ok(h),
+            Err(e) if e == "port_busy" => last = Err(e),
+            Err(e) => return Err(e),
+        }
+    }
+    last
+}
+
+async fn start_with(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, allow: AllowFn, retries: u32) -> Result<Handle, String> {
     // Restarting (a new key, off and on again): the old server lets go of the
     // port a moment after it is told to stop, so a busy port is tried again
     // for a little while before it counts as another program's.
@@ -134,7 +156,7 @@ pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, all
                 net::no_inherit(&l);
                 break l;
             }
-            Err(e) if e.kind() == std::io::ErrorKind::AddrInUse && tries < 15 => {
+            Err(e) if e.kind() == std::io::ErrorKind::AddrInUse && tries < retries => {
                 tries += 1;
                 tokio::time::sleep(Duration::from_millis(200)).await;
             }
@@ -456,15 +478,15 @@ fn current_key() -> &'static Mutex<String> {
 }
 
 async fn status_now(firewall: bool) -> PhoneStatus {
-    let running = cell().lock().unwrap().as_ref().map(|h| h.clients());
-    let Some(clients) = running else { return PhoneStatus::default() };
+    let running = cell().lock().unwrap().as_ref().map(|h| (h.clients(), h.port));
+    let Some((clients, port)) = running else { return PhoneStatus::default() };
     let nets = tauri::async_runtime::spawn_blocking(net::local_nets).await.unwrap_or_default();
     let key = current_key().lock().unwrap().clone();
     let router = tauri::async_runtime::spawn_blocking(net::internet_ip).await.ok().flatten();
-    let urls = phone_urls(&nets, PHONE_PORT, &key, router);
+    let urls = phone_urls(&nets, port, &key, router);
     let qr = urls.first().and_then(|u| qr_of(u));
     let tailscale = net::tailscale_ip();
-    let remote_url = tailscale.map(|ip| format!("http://{ip}:{PHONE_PORT}/?view=phone&k={key}"));
+    let remote_url = tailscale.map(|ip| format!("http://{ip}:{port}/?view=phone&k={key}"));
     let remote_qr = remote_url.as_deref().and_then(qr_of);
     let remote_firewall = if tailscale.is_some() {
         tauri::async_runtime::spawn_blocking(crate::party::phone_remote_rule_present).await.unwrap_or(false)
@@ -497,8 +519,12 @@ async fn start_for(app: tauri::AppHandle, fresh_key: bool) -> Result<PhoneStatus
             a2.asset_resolver().get(path.to_string()).map(|a| (a.bytes, a.mime_type))
         });
         let allow: AllowFn = Arc::new(|peer: &IpAddr| phone_peer(peer, &net::local_nets(), net::tailscale_ip()));
-        let h = start(Ipv4Addr::UNSPECIFIED, PHONE_PORT, key, assets, allow).await?;
-        net::log("celular: mapa no celular ligado (porta 8791)");
+        let h = start_any(Ipv4Addr::UNSPECIFIED, PHONE_PORTS, key, assets, allow).await?;
+        net::log(if h.port == PHONE_PORT {
+            format!("celular: mapa no celular ligado (porta {})", h.port)
+        } else {
+            format!("celular: porta {PHONE_PORT} ocupada, mapa no celular ligado na porta {}", h.port)
+        });
         *cell().lock().unwrap() = Some(h);
     }
     let firewall = tauri::async_runtime::spawn_blocking(crate::party::firewall_rules_present).await.unwrap_or(false);
@@ -677,6 +703,22 @@ mod tests {
         assert!(phone_peer(&phone_ts, &nets, ts));
         assert!(!phone_peer(&phone_ts, &nets, None));
         assert!(!phone_peer(&stranger, &nets, ts));
+    }
+
+    /// A port taken by something else (or left stuck): the next one serves the phone.
+    #[test]
+    fn a_taken_port_moves_the_phone_to_the_next_one() {
+        tauri::async_runtime::block_on(async {
+            let taken = std::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+            let first = taken.local_addr().unwrap().port();
+            let Some(last) = first.checked_add(3) else { return };
+            let h = start_any(Ipv4Addr::LOCALHOST, first..=last, "abcdef0123456789".into(), assets(), Arc::new(|_: &IpAddr| true)).await;
+            let h = h.expect("a free port among the next ones");
+            assert_ne!(h.port, first);
+            assert!(h.port > first && h.port <= last);
+            h.stop();
+            drop(taken);
+        });
     }
 
     /// Stopped and started again at once (a new key): the port is free again by

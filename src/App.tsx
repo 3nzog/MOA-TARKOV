@@ -634,7 +634,8 @@ function App() {
     () =>
       squad.members.flatMap((m) => {
         const p = squad.positions[m.id];
-        if (m.id === squad.selfId || !p || p.payload.mapId !== selectedMapId) return [];
+        // Same map in any spelling ("bigmap" / "customs").
+        if (m.id === squad.selfId || !p || !selectedMapId || canonicalMapId(p.payload.mapId) !== canonicalMapId(selectedMapId)) return [];
         return [{
           id: m.id,
           name: m.name,

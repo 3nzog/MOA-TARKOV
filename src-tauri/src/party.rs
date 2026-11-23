@@ -459,6 +459,9 @@ const FIREWALL_RULES: [&str; 5] = [
     "Tarkov MoA celular",
 ];
 
+/// A phone rule that opens all of 8791-8799 (PowerShell; `{n}` is the rule's name).
+const PHONE_RANGE_CHECK: &str = "((Get-NetFirewallRule -DisplayName '{n}' -ErrorAction SilentlyContinue | Get-NetFirewallPortFilter).LocalPort -contains '8791-8799')";
+
 pub fn firewall_rules_present() -> bool {
     #[cfg(windows)]
     {
@@ -468,6 +471,9 @@ pub fn firewall_rules_present() -> bool {
             .iter()
             .map(|n| format!("(Get-NetFirewallRule -DisplayName '{n}' -ErrorAction SilentlyContinue)"))
             .collect();
+        // The phone's rule must open the whole range (older versions opened 8791 only).
+        let mut checks = checks;
+        checks.push(PHONE_RANGE_CHECK.replace("{n}", "Tarkov MoA celular"));
         let script = format!("if ({}) {{ exit 0 }} else {{ exit 1 }}", checks.join(" -and "));
         std::process::Command::new("powershell.exe")
             .args(["-NoProfile", "-Command", &script])
@@ -491,7 +497,7 @@ pub fn phone_remote_rule_present() -> bool {
         use std::os::windows::process::CommandExt;
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         std::process::Command::new("powershell.exe")
-            .args(["-NoProfile", "-Command", "if (Get-NetFirewallRule -DisplayName 'Tarkov MoA celular (Tailscale)' -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"])
+            .args(["-NoProfile", "-Command", &format!("if ({}) {{ exit 0 }} else {{ exit 1 }}", PHONE_RANGE_CHECK.replace("{n}", "Tarkov MoA celular (Tailscale)"))])
             .creation_flags(CREATE_NO_WINDOW)
             .status()
             .map(|s| s.success())

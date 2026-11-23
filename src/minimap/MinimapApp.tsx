@@ -66,7 +66,7 @@ function ProjectExits({
   onChange,
 }: {
   mapId: string;
-  points: MinimapPoint[];
+  points: { x: number; z: number }[];
   onChange: (offsets: Offset[]) => void;
 }) {
   const map = useMap();
@@ -133,6 +133,15 @@ function RaidClock({ c }: { c: NonNullable<MinimapState['raidClock']> }) {
   );
 }
 
+/** A named point of the rim: an exit / route stop, or a squadmate (its colour). */
+interface RimPoint {
+  x: number;
+  z: number;
+  label: string;
+  point?: MinimapPoint;
+  mateColor?: string;
+}
+
 /** A squadmate on the minimap: same marker as the big map, smaller, fading with age. */
 function MateMarker({ mate, at, heading }: { mate: NonNullable<MinimapState['mates']>[number]; at: [number, number]; heading: number }) {
   const icon = useMemo(
@@ -175,6 +184,16 @@ export default function MinimapApp() {
   );
   // Stable between pushes from the main window, so the projection effect runs only when points change.
   const named = useMemo(() => (state?.points ?? []).filter((p) => p.label), [state?.points]);
+  // What gets a name, and an arrow on the rim when it is off the disc: your
+  // exits and the next route stop, then your squadmates (in their colour) —
+  // the map follows you closely, so a mate 60 m away was simply not shown.
+  const rim = useMemo<RimPoint[]>(
+    () => [
+      ...named.map((p) => ({ x: p.x, z: p.z, label: p.label!, point: p })),
+      ...(state?.mates ?? []).map((m) => ({ x: m.x, z: m.z, label: m.name, mateColor: m.color })),
+    ],
+    [named, state?.mates],
+  );
 
   useEffect(() => {
     document.documentElement.classList.add('minimap-root');
@@ -331,7 +350,7 @@ export default function MinimapApp() {
                     }}
                   />
                 ))}
-              {named.length > 0 && <ProjectExits mapId={mapId!} points={named} onChange={updateExitOffsets} />}
+              {rim.length > 0 && <ProjectExits mapId={mapId!} points={rim} onChange={updateExitOffsets} />}
               {toLatLng &&
                 (state.mates ?? []).map((m) => (
                   <MateMarker key={m.id} mate={m} at={toLatLng(m.x, m.z)} heading={headingAngle(m.rotation, getMapDef(mapId!)?.rotation ?? 0)} />
@@ -342,33 +361,35 @@ export default function MinimapApp() {
               <Follow mapId={mapId!} pos={pos} zoom={settings.zoom} />
             </MapContainer>
           </div>
-          {box > 0 && named.length > 0 && exitOffsets.length === named.length && (
+          {box > 0 && rim.length > 0 && exitOffsets.length === rim.length && (
             <svg className="minimap__exits" viewBox={`0 0 ${box} ${box}`} aria-hidden="true">
               {(() => {
                 // On screen: the dot is on the map, so it just gets a name above it.
                 // Off screen: an arrow on the rim and "name · distance" inward of it.
-                const items = named.map((p, i) => {
+                const items = rim.map((p, i) => {
                   const o = rotateOffset(exitOffsets[i].dx, exitOffsets[i].dy, turn);
                   const edge = edgeMarker(o.dx, o.dy, box);
                   const dist = distanceLabel(pos, p);
+                  // A mate on the disc already has a marker: the name goes a bit higher, above it.
+                  const above = p.mateColor ? 18 : 9;
                   const label: LabelBox = edge
-                    ? { x: edge.lx, y: edge.ly, text: dist ? `${p.label} · ${dist}` : p.label!, align: edge.align }
-                    : { x: box / 2 + o.dx, y: box / 2 + o.dy - 9, text: p.label!, align: 'middle' };
-                  return { p, edge, label };
+                    ? { x: edge.lx, y: edge.ly, text: dist ? `${p.label} · ${dist}` : p.label, align: edge.align }
+                    : { x: box / 2 + o.dx, y: box / 2 + o.dy - above, text: p.label, align: 'middle' };
+                  return { color: p.mateColor ?? colorOf(p.point!), edge, label };
                 });
                 const ys = layoutLabels(items.map((it) => it.label), box);
-                return items.map(({ p, edge, label }, i) => (
+                return items.map(({ color, edge, label }, i) => (
                   <g key={i}>
                     {edge && (
                       <path
                         d="M0,-8 L7,5 L-7,5 Z"
                         transform={`translate(${edge.x} ${edge.y}) rotate(${edge.angle})`}
-                        fill={colorOf(p)}
+                        fill={color}
                         stroke={TOKEN_HEX.bgSunken}
                         strokeWidth={1}
                       />
                     )}
-                    <text x={label.x} y={ys[i]} textAnchor={label.align} fill={colorOf(p)}>
+                    <text x={label.x} y={ys[i]} textAnchor={label.align} fill={color}>
                       {label.text}
                     </text>
                   </g>
