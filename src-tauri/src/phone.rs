@@ -127,6 +127,8 @@ pub fn phone_urls(nets: &[LocalNet], port: u16, key: &str, router: Option<Ipv4Ad
     ips.into_iter().map(|ip| format!("http://{ip}:{port}/?view=phone&k={key}")).collect()
 }
 
+/// One given port (the tests; the app uses `start_any`).
+#[cfg(test)]
 pub async fn start(bind: Ipv4Addr, port: u16, key: String, assets: AssetsFn, allow: AllowFn) -> Result<Handle, String> {
     start_with(bind, port, key, assets, allow, 15).await
 }
