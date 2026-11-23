@@ -22,8 +22,10 @@ use tauri::{Listener, Manager};
 
 fn main() {
     // Opened directly (not by the .bat) with a newer version on GitHub: the
-    // .bat takes over, updates and opens the new version.
-    if self_update::hand_over_if_outdated() {
+    // .bat takes over, updates and opens the new version. Not when Windows
+    // starts the app at log-in: that is meant to be invisible (no console of
+    // the .bat, no window), so the update waits for the title bar's button.
+    if !startup::started_in_tray() && self_update::hand_over_if_outdated() {
         return;
     }
     // Already open (maybe hidden in the tray): that one comes up, this ends.

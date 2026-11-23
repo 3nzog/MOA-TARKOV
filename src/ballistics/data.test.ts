@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { ammoFor, ammoFromScreen, ammoScore, ammoShortsFromScreen, bestValue, caliberLabel, classEffect, rankOwned, roundPrice, search, type AmmoData, type Names } from './data';
+import { ammoFor, ammoInScan, mostlyAmmo, ammoFromScreen, ammoScore, ammoShortsFromScreen, bestValue, caliberLabel, classEffect, rankOwned, roundPrice, search, type AmmoData, type Names } from './data';
 
 const data = JSON.parse(readFileSync('data/snapshot/ammo.json', 'utf8')) as AmmoData;
 const names = (JSON.parse(readFileSync('data/snapshot/progression-pt.json', 'utf8')) as { items: Names }).items;
@@ -138,5 +138,25 @@ describe('your ammo from a stash screenshot (short names)', () => {
     expect(groups).toHaveLength(1);
     expect(groups[0].ids[0]).toBe(m995);
     expect(groups[0].ids).toEqual([m995, m855, fmj].sort((x, y) => ammoScore(data.ammo[y], 4) - ammoScore(data.ammo[x], 4)));
+  });
+});
+
+describe('an inventory screenshot that is mostly ammo goes to the ammo page', () => {
+  const en = (JSON.parse(readFileSync('data/snapshot/progression-en.json', 'utf8')) as { items: Names }).items;
+  const idOf = (short: string, cal: string) => Object.keys(data.ammo).find((id) => data.ammo[id].c === cal && en[id]?.[1] === short)!;
+  const fmjAll = Object.keys(data.ammo).filter((id) => en[id]?.[1] === 'FMJ');
+
+  it('counts the cartridges and names them, a shared short name by the caliber seen', () => {
+    const items = [{ ids: [idOf('M855A1', 'Caliber556x45NATO')] }, { ids: [idOf('M995', 'Caliber556x45NATO')] }, { ids: fmjAll }, { ids: ['5c12688486f77426843c7d32'] }];
+    const got = ammoInScan(items, data);
+    expect(got.ammoItems).toBe(3);
+    expect(got.ids).toContain(idOf('FMJ', 'Caliber556x45NATO'));
+    expect(mostlyAmmo(got, items.length)).toBe(true);
+  });
+
+  it('a stash with a few cartridges among many things stays an inventory', () => {
+    const ammo = [{ ids: [idOf('M855A1', 'Caliber556x45NATO')] }, { ids: [idOf('M995', 'Caliber556x45NATO')] }, { ids: [idOf('M856A1', 'Caliber556x45NATO')] }];
+    const other = Array.from({ length: 6 }, () => ({ ids: ['5c12688486f77426843c7d32'] }));
+    expect(mostlyAmmo(ammoInScan([...ammo, ...other], data), 9)).toBe(false);
   });
 });

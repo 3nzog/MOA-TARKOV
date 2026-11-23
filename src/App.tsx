@@ -560,6 +560,36 @@ function App() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (scanResult?.mode === 'inventory') setStashSeen(scanResult.items);
   }, [scanResult]);
+  // Out of a raid, an inventory screenshot opens where it belongs: mostly
+  // cartridges → the ammo page (ranked); anything else → Planner → Items, where
+  // it was just counted. On the ammo page its own reader handles the print; in
+  // a raid nothing moves.
+  const screenRouting = useRef({ inRaid: false, section: railSection as RailSection | null, compact: false });
+  useEffect(() => {
+    screenRouting.current = { inRaid: !!liveRaid, section: railSection, compact: compact.compact };
+  }, [liveRaid, railSection, compact.compact]);
+  useEffect(() => {
+    const r = screenRouting.current;
+    if (scanResult?.mode !== 'inventory' || r.inRaid || r.compact || r.section === 'ballistics') return;
+    let alive = true;
+    void import('./ballistics/data')
+      .then(async (m) => ({ m, data: await m.loadAmmoData() }))
+      .then(({ m, data }) => {
+        if (!alive) return;
+        const found = m.ammoInScan(scanResult.items, data);
+        if (m.mostlyAmmo(found, scanResult.items.length) && found.ids.length > 0) {
+          setScreenAmmo(found.ids);
+          setRailSection('ballistics');
+        } else {
+          setPlannerTab('items');
+          setRailSection('planner');
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [scanResult]);
   const { update: updatePlanner, checkedObjectives: plannerChecked } = planner;
   const { needsScope, stationLevels, collected } = planner.planner;
   useEffect(() => {

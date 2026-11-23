@@ -260,3 +260,26 @@ export function rankOwned(ids: string[], data: AmmoData, armorClass: number): { 
     .map(([caliber, list]) => ({ caliber, ids: list.sort((x, y) => score(y) - score(x)) }))
     .sort((a, b) => score(b.ids[0]) - score(a.ids[0]));
 }
+
+/**
+ * The cartridges in an inventory screenshot's items (the price reader's,
+ * read by short name: a name several items share gives several ids). An item
+ * whose every id is a cartridge counts as ammo; it names one when only one
+ * id, or only one of the calibers seen surely, fits.
+ */
+export function ammoInScan(items: { ids: string[] }[], data: AmmoData): { ids: string[]; ammoItems: number } {
+  const isAmmo = (id: string) => !!data.ammo[id] && !data.ammo[id].g;
+  const ammoItems = items.filter((i) => i.ids.length > 0 && i.ids.every(isAmmo));
+  const ids: string[] = [];
+  for (const i of ammoItems) if (i.ids.length === 1 && !ids.includes(i.ids[0])) ids.push(i.ids[0]);
+  const cals = new Set(ids.map((id) => data.ammo[id].c));
+  for (const i of ammoItems) {
+    if (i.ids.length < 2) continue;
+    const fit = i.ids.filter((id) => cals.has(data.ammo[id].c));
+    if (fit.length === 1 && !ids.includes(fit[0])) ids.push(fit[0]);
+  }
+  return { ids, ammoItems: ammoItems.length };
+}
+
+/** An inventory screenshot that is mostly cartridges (3+, at least half of what it shows): the ammo page's. */
+export const mostlyAmmo = (found: { ammoItems: number }, items: number): boolean => found.ammoItems >= 3 && found.ammoItems * 2 >= items;
