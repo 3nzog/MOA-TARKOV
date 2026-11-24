@@ -111,6 +111,15 @@ export interface QuestsPayload {
   // Active quest ids (accepted − completed − failed). The receiver re-derives
   // the objective pins locally via deriveQuestState(), so no geometry is sent.
   activeQuestIds: string[];
+  // A game PC that accepts linked PCs: where to reach it (src/squad/linkOffer.ts).
+  // Optional — older apps neither send nor read it.
+  link?: LinkOffer;
+}
+
+export interface LinkOffer {
+  port: number;
+  ips: { ip: string; kind: "radmin" | "lan" }[];
+  name: string; // the game PC's computer name
 }
 
 // Structural marker shape — deliberately independent of the client's `Poi` so

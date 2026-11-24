@@ -381,7 +381,16 @@
       "netLan": "rede de casa",
       "netPublic": "Pública: sem party nela"
     },
-    "mirrored": "Esta é a party do PC do jogo, mostrada aqui porque este PC está anexado a ele. Para sair, saia no PC do jogo."
+    "mirrored": "Esta é a party do PC do jogo, mostrada aqui porque este PC está anexado a ele. Para sair, saia no PC do jogo.",
+    "link": {
+      "menu": "Opções de {{name}}",
+      "action": "Vincular ao computador do jogo",
+      "help": "Este PC vira a tela extra do PC do jogo dele. Ele confirma lá.",
+      "noOffer": "O MoA dele precisa estar como PC do jogo (Configurações → Dispositivos) e aberto.",
+      "noNetwork": "Sem rede em comum com ele (Radmin ou a mesma rede de casa).",
+      "waiting": "Esperando o PC do jogo aceitar…",
+      "done": "Vinculado a este PC do jogo."
+    }
   },
   "feedback": {
     "title": "Feedback",

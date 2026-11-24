@@ -381,7 +381,16 @@
       "netLan": "home network",
       "netPublic": "Public: no party on it"
     },
-    "mirrored": "This is the game PC's party, shown here because this PC is linked to it. To leave, leave on the game PC."
+    "mirrored": "This is the game PC's party, shown here because this PC is linked to it. To leave, leave on the game PC.",
+    "link": {
+      "menu": "Options for {{name}}",
+      "action": "Link to the game PC",
+      "help": "This PC becomes their game PC's extra screen. They confirm it there.",
+      "noOffer": "Their MoA must be set as the game PC (Settings → Devices) and open.",
+      "noNetwork": "No network in common with them (Radmin or the same home network).",
+      "waiting": "Waiting for the game PC to accept…",
+      "done": "Linked to this game PC."
+    }
   },
   "feedback": {
     "title": "Feedback",

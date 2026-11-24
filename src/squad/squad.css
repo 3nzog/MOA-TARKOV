@@ -287,7 +287,7 @@
      keeps the width. */
   .squad-member {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
     column-gap: 8px;
     row-gap: 1px;
     padding: 6px 7px;
@@ -296,6 +296,7 @@
   .squad-name { grid-column: 2; grid-row: 1; }
   .squad-you { grid-column: 3; grid-row: 1; margin-left: 0; }
   .squad-eye { grid-column: 4; grid-row: 1 / span 2; }
+  .squad-more { grid-column: 5; grid-row: 1 / span 2; }
   .squad-seen { grid-column: 2 / 4; grid-row: 2; }
   .squad-seen:empty { display: none; }
 }
@@ -307,3 +308,53 @@
   color: var(--text-dim);
   margin: var(--sp-2) 0;
 }
+
+/* The ⋮ menu by a member's name: link to their game PC. */
+.squad-more { position: relative; flex: none; }
+.squad-more__btn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+}
+.squad-more__btn:hover,
+.squad-more__btn.is-open { background: var(--surface-3); color: var(--text); }
+.squad-more__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 50;
+  width: 240px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: var(--elev-3);
+  animation: glass-in var(--dur-base, 160ms) var(--ease-out) both;
+}
+.squad-more__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.squad-more__item:hover:not(:disabled) { background: var(--surface-3); }
+.squad-more__item:disabled { opacity: 0.55; cursor: default; }
+.squad-more__item svg { flex: none; font-size: 16px; color: var(--accent); }
+.squad-more__note { margin: 2px 10px 4px; color: var(--text-dim); font-size: var(--fs-caption); line-height: 1.35; }

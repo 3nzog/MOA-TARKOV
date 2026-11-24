@@ -22,6 +22,7 @@ export function parseSquadSnapshot(raw: unknown): { snap: SquadState | null } | 
       quests: rec(r.quests),
       markers: rec(r.markers),
       draws: rec(r.draws),
+      links: rec(r.links),
     },
   };
 }

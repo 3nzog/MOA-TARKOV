@@ -26,7 +26,8 @@ import { isLinkedViewer } from "../link/linkApi";
 import { useMirroredState, usePublishState } from "../link/linkState";
 import { useLink } from "../link/useLink";
 import { parseSquadSnapshot } from "./squadSnapshot";
-import { netLog } from "../net/netApi";
+import { LINK_PORT, parseLinkOffer } from "./linkOffer";
+import { netLocalIps, netLog } from "../net/netApi";
 import { SquadTransport, type ConnStatus } from "./transport";
 import { loadIdentity, saveIdentity, type SquadIdentity } from "./identity";
 import { getSelfSymbol, useSelfSymbol } from "./symbols";
@@ -36,6 +37,7 @@ import type {
   PositionPayload,
   WireMarker,
   DrawPayload,
+  LinkOffer,
 } from "../../shared/squadProtocol";
 
 export interface MemberPosition {
@@ -53,6 +55,8 @@ export interface SquadState {
   quests: Record<string, string[]>; // active quest ids by member id
   markers: Record<string, WireMarker[]>; // shared markers by member id
   draws: Record<string, DrawPayload[]>; // shared drawings by member id
+  /** Members whose game PC accepts linked PCs: where to reach it, by member id. */
+  links?: Record<string, LinkOffer>;
   error: string | null;
 }
 
@@ -66,8 +70,12 @@ const EMPTY: SquadState = {
   quests: {},
   markers: {},
   draws: {},
+  links: {},
   error: null,
 };
+
+/** Quests as sent: with this PC's link offer when it has one. */
+const questsPayload = (ids: string[], link: LinkOffer | null) => (link ? { activeQuestIds: ids, link } : { activeQuestIds: ids });
 
 export interface SquadApi extends SquadState {
   inSquad: boolean;
@@ -90,6 +98,8 @@ export interface SquadApi extends SquadState {
   saveProfile: (name: string, colorId: string | null) => void;
   broadcastPosition: (p: PositionPayload) => void;
   broadcastQuests: (ids: string[]) => void;
+  /** This PC's own link offer (it is the game PC and accepts links), sent with its quests; null = none. */
+  setSelfLink: (offer: LinkOffer | null) => void;
   addMarker: (m: WireMarker) => void;
   removeMarker: (id: string) => void;
   addDraw: (d: DrawPayload) => void;
@@ -173,6 +183,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   // after us (the relay never replays anything sent before they arrived).
   const selfPos = useRef<PositionPayload | null>(null);
   const selfQuests = useRef<string[] | null>(null);
+  const selfLink = useRef<LinkOffer | null>(null);
   const selfMarkers = useRef<Map<string, WireMarker>>(new Map());
   const selfDraws = useRef<Map<string, DrawPayload>>(new Map());
 
@@ -180,7 +191,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
     const transport = transportRef.current;
     if (!transport) return;
     if (selfPos.current) transport.send("position", selfPos.current);
-    if (selfQuests.current) transport.send("quests", { activeQuestIds: selfQuests.current });
+    if (selfQuests.current) transport.send("quests", questsPayload(selfQuests.current, selfLink.current));
     for (const m of selfMarkers.current.values()) transport.send("marker-add", m);
     for (const d of selfDraws.current.values()) transport.send("draw-add", d);
   }, []);
@@ -221,6 +232,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
             quests: omit(s.quests, id),
             markers: omit(s.markers, id),
             draws: omit(s.draws, id),
+            links: omit(s.links ?? {}, id),
           }));
           break;
         }
@@ -236,7 +248,12 @@ export function SquadProvider({ children }: { children: ReactNode }) {
         case "quests": {
           const from = env.from;
           const ids = env.payload.activeQuestIds;
-          setState((s) => ({ ...s, quests: { ...s.quests, [from]: ids } }));
+          const offer = parseLinkOffer(env.payload.link);
+          setState((s) => ({
+            ...s,
+            quests: { ...s.quests, [from]: ids },
+            links: offer ? { ...(s.links ?? {}), [from]: offer } : omit(s.links ?? {}, from),
+          }));
           break;
         }
         case "marker-add": {
@@ -508,7 +525,14 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   const broadcastQuests = useCallback((ids: string[]) => {
     if (isLinkedViewer()) return;
     selfQuests.current = ids;
-    transportRef.current?.send("quests", { activeQuestIds: ids });
+    transportRef.current?.send("quests", questsPayload(ids, selfLink.current));
+  }, []);
+
+  const setSelfLink = useCallback((offer: LinkOffer | null) => {
+    if (JSON.stringify(offer) === JSON.stringify(selfLink.current)) return;
+    selfLink.current = offer;
+    // Goes out with the quests (once they are known: an empty list would clear them).
+    if (selfQuests.current) transportRef.current?.send("quests", questsPayload(selfQuests.current, selfLink.current));
   }, []);
 
   const addMarker = useCallback((m: WireMarker) => {
@@ -535,6 +559,24 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   // (friends see nobody extra). The game PC publishes it; one way only.
   const link = useLink();
   const linkedViewer = link.client?.state === "linked";
+  // The game PC tells the party where to link to it: another member links in
+  // one click (the ⋮ menu by this PC's name), and this PC still confirms it.
+  const offerName = link.role === "game" && link.host?.hosting ? link.host.name : null;
+  useEffect(() => {
+    if (!offerName) {
+      setSelfLink(null);
+      return;
+    }
+    let alive = true;
+    netLocalIps()
+      .then((ips) => {
+        if (alive) setSelfLink({ port: LINK_PORT, ips: ips.map(({ ip, kind }) => ({ ip, kind })), name: offerName });
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [offerName, setSelfLink]);
   usePublishState("squad", state.code !== null ? state : null);
   const [mirror, setMirror] = useState<SquadState | null>(null);
   useMirroredState("squad", parseSquadSnapshot, (r) => setMirror(r.snap));
@@ -558,6 +600,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
       saveProfile,
       broadcastPosition,
       broadcastQuests,
+      setSelfLink,
       addMarker,
       removeMarker,
       addDraw,
@@ -579,6 +622,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
       saveProfile,
       broadcastPosition,
       broadcastQuests,
+      setSelfLink,
       addMarker,
       removeMarker,
       addDraw,

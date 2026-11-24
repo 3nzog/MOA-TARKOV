@@ -381,7 +381,16 @@
       "netLan": "red de casa",
       "netPublic": "Pública: sin grupo en ella"
     },
-    "mirrored": "Este es el grupo del PC del juego, mostrado aquí porque este PC está vinculado a él. Para salir, sal en el PC del juego."
+    "mirrored": "Este es el grupo del PC del juego, mostrado aquí porque este PC está vinculado a él. Para salir, sal en el PC del juego.",
+    "link": {
+      "menu": "Opciones de {{name}}",
+      "action": "Vincular al PC del juego",
+      "help": "Este PC pasa a ser la pantalla extra de su PC del juego. Lo confirma allí.",
+      "noOffer": "Su MoA debe estar como PC del juego (Ajustes → Dispositivos) y abierto.",
+      "noNetwork": "Sin red en común con él (Radmin o la misma red de casa).",
+      "waiting": "Esperando que el PC del juego acepte…",
+      "done": "Vinculado a este PC del juego."
+    }
   },
   "feedback": {
     "title": "Comentarios",
