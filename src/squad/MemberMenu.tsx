@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, DotsThreeVertical, Link as LinkIcon } from '@phosphor-icons/react';
 import { useLink } from '../link/useLink';
+import { isLanIp } from '../link/linkApi';
 import { netLocalIps, type LocalIp } from '../net/netApi';
 import { pickLinkIp } from './linkOffer';
 import type { LinkOffer } from '../../shared/squadProtocol';
@@ -15,6 +16,9 @@ export default function MemberMenu({ name, offer }: { name: string; offer: LinkO
   const link = useLink();
   const [open, setOpen] = useState(false);
   const [mine, setMine] = useState<LocalIp[] | null>(null);
+  /** What the last click did, when it could not link the usual way. */
+  const [msg, setMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
 
   // This PC's networks, to pick the game PC's address on one of them.
@@ -50,19 +54,43 @@ export default function MemberMenu({ name, offer }: { name: string; offer: LinkO
   const waiting = toThis && (client?.state === 'connecting' || client?.state === 'pending');
   const note = !link.available
     ? null
-    : !offer
-      ? t('squad.link.noOffer')
-      : mine && !ip
-        ? t('squad.link.noNetwork')
+    : busy
+      ? t('squad.link.searching')
+      : msg
+        ? msg
         : linked
           ? t('squad.link.done')
           : waiting
             ? t('squad.link.waiting')
-            : t('squad.link.help');
+            : !offer
+              ? t('squad.link.noOffer')
+              : mine && !ip
+                ? t('squad.link.noNetwork')
+                : t('squad.link.help');
 
+  // Always clickable: the address the friend's app gave on a network both PCs
+  // share; else the first one it gave anyway (Radmin first); else whatever
+  // game PC answers on this PC's networks (an older app gives no address).
   const go = async () => {
-    if (!offer || !ip) return;
-    await link.connect({ host: ip, port: offer.port, name: offer.name });
+    if (!link.available || linked || busy) return;
+    setMsg(null);
+    let to: { host: string; port: number; name: string } | null = null;
+    if (offer) {
+      const any = ip ?? offer.ips.find((x) => x.kind === 'radmin')?.ip ?? offer.ips[0]?.ip ?? null;
+      if (any) to = { host: any, port: offer.port, name: offer.name };
+    }
+    if (!to) {
+      setBusy(true);
+      const found = await link.find().catch(() => []);
+      setBusy(false);
+      const pick = found.length === 1 ? found[0] : (found.find((f) => isLanIp(f.host)) ?? found[0]);
+      if (!pick) {
+        setMsg(t('squad.link.notFound'));
+        return;
+      }
+      to = pick;
+    }
+    await link.connect(to);
     // This PC is the extra screen from now on (even if it has the game too).
     if (link.prefs.mode !== 'screen') link.setMode('screen');
   };
@@ -86,7 +114,6 @@ export default function MemberMenu({ name, offer }: { name: string; offer: LinkO
             type="button"
             role="menuitem"
             className="squad-more__item"
-            disabled={!offer || !ip || linked || waiting || !link.available}
             onClick={() => void go()}
           >
             {linked ? <CheckCircle weight="fill" /> : <LinkIcon weight="bold" />}

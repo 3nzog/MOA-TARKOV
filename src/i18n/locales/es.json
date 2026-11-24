@@ -386,10 +386,12 @@
       "menu": "Opciones de {{name}}",
       "action": "Vincular al PC del juego",
       "help": "Este PC pasa a ser la pantalla extra de su PC del juego. Lo confirma allí.",
-      "noOffer": "Su MoA debe estar como PC del juego (Ajustes → Dispositivos) y abierto.",
-      "noNetwork": "Sin red en común con él (Radmin o la misma red de casa).",
+      "noOffer": "Su MoA no envió su dirección: al hacer clic, busco el PC del juego en la red.",
+      "noNetwork": "Sin red en común: al hacer clic, lo intento igual con la dirección que envió.",
       "waiting": "Esperando que el PC del juego acepte…",
-      "done": "Vinculado a este PC del juego."
+      "done": "Vinculado a este PC del juego.",
+      "searching": "Buscando el PC del juego…",
+      "notFound": "No encontré ningún PC del juego aceptando vínculos. Pídele que abra MoA como PC del juego y vuelve a intentarlo."
     }
   },
   "feedback": {

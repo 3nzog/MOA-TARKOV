@@ -386,10 +386,12 @@
       "menu": "Options for {{name}}",
       "action": "Link to the game PC",
       "help": "This PC becomes their game PC's extra screen. They confirm it there.",
-      "noOffer": "Their MoA must be set as the game PC (Settings → Devices) and open.",
-      "noNetwork": "No network in common with them (Radmin or the same home network).",
+      "noOffer": "Their app did not send its address: clicking looks for the game PC on the network.",
+      "noNetwork": "No network in common: clicking tries the address they sent anyway.",
       "waiting": "Waiting for the game PC to accept…",
-      "done": "Linked to this game PC."
+      "done": "Linked to this game PC.",
+      "searching": "Looking for the game PC…",
+      "notFound": "No game PC accepting links was found. Ask them to open MoA as the game PC and try again."
     }
   },
   "feedback": {
