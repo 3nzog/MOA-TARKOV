@@ -129,6 +129,7 @@ const PatchNotesModal = lazy(() => import('./components/PatchNotesModal'));
 const FeedbackModal = lazy(() => import('./feedback/FeedbackModal'));
 const ArtMapViewer = lazy(() => import('./map/ArtMapViewer'));
 const PlannerPanel = lazy(() => import('./planner/PlannerPanel'));
+const QuestItemsPage = lazy(() => import('./planner/QuestItemsPage'));
 const GunsmithBench = lazy(() => import('./gunsmith/GunsmithBench'));
 const BallisticsPanel = lazy(() => import('./ballistics/BallisticsPanel'));
 const MapInfoCard = lazy(() => import('./map/MapInfoCard'));
@@ -207,6 +208,7 @@ function App() {
   const [priceCardSeen, setPriceCardSeen] = useState(false);
   const progressionLoad = useProgressionData(
     railSection === 'planner' ||
+      railSection === 'questItems' ||
       appearance.upcomingQuests ||
       (routePrefs.on && routePrefs.goal === 'hideout') ||
       stashSeen !== null ||
@@ -589,8 +591,7 @@ function App() {
           setScreenAmmo(found.ids);
           setRailSection('ballistics');
         } else {
-          setPlannerTab('items');
-          setRailSection('planner');
+          setRailSection('questItems');
         }
       })
       .catch(() => undefined);
@@ -629,7 +630,8 @@ function App() {
       tasks: quests.tasks,
       meta: progressionData.tasks,
       statuses: questStatuses,
-      scope: needsScope,
+      // Every future need: the counters are per item, and Quest items shows the whole game.
+      scope: 'all',
       checkedObjectives: plannerChecked,
       includeHideout: true,
       stations: progressionData.stations,
@@ -1217,6 +1219,10 @@ function App() {
                   </Suspense>
                 </div>
               </div>
+            ) : railSection === 'questItems' ? (
+              <Suspense fallback={<Spinner size="md" />}>
+                <QuestItemsPage load={progressionLoad} tasks={quests.tasks} statuses={questStatuses} planner={planner} onClose={closePage} />
+              </Suspense>
             ) : railSection === 'gunsmith' ? (
               <Suspense fallback={<Spinner size="md" />}>
                 <GunsmithBench

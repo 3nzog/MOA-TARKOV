@@ -58,7 +58,8 @@
     "ballistics": "Balística",
     "phone": "Mapa en el móvil",
     "updateSource_one": "Nueva versión en GitHub ({{count}} cambio): actualizar",
-    "updateSource_other": "Nueva versión en GitHub ({{count}} cambios): actualizar"
+    "updateSource_other": "Nueva versión en GitHub ({{count}} cambios): actualizar",
+    "questItems": "Objetos de misión"
   },
   "settings": {
     "title": "Ajustes",
@@ -644,8 +645,8 @@
       "objectivesTitle": "Objetivos"
     },
     "items": {
-      "counted_one": "Captura del inventario: se contó {{count}} objeto que falta ({{list}}). Mira Planificador → Objetos.",
-      "counted_other": "Captura del inventario: se contaron {{count}} objetos que faltan ({{list}}). Mira Planificador → Objetos.",
+      "counted_one": "Captura del inventario: se contó {{count}} objeto que falta ({{list}}). Mira Objetos de misión.",
+      "counted_other": "Captura del inventario: se contaron {{count}} objetos que faltan ({{list}}). Mira Objetos de misión.",
       "anyOf": "Cualquiera de {{count}} objetos",
       "scopeActive": "Activas",
       "scopeAvailable": "+ Disponibles",
@@ -1367,5 +1368,15 @@
   "raidSideAsk": {
     "question": "Esta raid es de:",
     "hint": "Los logs del juego distinguen tus dos perfiles, pero no cuál es el Scav. Responde una vez: el otro perfil queda conocido también."
+  },
+  "questItems": {
+    "title": "Objetos de misión",
+    "summary": "{{kinds}} objetos · faltan {{missing}}",
+    "scopeAll": "Todo el juego",
+    "hideout": "Refugio también",
+    "screenHint": "Haz captura del alijo: los conteos se actualizan solos",
+    "empty": "No falta nada aquí.",
+    "quests_one": "{{count}} misión",
+    "quests_other": "{{count}} misiones"
   }
 }

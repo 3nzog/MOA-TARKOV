@@ -58,7 +58,8 @@
     "ballistics": "弹道",
     "phone": "手机地图",
     "updateSource_one": "GitHub 上有新版本（{{count}} 项更改）：更新",
-    "updateSource_other": "GitHub 上有新版本（{{count}} 项更改）：更新"
+    "updateSource_other": "GitHub 上有新版本（{{count}} 项更改）：更新",
+    "questItems": "任务物品"
   },
   "settings": {
     "title": "设置",
@@ -644,8 +645,8 @@
       "objectivesTitle": "目标"
     },
     "items": {
-      "counted_one": "库存截图：已计入 {{count}} 种仍需要的物品（{{list}}）。见 规划 → 物品。",
-      "counted_other": "库存截图：已计入 {{count}} 种仍需要的物品（{{list}}）。见 规划 → 物品。",
+      "counted_one": "库存截图：已计入 {{count}} 种仍需要的物品（{{list}}）。见 任务物品。",
+      "counted_other": "库存截图：已计入 {{count}} 种仍需要的物品（{{list}}）。见 任务物品。",
       "anyOf": "{{count}} 种物品中任意一种",
       "scopeActive": "进行中",
       "scopeAvailable": "+ 可接取",
@@ -1367,5 +1368,15 @@
   "raidSideAsk": {
     "question": "本场战局是：",
     "hint": "游戏日志能区分你的两个角色，但不知道哪个是 Scav。回答一次后，另一个角色也就知道了。"
+  },
+  "questItems": {
+    "title": "任务物品",
+    "summary": "{{kinds}} 种 · 还差 {{missing}} 个",
+    "scopeAll": "整个游戏",
+    "hideout": "含藏身处",
+    "screenHint": "截图仓库：数量会自动更新",
+    "empty": "这里没有缺少的物品。",
+    "quests_one": "{{count}} 个任务",
+    "quests_other": "{{count}} 个任务"
   }
 }

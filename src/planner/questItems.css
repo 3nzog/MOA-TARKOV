@@ -1,0 +1,74 @@
+/* Quest items page (QuestItemsPage.tsx): compact tiles, most missing first. */
+.qi { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.qi-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+.qi-title { display: flex; flex-direction: column; margin-right: auto; }
+.qi-title h2 { margin: 0; font-family: var(--font-display); font-size: var(--fs-display-sm); letter-spacing: 0.04em; }
+.qi-sub { color: var(--text-dim); font-size: var(--fs-caption); }
+.qi-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+}
+.qi-tools > :first-child { flex: 0 1 260px; }
+.qi-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-caption); color: var(--text-dim); }
+.qi-hint { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-size: var(--fs-caption); color: var(--text-dim); }
+.qi-hint svg { color: var(--accent); }
+.qi-state { padding: var(--sp-6); display: grid; place-items: center; }
+.qi-grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  grid-auto-rows: min-content;
+  gap: 8px;
+  margin: 0;
+  padding: var(--sp-2) var(--sp-4) var(--sp-4);
+  list-style: none;
+}
+.qi-item {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.qi-item.is-done { opacity: 0.5; }
+.qi-item.is-open { grid-column: span 2; border-color: var(--accent); }
+.qi-item__main {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  grid-template-rows: auto auto auto;
+  column-gap: 8px;
+  row-gap: 2px;
+  width: 100%;
+  padding: 7px 8px 9px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.qi-item__main img { grid-row: 1 / span 3; width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: var(--bg-sunken); }
+.qi-item__need { font-size: 17px; font-weight: 800; color: var(--accent); line-height: 1.1; }
+.qi-item.is-done .qi-item__need { color: #5ee07f; }
+.qi-item__name { font-size: 12px; font-weight: 700; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qi-item__meta { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.qi-fir { padding: 0 5px; border-radius: 4px; background: rgba(255, 120, 60, 0.18); color: #ff9a5c; font-size: 10px; font-weight: 800; }
+.qi-src { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 600; color: #ffd60a; }
+.qi-src--hideout { color: #5ee07f; }
+.qi-bar { position: absolute; left: 8px; right: 8px; bottom: 4px; height: 3px; border-radius: 2px; background: var(--surface-3); overflow: hidden; }
+.qi-bar > span { display: block; height: 100%; background: var(--accent); }
+.qi-item.is-done .qi-bar > span { background: #5ee07f; }
+.qi-detail { padding: 0 10px 10px; font-size: 12px; }
+.qi-detail > strong { display: block; margin-bottom: 4px; }
+.qi-detail ul { margin: 6px 0 0; padding-left: 16px; color: var(--text-dim); }
+.qi-counter { display: inline-flex; align-items: center; gap: 6px; }
+.qi-alt { margin: 6px 0 0; color: var(--text-dim); }

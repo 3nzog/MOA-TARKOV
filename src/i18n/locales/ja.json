@@ -58,7 +58,8 @@
     "ballistics": "弾薬性能",
     "phone": "スマホで地図",
     "updateSource_one": "GitHubに新しいバージョン（変更{{count}}件）：更新",
-    "updateSource_other": "GitHubに新しいバージョン（変更{{count}}件）：更新"
+    "updateSource_other": "GitHubに新しいバージョン（変更{{count}}件）：更新",
+    "questItems": "タスク用アイテム"
   },
   "settings": {
     "title": "設定",
@@ -644,8 +645,8 @@
       "objectivesTitle": "目標"
     },
     "items": {
-      "counted_one": "インベントリのスクショ：必要なアイテム {{count}} 件を数えました（{{list}}）。プランナー → アイテム を確認。",
-      "counted_other": "インベントリのスクショ：必要なアイテム {{count}} 件を数えました（{{list}}）。プランナー → アイテム を確認。",
+      "counted_one": "インベントリのスクショ：必要なアイテム {{count}} 件を数えました（{{list}}）。タスク用アイテム を確認。",
+      "counted_other": "インベントリのスクショ：必要なアイテム {{count}} 件を数えました（{{list}}）。タスク用アイテム を確認。",
       "anyOf": "{{count}} 種のうちいずれか",
       "scopeActive": "進行中",
       "scopeAvailable": "+ 受注可能",
@@ -1367,5 +1368,15 @@
   "raidSideAsk": {
     "question": "このレイドは:",
     "hint": "ゲームのログは 2 つのプロフィールを区別しますが、どちらが Scav かは分かりません。一度答えれば、もう一方も分かります。"
+  },
+  "questItems": {
+    "title": "タスク用アイテム",
+    "summary": "{{kinds}}種類 · 残り{{missing}}個",
+    "scopeAll": "ゲーム全体",
+    "hideout": "隠れ家も",
+    "screenHint": "スタッシュのスクリーンショットで数が自動更新",
+    "empty": "不足はありません。",
+    "quests_one": "タスク{{count}}件",
+    "quests_other": "タスク{{count}}件"
   }
 }

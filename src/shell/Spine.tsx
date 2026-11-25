@@ -19,12 +19,13 @@ import {
   Wrench,
   Target,
   DeviceMobile,
+  Package,
 } from '@phosphor-icons/react';
 import { Tooltip } from '../ui';
 
 // The map is NOT a section: it's the top-level selection, pinned above every
 // section's panel body (see .rail-panel__map in App.tsx).
-export type RailSection = 'quests' | 'intel' | 'squad' | 'planner' | 'gunsmith' | 'ballistics';
+export type RailSection = 'quests' | 'intel' | 'squad' | 'planner' | 'questItems' | 'gunsmith' | 'ballistics';
 
 export interface SpineProps {
   side: 'left' | 'right';
@@ -145,6 +146,7 @@ export default function Spine({
         t('rail.planner'),
         <ListChecks weight={activeSection === 'planner' ? 'fill' : 'regular'} />,
       )}
+      {section('questItems', t('rail.questItems'), <Package weight={activeSection === 'questItems' ? 'fill' : 'regular'} />)}
       {section('gunsmith', t('rail.gunsmith'), <Wrench weight={activeSection === 'gunsmith' ? 'fill' : 'regular'} />)}
       {section('ballistics', t('rail.ballistics'), <Target weight={activeSection === 'ballistics' ? 'fill' : 'regular'} />)}
       {onPhone && (

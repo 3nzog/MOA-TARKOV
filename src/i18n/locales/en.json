@@ -58,7 +58,8 @@
     "ballistics": "Ballistics",
     "phone": "Map on phone",
     "updateSource_one": "New version on GitHub ({{count}} change): update",
-    "updateSource_other": "New version on GitHub ({{count}} changes): update"
+    "updateSource_other": "New version on GitHub ({{count}} changes): update",
+    "questItems": "Quest items"
   },
   "settings": {
     "title": "Settings",
@@ -644,8 +645,8 @@
       "objectivesTitle": "Objectives"
     },
     "items": {
-      "counted_one": "Inventory screenshot: {{count}} item still needed counted ({{list}}). See Planner → Items.",
-      "counted_other": "Inventory screenshot: {{count}} items still needed counted ({{list}}). See Planner → Items.",
+      "counted_one": "Inventory screenshot: {{count}} item still needed counted ({{list}}). See Quest items.",
+      "counted_other": "Inventory screenshot: {{count}} items still needed counted ({{list}}). See Quest items.",
       "anyOf": "Any of {{count}} items",
       "scopeActive": "Active",
       "scopeAvailable": "+ Available",
@@ -1367,5 +1368,15 @@
   "raidSideAsk": {
     "question": "This raid is:",
     "hint": "The game's logs tell your two profiles apart but not which is the Scav. Answer once: the other profile is then known too."
+  },
+  "questItems": {
+    "title": "Quest items",
+    "summary": "{{kinds}} items · {{missing}} still needed",
+    "scopeAll": "Whole game",
+    "hideout": "Hideout too",
+    "screenHint": "Screenshot your stash: the counts update on their own",
+    "empty": "Nothing missing here.",
+    "quests_one": "{{count}} quest",
+    "quests_other": "{{count}} quests"
   }
 }

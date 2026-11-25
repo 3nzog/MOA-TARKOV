@@ -58,7 +58,8 @@
     "ballistics": "Balística",
     "phone": "Mapa no celular",
     "updateSource_one": "Versão nova no GitHub ({{count}} mudança): atualizar",
-    "updateSource_other": "Versão nova no GitHub ({{count}} mudanças): atualizar"
+    "updateSource_other": "Versão nova no GitHub ({{count}} mudanças): atualizar",
+    "questItems": "Itens de missão"
   },
   "settings": {
     "title": "Configurações",
@@ -644,8 +645,8 @@
       "objectivesTitle": "Objetivos"
     },
     "items": {
-      "counted_one": "Print do estoque: {{count}} item que falta foi contado ({{list}}). Veja em Planejador → Itens.",
-      "counted_other": "Print do estoque: {{count}} itens que faltam foram contados ({{list}}). Veja em Planejador → Itens.",
+      "counted_one": "Print do estoque: {{count}} item que falta foi contado ({{list}}). Veja em Itens de missão.",
+      "counted_other": "Print do estoque: {{count}} itens que faltam foram contados ({{list}}). Veja em Itens de missão.",
       "anyOf": "Qualquer um de {{count}} itens",
       "scopeActive": "Ativas",
       "scopeAvailable": "+ Disponíveis",
@@ -1367,5 +1368,15 @@
   "raidSideAsk": {
     "question": "Esta raid é de:",
     "hint": "Os logs do jogo diferenciam os seus dois perfis, mas não dizem qual é o Scav. Responda uma vez: o outro perfil passa a ser conhecido também."
+  },
+  "questItems": {
+    "title": "Itens de missão",
+    "summary": "{{kinds}} itens · faltam {{missing}} unidades",
+    "scopeAll": "Jogo todo",
+    "hideout": "Hideout também",
+    "screenHint": "Tire print do estoque: as contas se atualizam sozinhas",
+    "empty": "Nada faltando aqui.",
+    "quests_one": "{{count}} missão",
+    "quests_other": "{{count}} missões"
   }
 }
