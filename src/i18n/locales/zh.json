@@ -889,7 +889,16 @@
     "total": "合计（跳蚤市场与商人取高者）",
     "uncertainNote_one": "{{count}} 个名称对应多个物品，以价格区间显示，不计入合计。",
     "uncertainNote_other": "{{count}} 个名称对应多个物品，以价格区间显示，不计入合计。",
-    "note": "价格为 tarkov.dev 在最近一次数据更新时的估算。"
+    "note": "价格为 tarkov.dev 在最近一次数据更新时的估算。",
+    "each": "每个 {{value}}",
+    "use": {
+      "questHint": "任务仍需要此物品",
+      "hideoutHint": "藏身处升级仍需要此物品",
+      "craftHint": "使用此物品的制作（你的设施已可制作）",
+      "craftLocked": "使用此物品的制作（设施等级不足）",
+      "fir": "战局内",
+      "more": "+{{n}}"
+    }
   },
   "link": {
     "main": {

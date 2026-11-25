@@ -98,3 +98,24 @@ describe('your stash screenshot (1080p, Portuguese, read by Windows OCR at 2x)',
     expect(names).not.toContain('Manual');
   });
 });
+
+describe('a screenshot of ammo', () => {
+  const ammo = (JSON.parse(readFileSync(resolve(process.cwd(), 'data/snapshot/ammo.json'), 'utf8')) as { ammo: Record<string, { g?: boolean }> }).ammo;
+  const isRound = (id: string) => !!ammo[id] && !ammo[id].g;
+  const M855 = '54527a984bdc2d4e668b4567';
+  const M855A1 = '54527ac44bdc2d36668b4567';
+
+  it('"M855" read as written is the cartridge (or its pack), not the MBSS backpack it folds into', () => {
+    const [m855] = findShortNames(screen(line('M855', 100, 100)), index);
+    expect(m855.ids).toContain(M855);
+    expect(m855.ids.some((id) => /mbss/i.test(load('en')[id]?.[0] ?? ''))).toBe(false);
+  });
+
+  it('a name the cartridge shares with its ammo pack reads as the cartridge', () => {
+    const r = scanScreen(screen(line('M855A1 M855', 100, 100), line('M855A1', 100, 180)), index, undefined, isRound);
+    expect(r?.mode).toBe('inventory');
+    const ids = r && r.mode === 'inventory' ? r.items.map((i) => i.ids) : [];
+    expect(ids).toContainEqual([M855A1]);
+    expect(ids).toContainEqual([M855]);
+  });
+});

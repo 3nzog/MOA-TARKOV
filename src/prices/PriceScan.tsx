@@ -3,13 +3,27 @@
 // language (what the OCR reads) and are shown in the app's.
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Question, X } from '@phosphor-icons/react';
+import { Hammer, House, Question, Scroll, X } from '@phosphor-icons/react';
 import { IconButton } from '../ui';
 import type { ScanResult } from './scan';
+import type { ItemUse } from './itemUses';
+import type { Names } from '../planner/names';
 import { best, loadLocale, loadPrices, type Locale, type Price } from './usePriceScan';
 import './prices.css';
 
-export default function PriceScanCard({ result, onClose }: { result: NonNullable<ScanResult>; onClose: () => void }) {
+/** At most this many uses per item; the rest is "+N". */
+const MAX_USES = 3;
+
+export default function PriceScanCard({
+  result,
+  onClose,
+  uses,
+}: {
+  result: NonNullable<ScanResult>;
+  onClose: () => void;
+  /** What each item is still good for (quests, hideout, crafts); null while loading. */
+  uses?: { byItem: Map<string, ItemUse[]>; names: Names } | null;
+}) {
   const { t, i18n } = useTranslation();
   const [prices, setPrices] = useState<Record<string, Price> | null>(null);
   const [loc, setLoc] = useState<Locale | null>(null);
@@ -79,8 +93,10 @@ export default function PriceScanCard({ result, onClose }: { result: NonNullable
                   <small>
                     {t('prices.flea')} {p?.a ? rub(p.a) : '—'}
                     {p?.sp ? ` · ${trader(p.st)} ${rub(p.sp)}` : ''}
+                    {r.count > 1 && best(p) > 0 ? ` · ${t('prices.each', { value: rub(best(p)) })}` : ''}
                   </small>
                 )}
+                {r.ids.length === 1 && uses && <Uses list={uses.byItem.get(r.ids[0]) ?? []} names={uses.names} />}
               </span>
               <span className="price-card__value">
                 {r.ids.length > 1 ? range(r.ids, best) : rub(best(p) * r.count)}
@@ -100,5 +116,34 @@ export default function PriceScanCard({ result, onClose }: { result: NonNullable
         {t('prices.note')}
       </p>
     </div>
+  );
+}
+
+/** The item's uses as small tags: quests, hideout upgrades, crafts. */
+function Uses({ list, names }: { list: ItemUse[]; names: Names }) {
+  const { t } = useTranslation();
+  if (list.length === 0) return null;
+  const shown = list.slice(0, MAX_USES);
+  return (
+    <span className="price-card__uses">
+      {shown.map((u, i) =>
+        u.kind === 'quest' ? (
+          <span key={i} className="price-use price-use--quest" title={t('prices.use.questHint')}>
+            <Scroll weight="fill" /> {names.task(u.taskId)} ×{u.count}
+            {u.fir ? ` · ${t('prices.use.fir')}` : ''}
+          </span>
+        ) : u.kind === 'hideout' ? (
+          <span key={i} className="price-use price-use--hideout" title={t('prices.use.hideoutHint')}>
+            <House weight="fill" /> {names.station(u.stationId)} {u.level} ×{u.count}
+            {u.fir ? ` · ${t('prices.use.fir')}` : ''}
+          </span>
+        ) : (
+          <span key={i} className={`price-use price-use--craft${u.ready ? '' : ' is-locked'}`} title={t(u.ready ? 'prices.use.craftHint' : 'prices.use.craftLocked')}>
+            <Hammer weight="fill" /> {names.station(u.stationId)} {u.level} → {names.item(u.outputId)}
+          </span>
+        ),
+      )}
+      {list.length > MAX_USES && <span className="price-use price-use--more">{t('prices.use.more', { n: list.length - MAX_USES })}</span>}
+    </span>
   );
 }

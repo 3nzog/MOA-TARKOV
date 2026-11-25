@@ -889,7 +889,16 @@
     "total": "合計（フリマとトレーダーの高い方）",
     "uncertainNote_one": "{{count}} 件の名前が複数のアイテムに該当するため、価格帯で表示し合計から除外しています。",
     "uncertainNote_other": "{{count}} 件の名前が複数のアイテムに該当するため、価格帯で表示し合計から除外しています。",
-    "note": "価格は最終データ更新時の tarkov.dev の推定値です。"
+    "note": "価格は最終データ更新時の tarkov.dev の推定値です。",
+    "each": "1個 {{value}}",
+    "use": {
+      "questHint": "まだタスクで必要なアイテム",
+      "hideoutHint": "まだ隠れ家の強化で必要なアイテム",
+      "craftHint": "このアイテムを使うクラフト（作成可能）",
+      "craftLocked": "このアイテムを使うクラフト（設備レベル不足）",
+      "fir": "FIR",
+      "more": "+{{n}}"
+    }
   },
   "link": {
     "main": {

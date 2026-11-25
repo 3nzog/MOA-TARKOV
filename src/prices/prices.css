@@ -34,3 +34,27 @@
 .price-card__total { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 10px; border-radius: var(--r-md); background: var(--accent-soft); }
 .price-card__total strong { font-family: var(--font-mono); font-size: var(--fs-title); color: var(--accent); }
 .price-card__note { margin: 0; font-size: var(--fs-micro); color: var(--text-faint); line-height: 1.4; }
+
+/* What the item is still good for: quests, hideout, crafts. */
+.price-card__uses { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.price-use {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--surface-3);
+  color: var(--text-dim);
+}
+.price-use svg { flex: none; font-size: 12px; }
+.price-use--quest { background: rgba(255, 214, 10, 0.14); color: #ffd60a; }
+.price-use--hideout { background: rgba(94, 224, 127, 0.14); color: #5ee07f; }
+.price-use--craft { background: rgba(120, 170, 255, 0.14); color: #8db4ff; }
+.price-use--craft.is-locked { opacity: 0.55; }

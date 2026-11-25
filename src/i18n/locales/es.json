@@ -889,7 +889,16 @@
     "total": "Total (lo mejor entre mercadillo y comerciante)",
     "uncertainNote_one": "{{count}} nombre sirve para más de un objeto: se muestra como rango y queda fuera del total.",
     "uncertainNote_other": "{{count}} nombres sirven para más de un objeto: se muestran como rango y quedan fuera del total.",
-    "note": "Los precios son estimaciones de tarkov.dev de la última actualización."
+    "note": "Los precios son estimaciones de tarkov.dev de la última actualización.",
+    "each": "{{value}} c/u",
+    "use": {
+      "questHint": "Una misión aún pide este objeto",
+      "hideoutHint": "Una mejora del refugio aún pide este objeto",
+      "craftHint": "Receta que usa este objeto (tu estación ya la hace)",
+      "craftLocked": "Receta que usa este objeto (la estación aún no tiene el nivel)",
+      "fir": "FIR",
+      "more": "+{{n}}"
+    }
   },
   "link": {
     "main": {

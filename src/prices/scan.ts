@@ -34,7 +34,16 @@ export type ItemNames = Record<string, [string] | [string, string]>;
 export interface ItemIndex {
   full: Map<string, string[]>;
   short: Map<string, string[]>;
+  /**
+   * Short names as written (case and accents aside), before the look-alike
+   * folding: "M855" and "MBSS" fold to the same key, so when OCR read the
+   * name exactly as one item writes it, only that one counts.
+   */
+  shortExact: Map<string, string[]>;
 }
+
+/** A short name as written: accents and case gone, no spaces; look-alikes NOT folded. */
+const exactKey = (s: string) => normalizeText(s).replace(/\s+/g, '');
 
 // OCR mix-ups on the game's font, folded to one form on both sides.
 const FOLD: Record<string, string> = { '0': 'o', '1': 'i', l: 'i', '5': 's', '8': 'b', '|': 'i' };
@@ -56,16 +65,20 @@ function add(map: Map<string, string[]>, key: string, id: string) {
 export function buildIndex(...langs: ItemNames[]): ItemIndex {
   const full = new Map<string, string[]>();
   const short = new Map<string, string[]>();
+  const shortExact = new Map<string, string[]>();
   for (const names of langs) {
     for (const [id, n] of Object.entries(names)) {
       const f = skeleton(n[0]);
       if (f.length >= 6) add(full, f, id);
       const s = skeleton(n[1] ?? n[0]);
       // Two-letter short names collide with stray UI text too easily.
-      if (s.length >= 3) add(short, s, id);
+      if (s.length >= 3) {
+        add(short, s, id);
+        add(shortExact, exactKey(n[1] ?? n[0]), id);
+      }
     }
   }
-  return { full, short };
+  return { full, short, shortExact };
 }
 
 export interface Found {
@@ -145,7 +158,11 @@ export function matchShort(index: ItemIndex, raw: string): string[] | null {
   const k = skeleton(raw);
   if (k.length < 3) return null;
   const exact = index.short.get(k);
-  if (exact) return exact;
+  if (exact) {
+    // Read letter for letter as some of them write it: those (OCR got it right).
+    const asWritten = exact.length > 1 ? index.shortExact.get(exactKey(raw))?.filter((id) => exact.includes(id)) : undefined;
+    return asWritten && asWritten.length > 0 ? asWritten : exact;
+  }
   if (k.length < 5) return null;
   const keys = [...index.short.keys()];
   const prefix = keys.filter((key) => key.length > k.length && key.startsWith(k));
@@ -202,13 +219,23 @@ export type ScanResult =
  * inventory (short names on 2+ rows; the in-raid hotbar is a single row and
  * would otherwise open a list on every map screenshot), or neither.
  */
-export function scanScreen(text: ScreenText, index: ItemIndex, tradable?: (id: string) => boolean): ScanResult {
+export function scanScreen(text: ScreenText, index: ItemIndex, tradable?: (id: string) => boolean, cartridge?: (id: string) => boolean): ScanResult {
   // A shared name narrows to the variants that are actually bought and sold;
-  // if one is left, it is that one.
+  // if one is left, it is that one. A name a cartridge shares (its ammo pack
+  // writes the same "M855A1"; a backpack "MBSS" folds to it) is the
+  // cartridge: loose rounds are what a stash shows.
   const narrow = (f: Found): Found => {
-    if (!tradable || f.ids.length < 2) return f;
-    const real = f.ids.filter(tradable);
-    return real.length > 0 ? { ...f, ids: real } : f;
+    if (f.ids.length < 2) return f;
+    let ids = f.ids;
+    if (cartridge) {
+      const rounds = ids.filter(cartridge);
+      if (rounds.length > 0) ids = rounds;
+    }
+    if (tradable && ids.length > 1) {
+      const real = ids.filter(tradable);
+      if (real.length > 0) ids = real;
+    }
+    return ids === f.ids ? f : { ...f, ids };
   };
   const hovered = findHovered(text, index).map(narrow);
   if (hovered.length > 0 && hovered.length <= 3) return { mode: 'hovered', items: hovered };

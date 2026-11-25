@@ -48,6 +48,17 @@ export function loadPrices(): Promise<Record<string, Price>> {
   return pricesPromise;
 }
 
+// Cartridges (data/snapshot/ammo.json): a short name they share with their
+// ammo pack (or that folds into another item's) reads as the cartridge.
+let roundsPromise: Promise<Set<string>> | null = null;
+function loadRounds(): Promise<Set<string>> {
+  roundsPromise ??= import('../ballistics/data')
+    .then((m) => m.loadAmmoData())
+    .then((d) => new Set(Object.keys(d.ammo).filter((id) => !d.ammo[id].g)))
+    .catch(() => new Set<string>());
+  return roundsPromise;
+}
+
 /** Best of flea average and trader sale, per item. */
 export const best = (p: Price | undefined) => Math.max(p?.a ?? 0, p?.sp ?? 0);
 
@@ -68,8 +79,8 @@ export function usePriceScan(skipUntil: () => number, onFound?: () => void) {
     let alive = true;
     void subscribeScreenText(async (text) => {
       if (Date.now() < skipRef.current()) return;
-      const [index, prices] = await Promise.all([loadIndex(), loadPrices()]);
-      const r = scanScreen(text, index, (id) => best(prices[id]) > 0);
+      const [index, prices, rounds] = await Promise.all([loadIndex(), loadPrices(), loadRounds()]);
+      const r = scanScreen(text, index, (id) => best(prices[id]) > 0, (id) => rounds.has(id));
       if (alive && r) {
         foundRef.current?.();
         setResult(r);
@@ -85,8 +96,8 @@ export function usePriceScan(skipUntil: () => number, onFound?: () => void) {
     // In development a page can feed a screen by hand
     // (window.dispatchEvent(new CustomEvent('price-demo', { detail }))) to check it in a browser.
     const onDemo = async (e: Event) => {
-      const [index, prices] = await Promise.all([loadIndex(), loadPrices()]);
-      const r = scanScreen((e as CustomEvent<ScreenText>).detail, index, (id) => best(prices[id]) > 0);
+      const [index, prices, rounds] = await Promise.all([loadIndex(), loadPrices(), loadRounds()]);
+      const r = scanScreen((e as CustomEvent<ScreenText>).detail, index, (id) => best(prices[id]) > 0, (id) => rounds.has(id));
       if (alive) setResult(r);
     };
     if (import.meta.env.DEV) window.addEventListener('price-demo', onDemo);

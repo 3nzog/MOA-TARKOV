@@ -97,6 +97,7 @@ import { parsePlanner } from './state/planner';
 import { normalizeCustomPois } from './poi/customPoi';
 import type { SettingsTab } from './components/SettingsModal';
 import PriceScanCard from './prices/PriceScan';
+import { buildItemUses } from './prices/itemUses';
 import { usePriceScan } from './prices/usePriceScan';
 import PlaceLabelLayer from './map/PlaceLabelLayer';
 import { clock, raidMinutes } from './map/raidDuration';
@@ -201,8 +202,15 @@ function App() {
   const routePanel = routePrefs.panel;
   // Items read from an inventory screenshot, waiting to be counted toward the needs.
   const [stashSeen, setStashSeen] = useState<SeenItems | null>(null);
+  // A price card was shown: it tells what each item is still good for (quests,
+  // hideout, crafts), which takes the progression data.
+  const [priceCardSeen, setPriceCardSeen] = useState(false);
   const progressionLoad = useProgressionData(
-    railSection === 'planner' || appearance.upcomingQuests || (routePrefs.on && routePrefs.goal === 'hideout') || stashSeen !== null,
+    railSection === 'planner' ||
+      appearance.upcomingQuests ||
+      (routePrefs.on && routePrefs.goal === 'hideout') ||
+      stashSeen !== null ||
+      priceCardSeen,
   );
   const tracker = useTracker({
     progress: quests.progress,
@@ -592,6 +600,29 @@ function App() {
   }, [scanResult]);
   const { update: updatePlanner, checkedObjectives: plannerChecked } = planner;
   const { needsScope, stationLevels, collected } = planner.planner;
+  // The price card's "still good for": quests and hideout still asking for the
+  // item (left after Planner → Items' counters) and the crafts that use it.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (scanResult) setPriceCardSeen(true);
+  }, [scanResult]);
+  const itemUses = useMemo(() => {
+    if (!progressionData || !scanResult) return null;
+    const needs = aggregateNeeds({
+      tasks: quests.tasks,
+      meta: progressionData.tasks,
+      statuses: questStatuses,
+      scope: needsScope,
+      checkedObjectives: plannerChecked,
+      includeHideout: true,
+      stations: progressionData.stations,
+      stationLevels,
+    });
+    return {
+      byItem: buildItemUses(needs, progressionData.crafts, collected, stationLevels),
+      names: makeNames(progressionData, quests.tasks, '?'),
+    };
+  }, [progressionData, scanResult, quests.tasks, questStatuses, needsScope, plannerChecked, stationLevels, collected]);
   useEffect(() => {
     if (!stashSeen || !progressionData) return;
     const needs = aggregateNeeds({
@@ -977,7 +1008,7 @@ function App() {
       <LinkRequestDialog />
       {showIntro && <GlassIntro onDone={() => setShowIntro(false)} />}
       <Toast message={toast} onDismiss={() => setToast(null)} />
-      {priceScan.result && !onMarketTab && <PriceScanCard result={priceScan.result} onClose={priceScan.clear} />}
+      {priceScan.result && !onMarketTab && <PriceScanCard result={priceScan.result} onClose={priceScan.clear} uses={itemUses} />}
       <div
         className={`shell shell--${settings.railSide}${compact.compact ? ' shell--compact' : ''}${pageOpen ? ' shell--page' : ''}`}
         style={{ '--chrome-w': `${chromeWidth}px` } as CSSProperties}

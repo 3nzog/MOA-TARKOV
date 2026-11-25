@@ -889,7 +889,16 @@
     "total": "Total (melhor entre flea e trader)",
     "uncertainNote_one": "{{count}} nome serve para mais de um item: aparece como faixa de preço e fica fora do total.",
     "uncertainNote_other": "{{count}} nomes servem para mais de um item: aparecem como faixa de preço e ficam fora do total.",
-    "note": "Preços são estimativas do tarkov.dev, da última atualização dos dados."
+    "note": "Preços são estimativas do tarkov.dev, da última atualização dos dados.",
+    "each": "cada {{value}}",
+    "use": {
+      "questHint": "Uma missão ainda pede este item",
+      "hideoutHint": "Uma melhoria do hideout ainda pede este item",
+      "craftHint": "Receita que usa este item (sua estação já faz)",
+      "craftLocked": "Receita que usa este item (a estação ainda não está no nível)",
+      "fir": "em raid",
+      "more": "+{{n}}"
+    }
   },
   "link": {
     "main": {

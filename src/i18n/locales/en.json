@@ -889,7 +889,16 @@
     "total": "Total (best of flea and trader)",
     "uncertainNote_one": "{{count}} name fits more than one item, shown as a price range and left out of the total.",
     "uncertainNote_other": "{{count}} names fit more than one item, shown as price ranges and left out of the total.",
-    "note": "Prices are tarkov.dev estimates from the last data update."
+    "note": "Prices are tarkov.dev estimates from the last data update.",
+    "each": "{{value}} each",
+    "use": {
+      "questHint": "A quest still asks for this item",
+      "hideoutHint": "A hideout upgrade still asks for this item",
+      "craftHint": "A craft that uses this item (your station can run it)",
+      "craftLocked": "A craft that uses this item (station not at that level yet)",
+      "fir": "FIR",
+      "more": "+{{n}}"
+    }
   },
   "link": {
     "main": {
