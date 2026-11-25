@@ -1377,6 +1377,10 @@
     "screenHint": "Tire print do estoque: as contas se atualizam sozinhas",
     "empty": "Nada faltando aqui.",
     "quests_one": "{{count}} missão",
-    "quests_other": "{{count}} missões"
+    "quests_other": "{{count}} missões",
+    "owned": "Você já tem",
+    "notOwned": "Ainda não tem",
+    "have_one": "tem {{count}}",
+    "have_other": "tem {{count}}"
   }
 }

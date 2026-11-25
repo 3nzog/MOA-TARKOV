@@ -193,6 +193,29 @@ describe('aggregateNeeds', () => {
     expect(run({ includeHideout: true, stationLevels: { med: 1 } }).find((n) => n.key === 'salewa:fir')!.count).toBe(3);
   });
 
+  it("counts a quest BEAR and USEC each have a copy of once (your side's, or one when the side is unknown)", () => {
+    const give = (id: string) => ({ [id]: { type: 'giveItem' as const, items: ['paracord'], count: 3, fir: true, keys: [], optional: false } });
+    const twins = [
+      { id: 'tb', name: 'Textile - Part 1', objectives: [{ id: 'gb', type: 'giveItem' }] },
+      { id: 'tu', name: 'Textile - Part 1', objectives: [{ id: 'gu', type: 'giveItem' }] },
+    ] as TarkovTask[];
+    const tm = { tb: meta({ faction: 'BEAR', objectives: give('gb') }), tu: meta({ faction: 'USEC', objectives: give('gu') }) };
+    const count = (faction: 'USEC' | 'BEAR' | null) =>
+      aggregateNeeds({
+        tasks: twins,
+        meta: tm,
+        statuses: statusesOf(twins, tm, {}, { level: null, faction }),
+        scope: 'all',
+        checkedObjectives: new Set(),
+        includeHideout: false,
+        stations: [],
+        stationLevels: {},
+      }).find((n) => n.key === 'paracord:fir');
+    expect(count(null)).toMatchObject({ count: 3 });
+    expect(count('BEAR')?.sources).toEqual([expect.objectContaining({ taskId: 'tb' })]);
+    expect(count('USEC')?.sources).toEqual([expect.objectContaining({ taskId: 'tu' })]);
+  });
+
   it('reports a station blocked by another station level', () => {
     expect(stationStatus(stations[0], { med: 1 })).toMatchObject({
       built: 1,

@@ -1377,6 +1377,10 @@
     "screenHint": "Screenshot your stash: the counts update on their own",
     "empty": "Nothing missing here.",
     "quests_one": "{{count}} quest",
-    "quests_other": "{{count}} quests"
+    "quests_other": "{{count}} quests",
+    "owned": "You have some",
+    "notOwned": "Not in your stash",
+    "have_one": "have {{count}}",
+    "have_other": "have {{count}}"
   }
 }

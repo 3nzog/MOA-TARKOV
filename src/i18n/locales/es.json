@@ -1377,6 +1377,10 @@
     "screenHint": "Haz captura del alijo: los conteos se actualizan solos",
     "empty": "No falta nada aquí.",
     "quests_one": "{{count}} misión",
-    "quests_other": "{{count}} misiones"
+    "quests_other": "{{count}} misiones",
+    "owned": "Ya tienes",
+    "notOwned": "Aún no tienes",
+    "have_one": "tienes {{count}}",
+    "have_other": "tienes {{count}}"
   }
 }

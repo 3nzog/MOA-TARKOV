@@ -22,16 +22,28 @@
 .qi-hint { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-size: var(--fs-caption); color: var(--text-dim); }
 .qi-hint svg { color: var(--accent); }
 .qi-state { padding: var(--sp-6); display: grid; place-items: center; }
+.qi-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: var(--sp-4); }
+.qi-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4) var(--sp-1);
+  font-size: var(--fs-caption);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.qi-group .mono { color: var(--accent); }
+.qi-have { padding: 0 5px; border-radius: 4px; background: rgba(94, 224, 127, 0.16); color: #5ee07f; font-size: 10px; font-weight: 800; }
 .qi-grid {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
   grid-auto-rows: min-content;
   gap: 8px;
   margin: 0;
-  padding: var(--sp-2) var(--sp-4) var(--sp-4);
+  padding: var(--sp-1) var(--sp-4) var(--sp-2);
   list-style: none;
 }
 .qi-item {

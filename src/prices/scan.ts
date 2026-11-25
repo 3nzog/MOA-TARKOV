@@ -163,12 +163,50 @@ export function matchShort(index: ItemIndex, raw: string): string[] | null {
     const asWritten = exact.length > 1 ? index.shortExact.get(exactKey(raw))?.filter((id) => exact.includes(id)) : undefined;
     return asWritten && asWritten.length > 0 ? asWritten : exact;
   }
+  // OCR reads "m" as "rn" ("Shrnaska" for Shmaska).
+  const m = k.replace(/rn/g, 'm');
+  if (m !== k && index.short.has(m)) return index.short.get(m)!;
   if (k.length < 5) return null;
   const keys = [...index.short.keys()];
   const prefix = keys.filter((key) => key.length > k.length && key.startsWith(k));
   if (prefix.length > 0) return merge(index, prefix);
   const near = keys.filter((key) => Math.abs(key.length - k.length) <= 1 && levenshtein(key, k) === 1);
-  return near.length > 0 ? merge(index, near) : null;
+  if (near.length > 0) return merge(index, near);
+  // Two glyphs off ("Sahnnete" for Sabonete, "F sfaros" for Fósforos): only
+  // on long names, with the first and last letters right ("PRESET" is not
+  // "Presente"), and only when a single name is that close.
+  if (k.length < 7) return null;
+  const far = keys.filter(
+    (key) => key.length >= 7 && key[0] === k[0] && key.at(-1) === k.at(-1) && Math.abs(key.length - k.length) <= 2 && levenshtein(key, k) === 2,
+  );
+  return far.length === 1 ? merge(index, far) : null;
+}
+
+/**
+ * OCR sometimes splits one cell's name into two lines side by side ("P" +
+ * "ndrlve" for Pendrive): a line that starts right where another ends, on
+ * the same row, is joined to it.
+ */
+function joinFragments(lines: ScreenLine[]): ScreenLine[] {
+  const used = new Set<number>();
+  const out: ScreenLine[] = [];
+  lines.forEach((line, i) => {
+    if (used.has(i) || line.words.length === 0) return;
+    let words = [...line.words];
+    for (;;) {
+      const last = words[words.length - 1];
+      const end = last.x + last.w;
+      const next = lines.findIndex(
+        (l, j) => j !== i && !used.has(j) && l.words.length > 0 && Math.abs(l.words[0].y - last.y) <= 3 && l.words[0].x - end >= 0 && l.words[0].x - end <= 8,
+      );
+      if (next < 0) break;
+      used.add(next);
+      words = words.concat(lines[next].words);
+    }
+    used.add(i);
+    out.push(words.length === line.words.length ? line : { text: words.map((w) => w.text).join(' '), words });
+  });
+  return out;
 }
 
 /**
@@ -180,7 +218,7 @@ export function findShortNames(text: ScreenText, index: ItemIndex): Found[] {
   const out: Found[] = [];
   // The game's menu bars (top tabs, bottom buttons such as "MANUAL") are not items.
   const inMenus = (y: number) => text.height > 0 && (y < text.height * 0.045 || y > text.height * 0.955);
-  for (const line of text.lines) {
+  for (const line of joinFragments(text.lines)) {
     const ws = line.words.filter((w) => !inMenus(w.y));
     for (let i = 0; i < ws.length; ) {
       let step = 1;

@@ -67,10 +67,28 @@ export function aggregateNeeds(input: NeedsInput): ItemNeed[] {
     need.sources.push(source);
   };
 
+  // BEAR and USEC each have their own copy of some quests (same name, same
+  // items). The other side's copy never counts; with the side unknown, one
+  // copy per name does (the one furthest along).
+  const rank = (id: string) => {
+    const s = input.statuses.get(id)?.status;
+    return s === 'active' ? 3 : s === 'available' ? 2 : s === 'locked' ? 1 : 0;
+  };
+  const twin = new Map<string, string>();
   for (const task of input.tasks) {
-    if (!inScope(input.statuses.get(task.id), input.scope)) continue;
+    if (!input.meta[task.id]?.faction) continue;
+    if (input.statuses.get(task.id)?.lockReasons.some((r) => r.kind === 'faction')) continue;
+    const cur = twin.get(task.name);
+    if (cur === undefined || rank(task.id) > rank(cur)) twin.set(task.name, task.id);
+  }
+
+  for (const task of input.tasks) {
+    const info = input.statuses.get(task.id);
+    if (!inScope(info, input.scope)) continue;
+    if (info?.lockReasons.some((r) => r.kind === 'faction')) continue;
     const meta = input.meta[task.id];
     if (!meta) continue;
+    if (meta.faction && twin.get(task.name) !== task.id) continue;
     for (const objective of task.objectives ?? []) {
       const o = meta.objectives[objective.id];
       if (!o || o.type !== 'giveItem' || o.optional) continue;

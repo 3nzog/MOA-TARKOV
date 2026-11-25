@@ -1377,6 +1377,10 @@
     "screenHint": "スタッシュのスクリーンショットで数が自動更新",
     "empty": "不足はありません。",
     "quests_one": "タスク{{count}}件",
-    "quests_other": "タスク{{count}}件"
+    "quests_other": "タスク{{count}}件",
+    "owned": "所持あり",
+    "notOwned": "未所持",
+    "have_one": "所持 {{count}}",
+    "have_other": "所持 {{count}}"
   }
 }

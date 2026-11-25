@@ -1377,6 +1377,10 @@
     "screenHint": "Скриншот схрона: счётчики обновятся сами",
     "empty": "Здесь ничего не нужно.",
     "quests_one": "{{count}} задание",
-    "quests_other": "{{count}} заданий"
+    "quests_other": "{{count}} заданий",
+    "owned": "Уже есть",
+    "notOwned": "Ещё нет",
+    "have_one": "есть {{count}}",
+    "have_other": "есть {{count}}"
   }
 }

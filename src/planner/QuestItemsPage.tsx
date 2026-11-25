@@ -92,8 +92,8 @@ export default function QuestItemsPage({
         const hay = n.itemId ? `${names.item(n.itemId)} ${names.itemShort(n.itemId)}` : `${n.label ?? ''} ${n.alternatives.map(names.item).join(' ')}`;
         return hay.toLowerCase().includes(q);
       })
-      // Real items before "any item of…" groups; the ones more quests (and
-      // hideout levels) ask for first; then the most still missing; done last.
+      // Done last; real items before "any item of…" groups; the ones more
+      // quests (and hideout levels) ask for first; then the most still missing.
       .sort(
         (a, b) =>
           (left(a) === 0 ? 1 : 0) - (left(b) === 0 ? 1 : 0) ||
@@ -104,6 +104,66 @@ export default function QuestItemsPage({
       );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needs, query, prefs.showDone, collected, names]);
+  // What the stash already has some of comes first (with how many are still
+  // missing), then what it has none of.
+  const owned = shown.filter((n) => (collected[n.key] ?? 0) > 0);
+  const none = shown.filter((n) => (collected[n.key] ?? 0) === 0);
+
+  const tile = (n: ItemNeed) => {
+    const have = collected[n.key] ?? 0;
+    const rest = left(n);
+    const icon = n.itemId ?? n.alternatives[0];
+    const q = quests(n);
+    const h = stations(n);
+    const isOpen = open === n.key;
+    return (
+      <li key={n.key} className={`qi-item${rest === 0 ? ' is-done' : ''}${isOpen ? ' is-open' : ''}`}>
+        <button type="button" className="qi-item__main" onClick={() => setOpen(isOpen ? null : n.key)} title={label(n)}>
+          {icon && <img src={`https://assets.tarkov.dev/${icon}-icon.webp`} alt="" loading="lazy" />}
+          <span className="qi-item__need mono">{rest > 0 ? `${rest}×` : '✓'}</span>
+          <span className="qi-item__name">{n.itemId ? names.itemShort(n.itemId) : label(n)}</span>
+          <span className="qi-item__meta">
+            {have > 0 && rest > 0 && <span className="qi-have mono">{t('questItems.have', { count: have })}</span>}
+            {n.fir && <span className="qi-fir">FIR</span>}
+            {q > 0 && (
+              <span className="qi-src">
+                <Scroll weight="fill" /> {t('questItems.quests', { count: q })}
+              </span>
+            )}
+            {h > 0 && (
+              <span className="qi-src qi-src--hideout">
+                <House weight="fill" /> {h}
+              </span>
+            )}
+          </span>
+          <span className="qi-bar" aria-hidden="true">
+            <span style={{ width: `${Math.min(100, (have / n.count) * 100)}%` }} />
+          </span>
+        </button>
+        {isOpen && (
+          <div className="qi-detail">
+            <strong>{label(n)}</strong>
+            <div className="qi-counter">
+              <IconButton size="sm" icon={<Minus />} label={t('planner.items.less')} disabled={have <= 0} onClick={() => planner.setCollected(n.key, have - 1)} />
+              <span className="mono">
+                {have}/{n.count}
+              </span>
+              <IconButton size="sm" icon={<Plus />} label={t('planner.items.more')} onClick={() => planner.setCollected(n.key, have + 1)} />
+            </div>
+            <ul>
+              {n.sources.map((s, i) => (
+                <li key={i}>
+                  {s.kind === 'quest' ? names.task(s.taskId) : t('planner.hideout.stationLevel', { station: names.station(s.stationId), level: s.level })}
+                  <span className="mono"> ×{s.count}</span>
+                </li>
+              ))}
+            </ul>
+            {n.alternatives.length > 0 && <p className="qi-alt">{n.alternatives.map(names.itemShort).join(', ')}</p>}
+          </div>
+        )}
+      </li>
+    );
+  };
 
   const missing = needs.reduce((s, n) => s + left(n), 0);
   const kinds = needs.filter((n) => left(n) > 0).length;
@@ -150,62 +210,24 @@ export default function QuestItemsPage({
       ) : shown.length === 0 ? (
         <p className="qi-state muted">{t('questItems.empty')}</p>
       ) : (
-        <ul className="qi-grid">
-          {shown.map((n) => {
-            const have = collected[n.key] ?? 0;
-            const rest = left(n);
-            const icon = n.itemId ?? n.alternatives[0];
-            const q = quests(n);
-            const h = stations(n);
-            const isOpen = open === n.key;
-            return (
-              <li key={n.key} className={`qi-item${rest === 0 ? ' is-done' : ''}${isOpen ? ' is-open' : ''}`}>
-                <button type="button" className="qi-item__main" onClick={() => setOpen(isOpen ? null : n.key)} title={label(n)}>
-                  {icon && <img src={`https://assets.tarkov.dev/${icon}-icon.webp`} alt="" loading="lazy" />}
-                  <span className="qi-item__need mono">{rest > 0 ? `${rest}×` : '✓'}</span>
-                  <span className="qi-item__name">{n.itemId ? names.itemShort(n.itemId) : label(n)}</span>
-                  <span className="qi-item__meta">
-                    {n.fir && <span className="qi-fir">FIR</span>}
-                    {q > 0 && (
-                      <span className="qi-src">
-                        <Scroll weight="fill" /> {t('questItems.quests', { count: q })}
-                      </span>
-                    )}
-                    {h > 0 && (
-                      <span className="qi-src qi-src--hideout">
-                        <House weight="fill" /> {h}
-                      </span>
-                    )}
-                  </span>
-                  <span className="qi-bar" aria-hidden="true">
-                    <span style={{ width: `${Math.min(100, (have / n.count) * 100)}%` }} />
-                  </span>
-                </button>
-                {isOpen && (
-                  <div className="qi-detail">
-                    <strong>{label(n)}</strong>
-                    <div className="qi-counter">
-                      <IconButton size="sm" icon={<Minus />} label={t('planner.items.less')} disabled={have <= 0} onClick={() => planner.setCollected(n.key, have - 1)} />
-                      <span className="mono">
-                        {have}/{n.count}
-                      </span>
-                      <IconButton size="sm" icon={<Plus />} label={t('planner.items.more')} onClick={() => planner.setCollected(n.key, have + 1)} />
-                    </div>
-                    <ul>
-                      {n.sources.map((s, i) => (
-                        <li key={i}>
-                          {s.kind === 'quest' ? names.task(s.taskId) : t('planner.hideout.stationLevel', { station: names.station(s.stationId), level: s.level })}
-                          <span className="mono"> ×{s.count}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    {n.alternatives.length > 0 && <p className="qi-alt">{n.alternatives.map(names.itemShort).join(', ')}</p>}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <div className="qi-scroll">
+          {owned.length > 0 && (
+            <section>
+              <h3 className="qi-group">
+                {t('questItems.owned')} <span className="mono">{owned.length}</span>
+              </h3>
+              <ul className="qi-grid">{owned.map(tile)}</ul>
+            </section>
+          )}
+          {none.length > 0 && (
+            <section>
+              <h3 className="qi-group">
+                {t('questItems.notOwned')} <span className="mono">{none.length}</span>
+              </h3>
+              <ul className="qi-grid">{none.map(tile)}</ul>
+            </section>
+          )}
+        </div>
       )}
     </div>
   );

@@ -119,3 +119,17 @@ describe('a screenshot of ammo', () => {
     expect(ids).toContainEqual([M855]);
   });
 });
+
+describe('your 2026-11-25 stash prints (as Windows OCR read them)', () => {
+  const names = (...ls: ScreenLine[]) => findShortNames(screen(...ls), index).map((f) => f.ids.map((id) => load('pt')[id]?.[1] ?? load('pt')[id]?.[0]));
+  it('reads names two glyphs off, "rn" for "m", and a name split in two', () => {
+    expect(names(line('Sahnnete', 1654, 775))).toEqual([['Sabonete']]);
+    expect(names(line('F sfaros', 1658, 397))).toEqual([['Fósforos', 'Fósforos']]);
+    expect(names(line('Shrñaska', 1720, 460))).toEqual([['Shmaska']]);
+    const split = (t: string, x: number, w: number): ScreenLine => ({ text: t, words: [{ text: t, x, y: 460, w, h: 8 }] });
+    expect(names(split('P', 1784, 6), split('ndrlve', 1797, 34))[0]).toContain('Pendrive');
+  });
+  it('does not take the preset name for an item', () => {
+    expect(names(line('NEW PRESET 1', 245, 82))).toEqual([]);
+  });
+});

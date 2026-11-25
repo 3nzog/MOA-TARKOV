@@ -1377,6 +1377,10 @@
     "screenHint": "截图仓库：数量会自动更新",
     "empty": "这里没有缺少的物品。",
     "quests_one": "{{count}} 个任务",
-    "quests_other": "{{count}} 个任务"
+    "quests_other": "{{count}} 个任务",
+    "owned": "已有",
+    "notOwned": "还没有",
+    "have_one": "已有 {{count}}",
+    "have_other": "已有 {{count}}"
   }
 }
