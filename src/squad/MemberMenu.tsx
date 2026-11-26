@@ -1,17 +1,19 @@
-// The ⋮ menu by a party member's name. One thing only: link this PC to that
-// member's game PC (this PC becomes its extra screen). The member's app tells
-// the party where to reach it (src/squad/linkOffer.ts); the game PC still
-// confirms the link on its own screen. No kicking from here.
+// The ⋮ menu by a party member's name. One thing only: link this PC and that
+// member's PC, whichever side has the game. On an extra screen it links to the
+// member's game PC (the member's app says where it is, src/squad/linkOffer.ts;
+// the game PC confirms). On the game PC it lets the member's PC in: that PC,
+// linking on its own every few seconds, is accepted instead of ignored (the
+// click is the consent). No kicking from here.
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, DotsThreeVertical, Link as LinkIcon } from '@phosphor-icons/react';
 import { useLink } from '../link/useLink';
-import { isLanIp } from '../link/linkApi';
+import { isLanIp, linkInvite } from '../link/linkApi';
 import { netLocalIps, type LocalIp } from '../net/netApi';
 import { pickLinkIp } from './linkOffer';
-import type { LinkOffer } from '../../shared/squadProtocol';
+import type { LinkOffer, PcInfo } from '../../shared/squadProtocol';
 
-export default function MemberMenu({ name, offer }: { name: string; offer: LinkOffer | undefined }) {
+export default function MemberMenu({ name, offer, pc }: { name: string; offer: LinkOffer | undefined; pc?: PcInfo }) {
   const { t } = useTranslation();
   const link = useLink();
   const [open, setOpen] = useState(false);
@@ -52,9 +54,14 @@ export default function MemberMenu({ name, offer }: { name: string; offer: LinkO
   const toThis = !!ip && client?.host === ip;
   const linked = toThis && client?.state === 'linked';
   const waiting = toThis && (client?.state === 'connecting' || client?.state === 'pending');
+  // This PC has the game and the member's does not offer one: let theirs in.
+  const gameSide = link.role === 'game' && !offer;
+  const linkedHere = gameSide && !!pc && (link.host?.connected ?? []).some((d) => d.name === pc.name);
   const note = !link.available
     ? null
-    : busy
+    : gameSide
+      ? msg ?? (linkedHere ? t('squad.link.done') : t('squad.link.letInHelp'))
+      : busy
       ? t('squad.link.searching')
       : msg
         ? msg
@@ -74,6 +81,17 @@ export default function MemberMenu({ name, offer }: { name: string; offer: LinkO
   const go = async () => {
     if (!link.available || linked || busy) return;
     setMsg(null);
+    if (gameSide) {
+      const names = await linkInvite(pc?.ips.map((x) => x.ip) ?? []).catch(() => [] as string[]);
+      setMsg(
+        names.length > 0
+          ? t('squad.link.letInNow', { names: names.join(', ') })
+          : pc
+            ? t('squad.link.letInSoon')
+            : t('squad.link.letInWait'),
+      );
+      return;
+    }
     let to: { host: string; port: number; name: string } | null = null;
     if (offer) {
       const any = ip ?? offer.ips.find((x) => x.kind === 'radmin')?.ip ?? offer.ips[0]?.ip ?? null;
@@ -116,7 +134,7 @@ export default function MemberMenu({ name, offer }: { name: string; offer: LinkO
             className="squad-more__item"
             onClick={() => void go()}
           >
-            {linked ? <CheckCircle weight="fill" /> : <LinkIcon weight="bold" />}
+            {linked || linkedHere ? <CheckCircle weight="fill" /> : <LinkIcon weight="bold" />}
             <span>{t('squad.link.action')}</span>
           </button>
           {note && <p className="squad-more__note">{note}</p>}

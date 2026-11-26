@@ -3,7 +3,7 @@
 // port — along with its quests; another member's app can then link to it in
 // one click (the ⋮ menu by the name), without looking for it on the network.
 // The game PC still confirms on its own screen, as with any link.
-import type { LinkOffer } from '../../shared/squadProtocol';
+import type { LinkOffer, PcInfo } from '../../shared/squadProtocol';
 
 /** The link port (src-tauri/src/link.rs LINK_PORT). */
 export const LINK_PORT = 8789;
@@ -24,6 +24,12 @@ export function parseLinkOffer(v: unknown): LinkOffer | null {
   if (!port || ips.length === 0) return null;
   const name = typeof o.name === 'string' ? o.name.slice(0, 64) : '';
   return { port, ips, name };
+}
+
+/** A member's PC (name and addresses) as it came over the party; null = none. */
+export function parsePcInfo(v: unknown): PcInfo | null {
+  const o = parseLinkOffer(v && typeof v === 'object' ? { ...(v as object), port: LINK_PORT } : v);
+  return o ? { name: o.name, ips: o.ips } : null;
 }
 
 const prefix24 = (ip: string) => ip.split('.').slice(0, 3).join('.');

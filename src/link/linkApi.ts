@@ -50,6 +50,8 @@ export const linkHostStop = () => invoke<void>('link_host_stop');
 export const linkHostStatus = () => invoke<LinkHostStatus>('link_host_status');
 export const linkAnswer = (id: string, accept: boolean) => invoke<boolean>('link_answer', { id, accept });
 export const linkForget = (device: string) => invoke<void>('link_forget', { device });
+/** On the game PC: lets a friend's PC link for a few minutes (its addresses, or none: whoever just tried). */
+export const linkInvite = (ips: string[]) => invoke<string[]>('link_invite', { ips });
 export const linkFind = (timeoutMs?: number) => invoke<FoundLink[]>('link_find', { timeoutMs: timeoutMs ?? null });
 /** `manual`: asked by hand in Settings (a PC that refused this one is asked again only then). */
 export const linkConnect = (host: string, port?: number, manual = false) =>

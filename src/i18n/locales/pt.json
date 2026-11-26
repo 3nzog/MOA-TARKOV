@@ -392,7 +392,11 @@
       "waiting": "Esperando o PC do jogo aceitar…",
       "done": "Vinculado a este PC do jogo.",
       "searching": "Procurando o PC do jogo…",
-      "notFound": "Não achei nenhum PC do jogo aceitando vínculo. Peça pra ele abrir o MoA como PC do jogo e tente de novo."
+      "notFound": "Não achei nenhum PC do jogo aceitando vínculo. Peça pra ele abrir o MoA como PC do jogo e tente de novo.",
+      "letInHelp": "O seu PC é o do jogo: ao clicar, o PC dele fica liberado pra se vincular a este por 3 minutos.",
+      "letInNow": "Liberado: {{names}} se vincula em alguns segundos.",
+      "letInSoon": "Liberado por 3 minutos: o PC dele se vincula assim que tentar (o MoA dele precisa estar como tela extra).",
+      "letInWait": "Liberado por 3 minutos: peça pra ele abrir o MoA como tela extra (Configurações → Dispositivos) agora."
     }
   },
   "feedback": {

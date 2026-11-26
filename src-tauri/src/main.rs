@@ -155,6 +155,7 @@ fn main() {
             phone::phone_remote_firewall,
             link::link_set_auto_accept,
             link::link_forget,
+            link::link_invite,
             link::link_find,
             link::link_connect,
             link::link_disconnect,

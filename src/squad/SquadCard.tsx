@@ -11,7 +11,7 @@ import { hexForColorId, type SquadMember } from "../../shared/squadProtocol";
 import { useRelativeTime } from "../hooks/useRelativeTime";
 import { FRESH_FLASH_MS } from "./config";
 import MemberMenu from "./MemberMenu";
-import type { LinkOffer } from "../../shared/squadProtocol";
+import type { LinkOffer, PcInfo } from "../../shared/squadProtocol";
 
 function MemberRow({
   member,
@@ -21,6 +21,7 @@ function MemberRow({
   onToggleQuests,
   menu,
   offer,
+  pc,
 }: {
   member: SquadMember;
   isSelf: boolean;
@@ -30,6 +31,7 @@ function MemberRow({
   /** The ⋮ menu (link to this member's game PC); not on your own row. */
   menu: boolean;
   offer: LinkOffer | undefined;
+  pc: PcInfo | undefined;
 }) {
   const lastSeen = useRelativeTime(pos?.ts ?? null);
   const [flash, setFlash] = useState(false);
@@ -65,7 +67,7 @@ function MemberRow({
       >
         {hidden ? <EyeSlash weight="bold" /> : <Eye weight="bold" />}
       </button>
-      {menu && <MemberMenu name={member.name} offer={offer} />}
+      {menu && <MemberMenu name={member.name} offer={offer} pc={pc} />}
     </div>
   );
 }
@@ -91,6 +93,7 @@ export default function SquadCard() {
           onToggleQuests={() => squad.toggleQuestVisibility(m.id)}
           menu={m.id !== squad.selfId && !squad.mirrored}
           offer={squad.links?.[m.id]}
+          pc={squad.pcs?.[m.id]}
         />
       ))}
     </section>

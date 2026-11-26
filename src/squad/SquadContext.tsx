@@ -26,7 +26,7 @@ import { isLinkedViewer } from "../link/linkApi";
 import { useMirroredState, usePublishState } from "../link/linkState";
 import { useLink } from "../link/useLink";
 import { parseSquadSnapshot } from "./squadSnapshot";
-import { LINK_PORT, parseLinkOffer } from "./linkOffer";
+import { LINK_PORT, parseLinkOffer, parsePcInfo } from "./linkOffer";
 import { netLocalIps, netLog } from "../net/netApi";
 import { SquadTransport, type ConnStatus } from "./transport";
 import { loadIdentity, saveIdentity, type SquadIdentity } from "./identity";
@@ -38,6 +38,7 @@ import type {
   WireMarker,
   DrawPayload,
   LinkOffer,
+  PcInfo,
 } from "../../shared/squadProtocol";
 
 export interface MemberPosition {
@@ -57,6 +58,8 @@ export interface SquadState {
   draws: Record<string, DrawPayload[]>; // shared drawings by member id
   /** Members whose game PC accepts linked PCs: where to reach it, by member id. */
   links?: Record<string, LinkOffer>;
+  /** Every member's PC (name, addresses), by member id, for the game PC to let it link. */
+  pcs?: Record<string, PcInfo>;
   error: string | null;
 }
 
@@ -71,11 +74,16 @@ const EMPTY: SquadState = {
   markers: {},
   draws: {},
   links: {},
+  pcs: {},
   error: null,
 };
 
 /** Quests as sent: with this PC's link offer when it has one. */
-const questsPayload = (ids: string[], link: LinkOffer | null) => (link ? { activeQuestIds: ids, link } : { activeQuestIds: ids });
+const questsPayload = (ids: string[], link: LinkOffer | null, pc: PcInfo | null) => ({
+  activeQuestIds: ids,
+  ...(link ? { link } : {}),
+  ...(pc ? { pc } : {}),
+});
 
 export interface SquadApi extends SquadState {
   inSquad: boolean;
@@ -184,6 +192,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   const selfPos = useRef<PositionPayload | null>(null);
   const selfQuests = useRef<string[] | null>(null);
   const selfLink = useRef<LinkOffer | null>(null);
+  const selfPc = useRef<PcInfo | null>(null);
   const selfMarkers = useRef<Map<string, WireMarker>>(new Map());
   const selfDraws = useRef<Map<string, DrawPayload>>(new Map());
 
@@ -191,7 +200,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
     const transport = transportRef.current;
     if (!transport) return;
     if (selfPos.current) transport.send("position", selfPos.current);
-    if (selfQuests.current) transport.send("quests", questsPayload(selfQuests.current, selfLink.current));
+    if (selfQuests.current) transport.send("quests", questsPayload(selfQuests.current, selfLink.current, selfPc.current));
     for (const m of selfMarkers.current.values()) transport.send("marker-add", m);
     for (const d of selfDraws.current.values()) transport.send("draw-add", d);
   }, []);
@@ -233,6 +242,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
             markers: omit(s.markers, id),
             draws: omit(s.draws, id),
             links: omit(s.links ?? {}, id),
+            pcs: omit(s.pcs ?? {}, id),
           }));
           break;
         }
@@ -249,10 +259,12 @@ export function SquadProvider({ children }: { children: ReactNode }) {
           const from = env.from;
           const ids = env.payload.activeQuestIds;
           const offer = parseLinkOffer(env.payload.link);
+          const pc = parsePcInfo(env.payload.pc);
           setState((s) => ({
             ...s,
             quests: { ...s.quests, [from]: ids },
             links: offer ? { ...(s.links ?? {}), [from]: offer } : omit(s.links ?? {}, from),
+            pcs: pc ? { ...(s.pcs ?? {}), [from]: pc } : omit(s.pcs ?? {}, from),
           }));
           break;
         }
@@ -525,14 +537,20 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   const broadcastQuests = useCallback((ids: string[]) => {
     if (isLinkedViewer()) return;
     selfQuests.current = ids;
-    transportRef.current?.send("quests", questsPayload(ids, selfLink.current));
+    transportRef.current?.send("quests", questsPayload(ids, selfLink.current, selfPc.current));
   }, []);
 
   const setSelfLink = useCallback((offer: LinkOffer | null) => {
     if (JSON.stringify(offer) === JSON.stringify(selfLink.current)) return;
     selfLink.current = offer;
     // Goes out with the quests (once they are known: an empty list would clear them).
-    if (selfQuests.current) transportRef.current?.send("quests", questsPayload(selfQuests.current, selfLink.current));
+    if (selfQuests.current) transportRef.current?.send("quests", questsPayload(selfQuests.current, selfLink.current, selfPc.current));
+  }, []);
+
+  const setSelfPc = useCallback((pc: PcInfo | null) => {
+    if (JSON.stringify(pc) === JSON.stringify(selfPc.current)) return;
+    selfPc.current = pc;
+    if (selfQuests.current) transportRef.current?.send("quests", questsPayload(selfQuests.current, selfLink.current, selfPc.current));
   }, []);
 
   const addMarker = useCallback((m: WireMarker) => {
@@ -562,21 +580,22 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   // The game PC tells the party where to link to it: another member links in
   // one click (the ⋮ menu by this PC's name), and this PC still confirms it.
   const offerName = link.role === "game" && link.host?.hosting ? link.host.name : null;
+  const pcName = link.host?.name ?? null;
   useEffect(() => {
-    if (!offerName) {
-      setSelfLink(null);
-      return;
-    }
     let alive = true;
     netLocalIps()
-      .then((ips) => {
-        if (alive) setSelfLink({ port: LINK_PORT, ips: ips.map(({ ip, kind }) => ({ ip, kind })), name: offerName });
+      .then((list) => {
+        if (!alive) return;
+        const ips = list.map(({ ip, kind }) => ({ ip, kind }));
+        setSelfLink(offerName ? { port: LINK_PORT, ips, name: offerName } : null);
+        // Every PC tells its name and addresses: the game PC lets it link with a click.
+        setSelfPc(pcName ? { name: pcName, ips } : null);
       })
       .catch(() => undefined);
     return () => {
       alive = false;
     };
-  }, [offerName, setSelfLink]);
+  }, [offerName, pcName, setSelfLink, setSelfPc]);
   usePublishState("squad", state.code !== null ? state : null);
   const [mirror, setMirror] = useState<SquadState | null>(null);
   useMirroredState("squad", parseSquadSnapshot, (r) => setMirror(r.snap));

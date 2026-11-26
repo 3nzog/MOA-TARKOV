@@ -114,6 +114,13 @@ export interface QuestsPayload {
   // A game PC that accepts linked PCs: where to reach it (src/squad/linkOffer.ts).
   // Optional — older apps neither send nor read it.
   link?: LinkOffer;
+  // Every PC: its name and addresses, so the game PC can let it link with a click.
+  pc?: PcInfo;
+}
+
+export interface PcInfo {
+  name: string;
+  ips: { ip: string; kind: "radmin" | "lan" }[];
 }
 
 export interface LinkOffer {

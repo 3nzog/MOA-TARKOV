@@ -392,7 +392,11 @@
       "waiting": "Waiting for the game PC to accept…",
       "done": "Linked to this game PC.",
       "searching": "Looking for the game PC…",
-      "notFound": "No game PC accepting links was found. Ask them to open MoA as the game PC and try again."
+      "notFound": "No game PC accepting links was found. Ask them to open MoA as the game PC and try again.",
+      "letInHelp": "Your PC is the game PC: clicking lets their PC link to this one for 3 minutes.",
+      "letInNow": "Let in: {{names}} links in a few seconds.",
+      "letInSoon": "Let in for 3 minutes: their PC links as soon as it tries (their MoA must be an extra screen).",
+      "letInWait": "Let in for 3 minutes: ask them to open MoA as an extra screen (Settings → Devices) now."
     }
   },
   "feedback": {

@@ -23,6 +23,7 @@ export function parseSquadSnapshot(raw: unknown): { snap: SquadState | null } | 
       markers: rec(r.markers),
       draws: rec(r.draws),
       links: rec(r.links),
+      pcs: rec(r.pcs),
     },
   };
 }

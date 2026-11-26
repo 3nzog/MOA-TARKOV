@@ -392,7 +392,11 @@
       "waiting": "Esperando que el PC del juego acepte…",
       "done": "Vinculado a este PC del juego.",
       "searching": "Buscando el PC del juego…",
-      "notFound": "No encontré ningún PC del juego aceptando vínculos. Pídele que abra MoA como PC del juego y vuelve a intentarlo."
+      "notFound": "No encontré ningún PC del juego aceptando vínculos. Pídele que abra MoA como PC del juego y vuelve a intentarlo.",
+      "letInHelp": "Tu PC es el del juego: al hacer clic, su PC puede vincularse a este durante 3 minutos.",
+      "letInNow": "Permitido: {{names}} se vincula en unos segundos.",
+      "letInSoon": "Permitido 3 minutos: su PC se vincula en cuanto lo intente (su MoA debe estar como pantalla extra).",
+      "letInWait": "Permitido 3 minutos: pídele que abra MoA como pantalla extra (Ajustes → Dispositivos) ahora."
     }
   },
   "feedback": {

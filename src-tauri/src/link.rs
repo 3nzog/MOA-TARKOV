@@ -116,6 +116,71 @@ fn first_contact(home: bool, auto_accept: bool, manual: bool, refused_before: bo
 /// "Accept my PCs on the home network on their own" (Settings; on by default).
 static AUTO_ACCEPT_LAN: AtomicBool = AtomicBool::new(true);
 
+/// How long a "link this friend" click on the game PC lets that friend's PC in.
+const INVITE_FOR: Duration = Duration::from_secs(180);
+/// How far back "who just tried" looks.
+const TRIED_WITHIN: Duration = Duration::from_secs(120);
+
+/// The player clicked "link" on a friend in the party list on THIS (the game)
+/// PC: that friend's PC, linking on its own (as an extra screen does every
+/// few seconds), is let in instead of ignored — the click is the consent.
+#[derive(Default)]
+struct Invites {
+    /// Addresses let in, until when.
+    ips: Vec<(std::net::IpAddr, Instant)>,
+    /// PCs that tried on their own and were ignored: name, address, when.
+    tried: Vec<(String, std::net::IpAddr, Instant)>,
+}
+
+fn invites() -> &'static Mutex<Invites> {
+    static I: OnceLock<Mutex<Invites>> = OnceLock::new();
+    I.get_or_init(|| Mutex::new(Invites::default()))
+}
+
+/// Lets `ips` in for a few minutes; with none, the PCs that just tried. The
+/// names of the PCs let in by having tried (for the player to see).
+fn invite(ips: &[std::net::IpAddr], now: Instant) -> Vec<String> {
+    let mut inv = invites().lock().unwrap();
+    inv.ips.retain(|(_, until)| *until > now);
+    inv.tried.retain(|(_, _, at)| now.duration_since(*at) < TRIED_WITHIN);
+    let mut names = Vec::new();
+    let targets: Vec<std::net::IpAddr> = if ips.is_empty() {
+        let mut v = Vec::new();
+        for (name, ip, _) in &inv.tried {
+            if !v.contains(ip) {
+                v.push(*ip);
+                names.push(name.clone());
+            }
+        }
+        v
+    } else {
+        for (name, ip, _) in &inv.tried {
+            if ips.contains(ip) && !names.contains(name) {
+                names.push(name.clone());
+            }
+        }
+        ips.to_vec()
+    };
+    for ip in targets {
+        inv.ips.retain(|(i, _)| *i != ip);
+        inv.ips.push((ip, now + INVITE_FOR));
+    }
+    names
+}
+
+fn invited(ip: &std::net::IpAddr, now: Instant) -> bool {
+    invites().lock().unwrap().ips.iter().any(|(i, until)| i == ip && *until > now)
+}
+
+fn remember_tried(name: &str, ip: std::net::IpAddr, now: Instant) {
+    let mut inv = invites().lock().unwrap();
+    inv.tried.retain(|(_, i, at)| *i != ip && now.duration_since(*at) < TRIED_WITHIN);
+    inv.tried.push((name.to_owned(), ip, now));
+    if inv.tried.len() > 16 {
+        inv.tried.remove(0);
+    }
+}
+
 fn valid_device(s: &str) -> bool {
     (16..=64).contains(&s.len()) && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
 }
@@ -416,10 +481,13 @@ async fn serve(stream: TcpStream, peer: SocketAddr, state: Arc<Mutex<ServerState
     let first = (!known).then(|| {
         let home = on_home_network(&peer.ip(), &(cfg.nets)());
         let refused_before = state.lock().unwrap().blocked.iter().any(|d| d == &hello.device);
+        if invited(&peer.ip(), Instant::now()) {
+            return FirstContact::Accept;
+        }
         first_contact(home, AUTO_ACCEPT_LAN.load(Ordering::Relaxed), hello.manual, refused_before)
     });
     if first == Some(FirstContact::Accept) {
-        net::log(format!("anexar: {} ({}) anexado sozinho (rede de casa)", hello.name, peer.ip()));
+        net::log(format!("anexar: {} ({}) anexado (rede de casa, ou o jogador clicou nele na party)", hello.name, peer.ip()));
         (cfg.notify)("link-auto", json!({ "name": hello.name, "ip": peer.ip().to_string() }));
         let mut st = state.lock().unwrap();
         st.devices.retain(|d| d.device != hello.device);
@@ -427,6 +495,7 @@ async fn serve(stream: TcpStream, peer: SocketAddr, state: Arc<Mutex<ServerState
         save_devices(&cfg.store, &st.devices);
     } else if first == Some(FirstContact::Ignore) {
         net::log(format!("anexar: {} ({}) pediu sozinho, sem ninguém clicar; ignorado sem perguntar", hello.name, peer.ip()));
+        remember_tried(&hello.name, peer.ip(), Instant::now());
         let _ = tx.send(text(json!({ "t": "refused" })));
         let _ = tx.send(Message::Close(None));
         let _ = writer.await;
@@ -875,6 +944,17 @@ pub fn link_answer(id: String, accept: bool) -> bool {
     server_cell().lock().unwrap().as_ref().map(|s| s.answer(&id, accept)).unwrap_or(false)
 }
 
+/// On the game PC: "link this friend" (party list). Lets the friend's PC in
+/// for a few minutes — by its addresses when the party gave them, else every
+/// PC that just tried on its own. Returns the names of those that just tried.
+#[tauri::command]
+pub fn link_invite(ips: Vec<String>) -> Vec<String> {
+    let ips: Vec<std::net::IpAddr> = ips.iter().filter_map(|s| s.parse().ok()).collect();
+    let names = invite(&ips, Instant::now());
+    net::log(format!("anexar: o jogador liberou {} na party", if names.is_empty() { "um amigo".to_string() } else { names.join(", ") }));
+    names
+}
+
 #[tauri::command]
 pub fn link_forget(app: tauri::AppHandle, device: String) {
     match server_cell().lock().unwrap().as_ref() {
@@ -968,6 +1048,24 @@ pub fn link_disconnect() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A click on a friend in the party, on the game PC, lets that friend's
+    /// PC in: by its address, or (no address known) the PC that just tried.
+    #[test]
+    fn a_click_on_the_game_pc_lets_the_friend_in() {
+        let t0 = Instant::now();
+        let friend: std::net::IpAddr = "26.208.28.168".parse().unwrap();
+        let other: std::net::IpAddr = "26.1.2.3".parse().unwrap();
+        assert!(!invited(&friend, t0));
+        remember_tried("NOTDOSGURI", friend, t0);
+        assert_eq!(invite(&[], t0), vec!["NOTDOSGURI".to_string()]);
+        assert!(invited(&friend, t0 + Duration::from_secs(20)));
+        assert!(!invited(&other, t0));
+        assert!(!invited(&friend, t0 + INVITE_FOR + Duration::from_secs(1)), "only for a few minutes");
+        assert!(invite(&[other], t0).is_empty());
+        assert!(invited(&other, t0));
+    }
+
 
     fn nets_none() -> NetsFn {
         Arc::new(Vec::new)
