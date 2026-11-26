@@ -1406,6 +1406,7 @@
     "owned": "所持あり",
     "notOwned": "未所持",
     "have_one": "所持 {{count}}",
-    "have_other": "所持 {{count}}"
+    "have_other": "所持 {{count}}",
+    "side": "BEARとUSEC、どちらですか？他陣営のタスクは一覧から消えます。"
   }
 }

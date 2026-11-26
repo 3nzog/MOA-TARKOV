@@ -3,7 +3,7 @@ import { loadProgression } from '../api/progression';
 import type { ApiLang } from '../api/tarkov-dev';
 import type { TarkovTask } from '../api/types';
 import { i18n } from '../i18n';
-import { computeQuestStatuses, type QuestInfo } from '../progression/status';
+import { computeQuestStatuses, inferFaction, type QuestInfo } from '../progression/status';
 import type { ProgressionData } from '../progression/types';
 import { effectiveStatus, type LocalProgress } from '../state/localProgress';
 
@@ -66,14 +66,16 @@ export function useQuestStatuses(
 ): Map<string, QuestInfo> {
   return useMemo(() => {
     if (!data || tasks.length === 0) return new Map();
+    const baseStatus = (id: string) => effectiveStatus(progress, id);
     return computeQuestStatuses({
       tasks,
       meta: data.tasks,
-      baseStatus: (id) => effectiveStatus(progress, id),
+      baseStatus,
       isManual: (id) => id in progress.overrides,
       profile: {
         level: progress.levelSet ? progress.playerLevel : null,
-        faction: progress.factionSet ? progress.faction : null,
+        // Not entered: the side the quests you took belong to.
+        faction: progress.factionSet ? progress.faction : inferFaction(tasks, data.tasks, baseStatus),
       },
     });
   }, [tasks, data, progress]);

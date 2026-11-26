@@ -6,9 +6,10 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MagnifyingGlass, Minus, Plus, Scroll, House, X, Camera } from '@phosphor-icons/react';
 import { aggregateNeeds, type ItemNeed, type NeedScope } from '../progression/needs';
-import { IconButton, Input, Segmented, Spinner, Toggle } from '../ui';
+import { Button, IconButton, Input, Segmented, Spinner, Toggle } from '../ui';
 import type { TarkovTask } from '../api/types';
 import type { QuestInfo } from '../progression/status';
+import type { Faction } from '../progression/types';
 import type { ProgressionLoad } from '../app/useProgression';
 import type { PlannerApi } from '../app/usePlanner';
 import { makeNames } from './names';
@@ -35,12 +36,15 @@ export default function QuestItemsPage({
   tasks,
   statuses,
   planner,
+  onFaction,
   onClose,
 }: {
   load: ProgressionLoad;
   tasks: TarkovTask[];
   statuses: Map<string, QuestInfo>;
   planner: PlannerApi;
+  /** Sets your side (BEAR / USEC), when neither you nor your quests told it yet. */
+  onFaction?: (f: Faction) => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
@@ -165,6 +169,10 @@ export default function QuestItemsPage({
     );
   };
 
+  // A side is known (entered, or told by the quests you took) once the other
+  // side's quests are locked for it.
+  const sideKnown = useMemo(() => [...statuses.values()].some((i) => i.lockReasons.some((r) => r.kind === 'faction')), [statuses]);
+
   const missing = needs.reduce((s, n) => s + left(n), 0);
   const kinds = needs.filter((n) => left(n) > 0).length;
 
@@ -202,6 +210,18 @@ export default function QuestItemsPage({
           <Camera weight="fill" /> {t('questItems.screenHint')}
         </span>
       </div>
+
+      {data && !sideKnown && onFaction && (
+        <div className="qi-side">
+          <span>{t('questItems.side')}</span>
+          <Button size="sm" onClick={() => onFaction('BEAR')}>
+            BEAR
+          </Button>
+          <Button size="sm" onClick={() => onFaction('USEC')}>
+            USEC
+          </Button>
+        </div>
+      )}
 
       {!data ? (
         <div className="qi-state">

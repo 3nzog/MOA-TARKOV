@@ -84,3 +84,16 @@
 .qi-detail ul { margin: 6px 0 0; padding-left: 16px; color: var(--text-dim); }
 .qi-counter { display: inline-flex; align-items: center; gap: 6px; }
 .qi-alt { margin: 6px 0 0; color: var(--text-dim); }
+.qi-side {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 var(--sp-4) var(--sp-1);
+  padding: 6px 10px;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: var(--fs-caption);
+}
+.qi-side > span { margin-right: auto; }

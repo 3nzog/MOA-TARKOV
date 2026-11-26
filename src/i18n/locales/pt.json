@@ -1406,6 +1406,7 @@
     "owned": "Você já tem",
     "notOwned": "Ainda não tem",
     "have_one": "tem {{count}}",
-    "have_other": "tem {{count}}"
+    "have_other": "tem {{count}}",
+    "side": "Você é BEAR ou USEC? Assim as missões da outra facção somem daqui."
   }
 }

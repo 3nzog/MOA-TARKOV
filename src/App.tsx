@@ -90,7 +90,7 @@ import LinkRequestDialog from './link/LinkRequestDialog';
 import { useMirroredState, usePublishState } from './link/linkState';
 import { normalizeTraderLevels, setTraderLevels, useTraderLevels } from './gunsmith/availability';
 import { replacePresets, usePresets } from './gunsmith/presets';
-import { normalizeProgress } from './state/localProgress';
+import { normalizeProgress, setFaction } from './state/localProgress';
 import { subscribeScreenText } from './services/tauriEvents';
 import { parseHistory } from './state/raidHistory';
 import { parsePlanner } from './state/planner';
@@ -1225,7 +1225,14 @@ function App() {
               </div>
             ) : railSection === 'questItems' ? (
               <Suspense fallback={<Spinner size="md" />}>
-                <QuestItemsPage load={progressionLoad} tasks={quests.tasks} statuses={questStatuses} planner={planner} onClose={closePage} />
+                <QuestItemsPage
+                  load={progressionLoad}
+                  tasks={quests.tasks}
+                  statuses={questStatuses}
+                  planner={planner}
+                  onFaction={(f) => quests.setProgress((p) => setFaction(p, f))}
+                  onClose={closePage}
+                />
               </Suspense>
             ) : railSection === 'gunsmith' ? (
               <Suspense fallback={<Spinner size="md" />}>

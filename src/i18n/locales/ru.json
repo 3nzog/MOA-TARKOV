@@ -1406,6 +1406,7 @@
     "owned": "Уже есть",
     "notOwned": "Ещё нет",
     "have_one": "есть {{count}}",
-    "have_other": "есть {{count}}"
+    "have_other": "есть {{count}}",
+    "side": "Вы BEAR или USEC? Тогда квесты другой фракции уйдут из списка."
   }
 }

@@ -325,3 +325,14 @@ describe('committed snapshot', () => {
     expect(data!.crafts.length).toBeGreaterThan(50);
   });
 });
+
+describe('inferFaction', () => {
+  const tasks = [task('bear'), task('usec'), task('both')];
+  const m = { bear: meta({ faction: 'BEAR' }), usec: meta({ faction: 'USEC' }), both: meta() };
+  it('tells your side from the side-only quests you took, and does not guess on a mix', async () => {
+    const { inferFaction } = await import('./status');
+    expect(inferFaction(tasks, m, (id) => (id === 'bear' ? 'complete' : 'none'))).toBe('BEAR');
+    expect(inferFaction(tasks, m, (id) => (id === 'both' ? 'active' : 'none'))).toBeNull();
+    expect(inferFaction(tasks, m, (id) => (id === 'both' ? 'none' : 'active'))).toBeNull();
+  });
+});

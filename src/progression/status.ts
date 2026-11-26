@@ -120,6 +120,24 @@ export function computeQuestStatuses(input: StatusInput): Map<string, QuestInfo>
   return out;
 }
 
+/**
+ * The player's side, told by the quests they took: only BEAR gets the BEAR
+ * copy of a quest (and USEC the USEC one). null when no such quest was taken,
+ * or both sides' were (manual marks gone wrong — no guess then).
+ */
+export function inferFaction(
+  tasks: TarkovTask[],
+  meta: Record<string, TaskMeta>,
+  baseStatus: (taskId: string) => BaseStatus,
+): Faction | null {
+  const sides = new Set<Faction>();
+  for (const t of tasks) {
+    const f = meta[t.id]?.faction;
+    if (f && baseStatus(t.id) !== 'none') sides.add(f);
+  }
+  return sides.size === 1 ? [...sides][0] : null;
+}
+
 /** Reverse edges: quest id → quests that list it as a prerequisite. */
 export function buildUnlocks(meta: Record<string, TaskMeta>): Map<string, string[]> {
   const out = new Map<string, string[]>();

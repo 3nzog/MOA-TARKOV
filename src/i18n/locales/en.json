@@ -1406,6 +1406,7 @@
     "owned": "You have some",
     "notOwned": "Not in your stash",
     "have_one": "have {{count}}",
-    "have_other": "have {{count}}"
+    "have_other": "have {{count}}",
+    "side": "Are you BEAR or USEC? The other side’s quests then leave this list."
   }
 }
