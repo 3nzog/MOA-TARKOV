@@ -9,6 +9,7 @@ import { estimateCraft, fleaPrice, formatRub, valuePerSlot } from '../progressio
 import { Button, HelpTip, Input, Segmented, Select, Toggle } from '../ui';
 import { formatSeconds } from './names';
 import type { PlannerCtx } from './PlannerPanel';
+import BestTimes from './BestTimes';
 
 const PAGE = 40;
 
@@ -23,7 +24,7 @@ export default function MarketTab({
   onClearScan?: () => void;
 }) {
   const { t, i18n } = useTranslation();
-  const [mode, setMode] = useState<'crafts' | 'prices'>(scanned ? 'prices' : 'crafts');
+  const [mode, setMode] = useState<'crafts' | 'prices' | 'times'>(scanned ? 'prices' : 'crafts');
   // A new screenshot of the inventory turns this tab into its price list.
   const [seenScan, setSeenScan] = useState(scanned);
   if (scanned !== seenScan) {
@@ -45,10 +46,11 @@ export default function MarketTab({
       <Segmented
         fullWidth
         value={mode}
-        onChange={(v) => setMode(v as 'crafts' | 'prices')}
+        onChange={(v) => setMode(v as 'crafts' | 'prices' | 'times')}
         options={[
           { id: 'crafts', label: t('planner.market.crafts') },
           { id: 'prices', label: t('planner.market.prices') },
+          { id: 'times', label: t('planner.times.tab') },
         ]}
       />
       <p className={ageDays > 3 ? 'shell-warn planner-age' : 'planner-hint'}>
@@ -60,7 +62,13 @@ export default function MarketTab({
           </>
         )}
       </p>
-      {mode === 'crafts' ? <Crafts ctx={ctx} /> : <Prices ctx={ctx} scanned={scanned ?? null} onClearScan={onClearScan} />}
+      {mode === 'crafts' ? (
+        <Crafts ctx={ctx} />
+      ) : mode === 'times' ? (
+        <BestTimes ctx={ctx} />
+      ) : (
+        <Prices ctx={ctx} scanned={scanned ?? null} onClearScan={onClearScan} />
+      )}
     </div>
   );
 }

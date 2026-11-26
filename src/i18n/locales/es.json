@@ -767,6 +767,27 @@
         "elimination": "deducido (el otro perfil ya se conoce)",
         "panel": "leído de la lista de O+O"
       }
+    },
+    "times": {
+      "tab": "Mejor hora",
+      "intro": "MoA anota los precios solo cada 30 min, también oculto en la bandeja. Con {{days}} días de registros muestra la hora en que cada objeto se vende más caro (barras más altas, hora de este PC); con una semana, el mejor día.",
+      "lastCheck": "Última revisión: {{time}}.",
+      "add": "Añadir un objeto para seguir…",
+      "none": "Ningún objeto seguido.",
+      "remove": "Dejar de seguir",
+      "records": "{{count}} registros · {{days}} días",
+      "waiting": "Aún sin registros: el primero llega en 30 minutos como mucho.",
+      "collecting": "Recogiendo… unos {{days}} día(s) más para decir la mejor hora con seguridad.",
+      "best": "Mejor hora: {{hours}}",
+      "worst": "peor: {{hour}}",
+      "bestDay": "mejor día: {{day}} ({{pct}})",
+      "day0": "domingo",
+      "day1": "lunes",
+      "day2": "martes",
+      "day3": "miércoles",
+      "day4": "jueves",
+      "day5": "viernes",
+      "day6": "sábado"
     }
   },
   "minimap": {

@@ -99,6 +99,7 @@ import type { SettingsTab } from './components/SettingsModal';
 import PriceScanCard from './prices/PriceScan';
 import { buildItemUses } from './prices/itemUses';
 import { usePriceScan } from './prices/usePriceScan';
+import { usePriceRecorder } from './prices/priceLog';
 import PlaceLabelLayer from './map/PlaceLabelLayer';
 import { clock, raidMinutes } from './map/raidDuration';
 import { collectObjectiveMaps } from './quests/derive';
@@ -229,6 +230,9 @@ function App() {
   const panelToastTimer = useRef<number | undefined>(undefined);
   // A screenshot of the game's Tasks screen marks the listed active quests the logs missed.
   useQuestScreen({ tasks: quests.tasks, progress: quests.progress, setProgress: quests.setProgress, notify: setToast });
+  // Planner → Market → "Best time to sell": the app writes prices down on its
+  // own, every half hour, also hidden in the tray.
+  usePriceRecorder(typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
   const priceScan = usePriceScan(
     () => extractSkipUntil.current,
     () => window.clearTimeout(panelToastTimer.current),

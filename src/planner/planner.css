@@ -235,3 +235,25 @@
 .hideout-starters .planner-list { width: 100%; }
 .hideout-craft { display: flex; align-items: center; gap: 8px; }
 .hideout-craft > span:first-child { flex: 1; min-width: 0; }
+
+/* Market → Best time to sell (BestTimes.tsx). */
+.times-add { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.times-add button {
+  display: flex; align-items: center; gap: 6px; width: 100%; padding: 6px 8px;
+  border: none; border-radius: var(--r-sm); background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.times-add button:hover { background: var(--surface-3); }
+.times-card {
+  display: flex; flex-direction: column; gap: 6px; padding: 10px;
+  border: 1px solid var(--border); border-radius: var(--r-md); background: var(--bg-sunken);
+}
+.times-card__head { display: flex; align-items: center; gap: 8px; }
+.times-card__head strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.times-card__head .muted { font-size: var(--fs-caption); white-space: nowrap; }
+.times-bars { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; height: 64px; align-items: end; padding-bottom: 14px; }
+.times-bar { position: relative; height: 100%; display: flex; align-items: flex-end; }
+.times-bar__fill { width: 100%; border-radius: 2px 2px 0 0; background: color-mix(in srgb, var(--accent) 45%, var(--surface-3)); }
+.times-bar__fill.is-best { background: #3fbf6a; }
+.times-bar__fill.is-worst { background: #d9534f; }
+.times-bar__h { position: absolute; bottom: -14px; left: 0; font-size: 10px; color: var(--text-dim); }
+.times-verdict { margin: 0; font-weight: 600; }

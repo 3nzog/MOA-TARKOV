@@ -767,6 +767,27 @@
         "elimination": "deduced (the other profile is known)",
         "panel": "read from the O+O list"
       }
+    },
+    "times": {
+      "tab": "Best time",
+      "intro": "MoA writes prices down on its own every 30 min, also hidden in the tray. With {{days}} days of records it shows the hour each item sells highest (taller bars, this PC's clock); with a week, the best day.",
+      "lastCheck": "Last check: {{time}}.",
+      "add": "Add an item to watch…",
+      "none": "No items watched.",
+      "remove": "Stop watching",
+      "records": "{{count}} records · {{days}} days",
+      "waiting": "No records yet: the first comes within 30 minutes.",
+      "collecting": "Collecting… about {{days}} more day(s) to tell the best hour reliably.",
+      "best": "Best time: {{hours}}",
+      "worst": "worst: {{hour}}",
+      "bestDay": "best day: {{day}} ({{pct}})",
+      "day0": "Sunday",
+      "day1": "Monday",
+      "day2": "Tuesday",
+      "day3": "Wednesday",
+      "day4": "Thursday",
+      "day5": "Friday",
+      "day6": "Saturday"
     }
   },
   "minimap": {
