@@ -1427,6 +1427,78 @@ mod tests {
         assert!(parse_found(br#"{"moa":"link","v":1,"port":8789,"name":""}"#, "192.168.1.9:8790".parse().unwrap(), &nets).is_none());
     }
 
+    /// How fast a position goes from the game PC to the linked screen: 300 of
+    /// them over loopback and over each of this PC's real networks, timed one
+    /// by one (average, p95, worst). Uses free ports: safe with the app open.
+    /// cargo test link_latency_bench -- --ignored --nocapture
+    #[test]
+    #[ignore]
+    fn link_latency_bench() {
+        tauri::async_runtime::block_on(async {
+            let mut targets = vec![(Ipv4Addr::LOCALHOST, "loopback".to_string())];
+            for n in net::local_nets() {
+                targets.push((n.ip, format!("{:?} {}", n.kind, n.ip)));
+            }
+            for (ip, label) in targets {
+                let main_rec = Rec::new();
+                let all = net::local_nets();
+                let cfg = ServerCfg {
+                    name: "PC-DO-JOGO".into(),
+                    notify: main_rec.notify(),
+                    scan: Arc::new(|| None),
+                    store: None,
+                    nets: Arc::new(move || all.clone()),
+                };
+                let Ok(server) = Server::start(cfg, ip, 0, 0).await else {
+                    println!("{label}: could not listen");
+                    continue;
+                };
+                let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<(String, Value)>();
+                let emit: Notify = Arc::new(move |e: &str, v: Value| {
+                    let _ = tx.send((e.to_owned(), v));
+                });
+                let client = start_client(ip.to_string(), server.tcp_port, ClientCfg { device: DEV.into(), name: "PC-DO-MAPA".into(), emit, manual: true });
+                // Linked: on its own at home, by answering the request elsewhere.
+                let linked = tokio::time::timeout(Duration::from_secs(5), async {
+                    loop {
+                        if let Some(req) = main_rec.all("link-request").first() {
+                            server.answer(req["id"].as_str().unwrap_or(""), true);
+                        }
+                        match tokio::time::timeout(Duration::from_millis(50), rx.recv()).await {
+                            Ok(Some((e, v))) if e == "link-client" && v["state"] == "linked" => break,
+                            _ => {}
+                        }
+                    }
+                })
+                .await;
+                if linked.is_err() {
+                    println!("{label}: did not link");
+                    client.stop();
+                    server.stop();
+                    continue;
+                }
+                let mut ms: Vec<f64> = Vec::new();
+                for i in 0..300 {
+                    let t = Instant::now();
+                    server.forward("player-position", &format!(r#"{{"x":{i},"y":0,"z":0,"rotation":0}}"#));
+                    loop {
+                        match tokio::time::timeout(Duration::from_secs(2), rx.recv()).await {
+                            Ok(Some((e, v))) if e == "player-position" && v["x"] == i => break,
+                            Ok(Some(_)) => continue,
+                            _ => panic!("{label}: position {i} lost"),
+                        }
+                    }
+                    ms.push(t.elapsed().as_secs_f64() * 1000.0);
+                }
+                ms.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                let avg = ms.iter().sum::<f64>() / ms.len() as f64;
+                println!("{label}: 300 positions, avg {avg:.2} ms, p95 {:.2} ms, worst {:.2} ms, none lost", ms[284], ms[299]);
+                client.stop();
+                server.stop();
+            }
+        });
+    }
+
     /// Links over this PC's real home / Radmin addresses (what a second PC
     /// would use): discovery by broadcast, pairing, and an event both ways.
     /// cargo test link_live -- --ignored --nocapture

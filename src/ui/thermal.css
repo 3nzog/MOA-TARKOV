@@ -181,3 +181,33 @@ body::before {
   body::before,
   .spine__mark { animation: none; }
 }
+
+/* ============================================================================
+   Performance. Any animation that never stops makes the window draw 60 frames
+   a second, forever — and each frame redoes the blur of every glass panel. On
+   the game PC that took 1.7 CPU cores and much of the GPU from the game, even
+   with nothing happening. So nothing loops forever: the ambient motion is
+   still, the signals pulse a few times when they appear and then rest, and
+   while another window (the game) has the focus nothing animates at all.
+   ========================================================================== */
+body::before { animation: none; will-change: auto; }
+.spine__mark { animation: none; }
+.tc-route-line { animation: none; }
+.tc-poi-danger .tc-poi-glyph,
+.floor-live-dot,
+.raid-pill__dot,
+.squad-conn-connected .squad-conn-dot,
+.tc-mk__ping,
+.tc-shared .tc-poi-glyph::after,
+.tc-route-stop--next::after,
+.spine__btn--update::after {
+  animation-iteration-count: 3 !important;
+}
+.titlebar__update { animation-iteration-count: 6 !important; }
+/* The game (or any other window) has the focus: this window holds still. */
+html.app-unfocused *,
+html.app-unfocused *::before,
+html.app-unfocused *::after {
+  animation-play-state: paused !important;
+  transition: none !important;
+}

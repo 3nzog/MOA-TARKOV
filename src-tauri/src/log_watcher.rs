@@ -38,6 +38,30 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use crate::eft_config;
 
 const POLL_INTERVAL: Duration = Duration::from_millis(400);
+/// A log written to this recently is followed closely even outside the newest
+/// session (a session that runs past midnight, a clock change).
+const RECENT: Duration = Duration::from_secs(12 * 3600);
+/// How often a followed log checks whether its session is still the game's.
+const STALE_CHECK_EVERY: u32 = 150; // × POLL_INTERVAL ≈ 1 min
+
+/// The game makes a session folder each time it starts ("log_2026.11.19_14-15-40_…"),
+/// so the newest one sorts last.
+fn newest_session(root: &Path) -> Option<PathBuf> {
+    fs::read_dir(root).ok()?.flatten().map(|e| e.path()).filter(|p| p.is_dir()).max()
+}
+
+/// Whether a log is worth reading again and again: it is in the game's newest
+/// session, or was written to lately. Every other log is read once and left —
+/// the game PC had hundreds of old logs, each reopened every 0.4 s, forever.
+fn keep_following(root: &Path, path: &Path, newest: Option<&Path>) -> bool {
+    let in_newest = newest.is_some_and(|n| crate::startup::session_dir(root, path).as_deref() == Some(n));
+    let recent = fs::metadata(path)
+        .and_then(|m| m.modified())
+        .ok()
+        .and_then(|t| t.elapsed().ok())
+        .is_some_and(|age| age < RECENT);
+    in_newest || recent
+}
 const STATE_FILE: &str = "log_watcher_state.json";
 
 static CANCEL: OnceLock<Mutex<Option<Arc<AtomicBool>>>> = OnceLock::new();
@@ -425,9 +449,28 @@ pub fn process_file(
     Ok(start + bytes_read)
 }
 
-fn tail_loop(app: AppHandle, state_path: PathBuf, offsets: Arc<Mutex<Offsets>>, path: PathBuf, cancel: Arc<AtomicBool>) {
+fn tail_loop(
+    app: AppHandle,
+    state_path: PathBuf,
+    offsets: Arc<Mutex<Offsets>>,
+    path: PathBuf,
+    cancel: Arc<AtomicBool>,
+    root: PathBuf,
+    tailed: Arc<Mutex<Vec<PathBuf>>>,
+) {
+    let mut ticks: u32 = 0;
     loop {
         if cancel.load(Ordering::Relaxed) {
+            return;
+        }
+        // A newer session started (the game was reopened) and this log is
+        // quiet: stop reading it. Written to again, the folder watcher picks
+        // it up once more.
+        ticks = ticks.wrapping_add(1);
+        if ticks.is_multiple_of(STALE_CHECK_EVERY) && !keep_following(&root, &path, newest_session(&root).as_deref()) {
+            if let Ok(mut t) = tailed.lock() {
+                t.retain(|p| p != &path);
+            }
             return;
         }
         let start = offsets
@@ -460,6 +503,8 @@ fn tail_loop(app: AppHandle, state_path: PathBuf, offsets: Arc<Mutex<Offsets>>, 
     }
 }
 
+/// The logs already there: the game's current session is followed; every
+/// older log is read once, in the background, from where it was left.
 fn scan_existing(
     app: &AppHandle,
     state_path: &Path,
@@ -468,18 +513,44 @@ fn scan_existing(
     root: &Path,
     cancel: Arc<AtomicBool>,
 ) {
-    let walker = match fs::read_dir(root) {
-        Ok(it) => it,
-        Err(_) => return,
-    };
-    for entry in walker.flatten() {
-        let p = entry.path();
-        if p.is_dir() {
-            scan_existing(app, state_path, offsets, tailed, &p, cancel.clone());
-        } else if is_application_log(&p) {
-            start_tail(app.clone(), state_path.to_path_buf(), offsets.clone(), tailed.clone(), p, cancel.clone());
+    fn collect(dir: &Path, out: &mut Vec<PathBuf>) {
+        let Ok(it) = fs::read_dir(dir) else { return };
+        for entry in it.flatten() {
+            let p = entry.path();
+            if p.is_dir() {
+                collect(&p, out);
+            } else if is_application_log(&p) {
+                out.push(p);
+            }
         }
     }
+    let mut logs = Vec::new();
+    collect(root, &mut logs);
+    let newest = newest_session(root);
+    let (follow, once): (Vec<PathBuf>, Vec<PathBuf>) = logs.into_iter().partition(|p| keep_following(root, p, newest.as_deref()));
+    for p in follow {
+        start_tail(app.clone(), state_path.to_path_buf(), offsets.clone(), tailed.clone(), p, cancel.clone(), root.to_path_buf());
+    }
+    if once.is_empty() {
+        return;
+    }
+    let (app, state_path, offsets) = (app.clone(), state_path.to_path_buf(), offsets.clone());
+    thread::spawn(move || {
+        for path in once {
+            if cancel.load(Ordering::Relaxed) {
+                return;
+            }
+            let start = offsets.lock().ok().and_then(|m| m.get(&path).copied()).unwrap_or(0);
+            if let Ok(new_offset) = process_file(&app, &path, start) {
+                if new_offset != start {
+                    if let Ok(mut m) = offsets.lock() {
+                        m.insert(path.clone(), new_offset);
+                        save_state(&state_path, &m);
+                    }
+                }
+            }
+        }
+    });
 }
 
 fn start_tail(
@@ -489,6 +560,7 @@ fn start_tail(
     tailed: Arc<Mutex<Vec<PathBuf>>>,
     path: PathBuf,
     cancel: Arc<AtomicBool>,
+    root: PathBuf,
 ) {
     if let Ok(mut t) = tailed.lock() {
         if t.contains(&path) {
@@ -497,7 +569,7 @@ fn start_tail(
         t.push(path.clone());
     }
     thread::spawn(move || {
-        tail_loop(app, state_path, offsets, path, cancel);
+        tail_loop(app, state_path, offsets, path, cancel, root, tailed);
     });
 }
 
@@ -536,6 +608,7 @@ pub fn restart(app: AppHandle, logs_dir: PathBuf) {
                 .unwrap_or_default(),
         ));
         let root_for_watcher = logs_dir.clone();
+        let tail_root = logs_dir.clone();
 
         // Watch for newly-created log files.
         let app_for_watcher = app.clone();
@@ -564,6 +637,7 @@ pub fn restart(app: AppHandle, logs_dir: PathBuf) {
                                     tailed_for_watcher.clone(),
                                     path,
                                     cancel_for_watcher.clone(),
+                                    tail_root.clone(),
                                 );
                             }
                         }
@@ -803,6 +877,27 @@ pub fn replay_past_logs_cmd(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn only_the_current_session_is_followed_closely() {
+        let root = std::env::temp_dir().join(format!("moa-logs-{}", std::process::id()));
+        let old = root.join("log_2026.11.18_21-43-38_1.3.0.2.48779");
+        let new = root.join("log_2026.11.19_14-15-40_1.3.0.2.48779");
+        std::fs::create_dir_all(&old).unwrap();
+        std::fs::create_dir_all(&new).unwrap();
+        let old_log = old.join("2026.11.18_21-43-38_1.3.0.2.48779 application_000.log");
+        let new_log = new.join("2026.11.19_14-15-40_1.3.0.2.48779 application_000.log");
+        std::fs::write(&old_log, "x").unwrap();
+        std::fs::write(&new_log, "x").unwrap();
+        // An old log last written two days ago.
+        let two_days = std::time::SystemTime::now() - std::time::Duration::from_secs(48 * 3600);
+        std::fs::File::options().write(true).open(&old_log).unwrap().set_modified(two_days).unwrap();
+        let newest = newest_session(&root);
+        assert_eq!(newest.as_deref(), Some(new.as_path()));
+        assert!(keep_following(&root, &new_log, newest.as_deref()));
+        assert!(!keep_following(&root, &old_log, newest.as_deref()), "an old session is read once, not followed");
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
     use super::*;
 
     #[test]

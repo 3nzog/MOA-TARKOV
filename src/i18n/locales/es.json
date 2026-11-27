@@ -1007,6 +1007,13 @@
       "doneGame": "Listo: este es el PC del juego; el PC de {{name}} pasa a ser la pantalla extra.",
       "doneScreen": "Listo: el PC de {{name}} tiene el juego; este pasa a ser su pantalla extra. Vinculando…",
       "declined": "{{name}} no quiso vincular ahora."
+    },
+    "relay": {
+      "title": "Este PC solo está pasando la información",
+      "body": "Es el PC del juego y envía todo (posición, raid, misiones, capturas) a {{names}}. El panel completo está allí.",
+      "light": "Para no cargar el juego, el mapa no se ejecuta aquí y la ventana queda en la bandeja.",
+      "showHere": "Abrir el panel aquí igualmente",
+      "unlink": "Dejar de pasar la información"
     }
   },
   "net": {

@@ -1,7 +1,7 @@
 // Starting with Windows (hidden, in the tray) and showing up when the game
 // starts (src-tauri/src/startup.rs). The game starting is seen in its logs on
 // the game PC, and a linked second PC is told too: both screens open together.
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
@@ -57,13 +57,18 @@ export function useStartupPrefs(): StartupPrefs {
 }
 
 /** The game started: bring the window up (when that is on). */
-export function useShowOnGameLaunch(notify: (message: string) => void, text: string): void {
+export function useShowOnGameLaunch(notify: (message: string) => void, text: string, relayOnly = false): void {
+  // The game PC passing its information to a linked panel stays in the tray.
+  const relay = useRef(relayOnly);
+  useEffect(() => {
+    relay.current = relayOnly;
+  }, [relayOnly]);
   useEffect(() => {
     if (!inTauri()) return;
     let off: (() => void) | null = null;
     let alive = true;
     void listen('game-launched', () => {
-      if (!current.showOnGame) return;
+      if (!current.showOnGame || relay.current) return;
       void mainShow().catch(() => undefined);
       notify(text);
     }).then((u) => {

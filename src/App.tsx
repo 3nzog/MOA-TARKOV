@@ -55,6 +55,8 @@ import { useDrawing } from './app/useDrawing';
 import { useSquadSync } from './app/useSquadSync';
 import { useAppUpdate } from './app/useAppUpdate';
 import { useShowOnGameLaunch } from './app/startup';
+import { useLink } from './link/useLink';
+import RelayScreen from './link/RelayScreen';
 import { useScavTimer } from './scav/scavTimer';
 import ScavChip from './scav/ScavChip';
 import RaidSideAsk from './scav/RaidSideAsk';
@@ -116,6 +118,13 @@ import { effectiveStatus } from './state/localProgress';
  * The raid pill's clock: time left (PMC) or time in raid. It ticks on its own
  * every second, so the rest of the app does not re-render with it.
  */
+/** Sends the main window to the tray (no-op outside the app). */
+async function hideMainWindow() {
+  if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) return;
+  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+  await getCurrentWindow().hide().catch(() => undefined);
+}
+
 function RaidPillClock({ startedAt, endsAt }: { startedAt: number; endsAt: number | null }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -359,7 +368,19 @@ function App() {
   });
   const update = useAppUpdate(setToast);
   // The game started (here or on the linked game PC): the window comes up.
-  useShowOnGameLaunch(setToast, t('startup.gameLaunched'));
+  // This PC has the game and an extra screen is linked to it: it only passes
+  // the information on. Its window goes to the tray and shows a light page
+  // instead of the map (RelayScreen), unless the player asks for the panel here.
+  const link = useLink();
+  const linkedScreens = link.role === 'game' ? (link.host?.connected ?? []).map((d) => d.name) : [];
+  const [panelHere, setPanelHere] = useState(false);
+  const relayOnly = linkedScreens.length > 0 && !panelHere;
+  const wasRelay = useRef(false);
+  useEffect(() => {
+    if (relayOnly && !wasRelay.current) void hideMainWindow();
+    wasRelay.current = relayOnly;
+  }, [relayOnly]);
+  useShowOnGameLaunch(setToast, t('startup.gameLaunched'), relayOnly);
   const questStatuses = useQuestStatuses(
     quests.tasks,
     progressionLoad.state === 'ready' ? progressionLoad.data : null,
@@ -1003,6 +1024,15 @@ function App() {
       ? 0
       : 10 + 64 + 10 + (railSection && !pageOpen ? railWidth.width + 10 : 0);
 
+  if (relayOnly) {
+    return (
+      <div className="app-container">
+        <TitleBar />
+        <RelayScreen screens={linkedScreens} onShowHere={() => setPanelHere(true)} onUnlink={() => void link.setAllowLinks(false)} />
+      </div>
+    );
+  }
+
   return (
     <div className="app-container">
       <TitleBar
@@ -1258,7 +1288,7 @@ function App() {
             mapPointer.current = { x: e.clientX, y: e.clientY };
           }}
         >
-          <ScavChip state={scav} />
+          <ScavChip wait={scav} />
           {liveRaid?.profileKey && !liveRaidSide && <RaidSideAsk onPick={setLiveRaidSide} />}
               {mapCard && selectedMapId && (
                 <Suspense fallback={null}>

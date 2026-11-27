@@ -3,7 +3,7 @@
 // and a sound says when the Scav can go in again. The length depends on
 // Fence's reputation and the hideout, which no log tells, so the player sets
 // it once.
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { raidSide, type RaidHistory, type SideKnowledge } from '../state/raidHistory';
 import { playSound } from '../sound/sounds';
 
@@ -76,21 +76,23 @@ export function scavState(endedAt: number | null, minutes: number, now: number):
   return now - readyAt <= READY_SHOWN_MS ? { kind: 'ready', readyAt } : { kind: 'none' };
 }
 
-/** The Scav's wait, ticking while it counts; the sound and a message when it is over. */
-export function useScavTimer(h: RaidHistory, k: SideKnowledge, notify: (m: string) => void, readyText: string): ScavState {
+/** What the Scav's wait is counted from. */
+export interface ScavWait {
+  endedAt: number | null;
+  minutes: number;
+}
+
+/**
+ * The Scav's wait: the sound and a message when it is over. It does not tick:
+ * the chip on the map counts down on its own (ScavChip), so the whole app is
+ * not drawn again every second while the wait runs.
+ */
+export function useScavTimer(h: RaidHistory, k: SideKnowledge, notify: (m: string) => void, readyText: string): ScavWait {
   const { minutes } = useScavPrefs();
   const endedAt = lastScavEnd(h, k);
-  const [now, setNow] = useState(() => Date.now());
-  const state = scavState(endedAt, minutes, now);
-  const counting = state.kind !== 'none';
-  useEffect(() => {
-    if (!counting) return;
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, [counting]);
   // Said once per wait, and only when it ends while the app is open (not on a
   // late start, long after it was over).
-  const readyAt = state.kind === 'none' ? null : state.readyAt;
+  const readyAt = endedAt === null ? null : endedAt + minutes * 60_000;
   useEffect(() => {
     if (readyAt === null) return;
     const wait = readyAt - Date.now();
@@ -101,5 +103,18 @@ export function useScavTimer(h: RaidHistory, k: SideKnowledge, notify: (m: strin
     }, Math.max(0, wait));
     return () => window.clearTimeout(id);
   }, [readyAt, notify, readyText]);
+  return useMemo(() => ({ endedAt, minutes }), [endedAt, minutes]);
+}
+
+/** The wait at this moment, ticking every second while it shows (for the chip). */
+export function useScavState(w: ScavWait): ScavState {
+  const [now, setNow] = useState(() => Date.now());
+  const state = scavState(w.endedAt, w.minutes, now);
+  const showing = state.kind !== 'none' || (w.endedAt !== null && now < w.endedAt + w.minutes * 60_000 + READY_SHOWN_MS);
+  useEffect(() => {
+    if (!showing) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [showing]);
   return state;
 }

@@ -3,11 +3,12 @@
 import { useTranslation } from 'react-i18next';
 import { Skull } from '@phosphor-icons/react';
 import { clock } from '../map/raidDuration';
-import type { ScavState } from './scavTimer';
+import { useScavState, type ScavWait } from './scavTimer';
 import './scav.css';
 
-export default function ScavChip({ state }: { state: ScavState }) {
+export default function ScavChip({ wait }: { wait: ScavWait }) {
   const { t } = useTranslation();
+  const state = useScavState(wait);
   if (state.kind === 'none') return null;
   const ready = state.kind === 'ready';
   return (

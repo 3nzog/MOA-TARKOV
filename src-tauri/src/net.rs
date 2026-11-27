@@ -167,21 +167,40 @@ fn read_nets() -> Vec<LocalNet> {
     }
 }
 
-/// This PC's Radmin and home-network addresses. Cached for a few seconds:
-/// asking Windows takes a few hundred milliseconds.
+/// This PC's Radmin and home-network addresses. Asking Windows starts a
+/// PowerShell (hundreds of milliseconds of CPU), and it was asked every few
+/// seconds (each link attempt, each party check): a PowerShell every 7 s,
+/// forever, on the game PC. Now the answer is kept a minute and refreshed in
+/// the background: callers get the last one at once and never wait for it,
+/// except the very first time.
 type NetsCache = Mutex<Option<(Instant, Vec<LocalNet>)>>;
+const NETS_FRESH: Duration = Duration::from_secs(60);
+
+fn nets_cache() -> &'static NetsCache {
+    static CACHE: OnceLock<NetsCache> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(None))
+}
 
 pub fn local_nets() -> Vec<LocalNet> {
-    static CACHE: OnceLock<NetsCache> = OnceLock::new();
-    let cell = CACHE.get_or_init(|| Mutex::new(None));
-    if let Some((at, nets)) = cell.lock().unwrap().as_ref() {
-        if at.elapsed() < Duration::from_secs(8) {
-            return nets.clone();
+    static REFRESHING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    let cached = nets_cache().lock().unwrap().clone();
+    match cached {
+        Some((at, nets)) => {
+            if at.elapsed() >= NETS_FRESH && !REFRESHING.swap(true, std::sync::atomic::Ordering::SeqCst) {
+                std::thread::spawn(|| {
+                    let fresh = read_nets();
+                    *nets_cache().lock().unwrap() = Some((Instant::now(), fresh));
+                    REFRESHING.store(false, std::sync::atomic::Ordering::SeqCst);
+                });
+            }
+            nets
+        }
+        None => {
+            let nets = read_nets();
+            *nets_cache().lock().unwrap() = Some((Instant::now(), nets.clone()));
+            nets
         }
     }
-    let nets = read_nets();
-    *cell.lock().unwrap() = Some((Instant::now(), nets.clone()));
-    nets
 }
 
 /// Whether a peer may talk to this PC: itself, or a PC on one of its own

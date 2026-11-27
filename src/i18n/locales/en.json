@@ -1007,6 +1007,13 @@
       "doneGame": "Done: this is the game PC; {{name}}'s PC becomes the extra screen.",
       "doneScreen": "Done: {{name}}'s PC has the game; this one becomes its extra screen. Linking…",
       "declined": "{{name}} did not want to link now."
+    },
+    "relay": {
+      "title": "This PC is only passing the information on",
+      "body": "It is the game PC and sends everything (position, raid, quests, screenshots) to {{names}}. The full panel is there.",
+      "light": "So the game runs freely, the map does not run here and the window stays in the tray.",
+      "showHere": "Open the panel here anyway",
+      "unlink": "Stop passing the information on"
     }
   },
   "net": {

@@ -1007,6 +1007,13 @@
       "doneGame": "Pronto: este é o PC do jogo, e o PC de {{name}} vira a tela extra.",
       "doneScreen": "Pronto: o PC de {{name}} é o do jogo, e este vira a tela extra. Conectando…",
       "declined": "{{name}} não quis vincular agora."
+    },
+    "relay": {
+      "title": "Este PC só está passando as informações",
+      "body": "Ele é o PC do jogo e manda tudo (posição, raid, missões, prints) para {{names}}. O painel completo fica lá.",
+      "light": "Pra não pesar no jogo, o mapa não roda aqui e a janela fica escondida na bandeja.",
+      "showHere": "Abrir o painel aqui mesmo",
+      "unlink": "Parar de passar as informações"
     }
   },
   "net": {
