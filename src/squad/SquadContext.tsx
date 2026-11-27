@@ -27,6 +27,7 @@ import { useMirroredState, usePublishState } from "../link/linkState";
 import { useLink } from "../link/useLink";
 import { parseSquadSnapshot } from "./squadSnapshot";
 import { LINK_PORT, parseLinkOffer, parsePcInfo } from "./linkOffer";
+import { parsePairMsg } from "../link/pairing";
 import { netLocalIps, netLog } from "../net/netApi";
 import { SquadTransport, type ConnStatus } from "./transport";
 import { loadIdentity, saveIdentity, type SquadIdentity } from "./identity";
@@ -39,6 +40,7 @@ import type {
   DrawPayload,
   LinkOffer,
   PcInfo,
+  PairMsg,
 } from "../../shared/squadProtocol";
 
 export interface MemberPosition {
@@ -60,6 +62,8 @@ export interface SquadState {
   links?: Record<string, LinkOffer>;
   /** Every member's PC (name, addresses), by member id, for the game PC to let it link. */
   pcs?: Record<string, PcInfo>;
+  /** Each member's latest pairing step (src/link/pairing.ts), by member id. */
+  pairs?: Record<string, PairMsg>;
   error: string | null;
 }
 
@@ -75,14 +79,16 @@ const EMPTY: SquadState = {
   draws: {},
   links: {},
   pcs: {},
+  pairs: {},
   error: null,
 };
 
 /** Quests as sent: with this PC's link offer when it has one. */
-const questsPayload = (ids: string[], link: LinkOffer | null, pc: PcInfo | null) => ({
+const questsPayload = (ids: string[], link: LinkOffer | null, pc: PcInfo | null, pair: PairMsg | null = null) => ({
   activeQuestIds: ids,
   ...(link ? { link } : {}),
   ...(pc ? { pc } : {}),
+  ...(pair ? { pair } : {}),
 });
 
 export interface SquadApi extends SquadState {
@@ -108,6 +114,8 @@ export interface SquadApi extends SquadState {
   broadcastQuests: (ids: string[]) => void;
   /** This PC's own link offer (it is the game PC and accepts links), sent with its quests; null = none. */
   setSelfLink: (offer: LinkOffer | null) => void;
+  /** This PC's pairing step (src/link/pairing.ts); null = none. */
+  sendPair: (msg: PairMsg | null) => void;
   addMarker: (m: WireMarker) => void;
   removeMarker: (id: string) => void;
   addDraw: (d: DrawPayload) => void;
@@ -193,6 +201,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   const selfQuests = useRef<string[] | null>(null);
   const selfLink = useRef<LinkOffer | null>(null);
   const selfPc = useRef<PcInfo | null>(null);
+  const selfPair = useRef<PairMsg | null>(null);
   const selfMarkers = useRef<Map<string, WireMarker>>(new Map());
   const selfDraws = useRef<Map<string, DrawPayload>>(new Map());
 
@@ -200,7 +209,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
     const transport = transportRef.current;
     if (!transport) return;
     if (selfPos.current) transport.send("position", selfPos.current);
-    if (selfQuests.current) transport.send("quests", questsPayload(selfQuests.current, selfLink.current, selfPc.current));
+    if (selfQuests.current) transport.send("quests", questsPayload(selfQuests.current, selfLink.current, selfPc.current, selfPair.current));
     for (const m of selfMarkers.current.values()) transport.send("marker-add", m);
     for (const d of selfDraws.current.values()) transport.send("draw-add", d);
   }, []);
@@ -243,6 +252,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
             draws: omit(s.draws, id),
             links: omit(s.links ?? {}, id),
             pcs: omit(s.pcs ?? {}, id),
+            pairs: omit(s.pairs ?? {}, id),
           }));
           break;
         }
@@ -260,11 +270,13 @@ export function SquadProvider({ children }: { children: ReactNode }) {
           const ids = env.payload.activeQuestIds;
           const offer = parseLinkOffer(env.payload.link);
           const pc = parsePcInfo(env.payload.pc);
+          const pair = parsePairMsg(env.payload.pair);
           setState((s) => ({
             ...s,
             quests: { ...s.quests, [from]: ids },
             links: offer ? { ...(s.links ?? {}), [from]: offer } : omit(s.links ?? {}, from),
             pcs: pc ? { ...(s.pcs ?? {}), [from]: pc } : omit(s.pcs ?? {}, from),
+            pairs: pair ? { ...(s.pairs ?? {}), [from]: pair } : omit(s.pairs ?? {}, from),
           }));
           break;
         }
@@ -537,20 +549,27 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   const broadcastQuests = useCallback((ids: string[]) => {
     if (isLinkedViewer()) return;
     selfQuests.current = ids;
-    transportRef.current?.send("quests", questsPayload(ids, selfLink.current, selfPc.current));
+    transportRef.current?.send("quests", questsPayload(ids, selfLink.current, selfPc.current, selfPair.current));
   }, []);
 
   const setSelfLink = useCallback((offer: LinkOffer | null) => {
     if (JSON.stringify(offer) === JSON.stringify(selfLink.current)) return;
     selfLink.current = offer;
     // Goes out with the quests (once they are known: an empty list would clear them).
-    if (selfQuests.current) transportRef.current?.send("quests", questsPayload(selfQuests.current, selfLink.current, selfPc.current));
+    if (selfQuests.current) transportRef.current?.send("quests", questsPayload(selfQuests.current, selfLink.current, selfPc.current, selfPair.current));
   }, []);
 
   const setSelfPc = useCallback((pc: PcInfo | null) => {
     if (JSON.stringify(pc) === JSON.stringify(selfPc.current)) return;
     selfPc.current = pc;
-    if (selfQuests.current) transportRef.current?.send("quests", questsPayload(selfQuests.current, selfLink.current, selfPc.current));
+    if (selfQuests.current) transportRef.current?.send("quests", questsPayload(selfQuests.current, selfLink.current, selfPc.current, selfPair.current));
+  }, []);
+
+  // A pairing step goes out at once (with no quests yet, with an empty list:
+  // nobody has this PC's quests then anyway).
+  const sendPair = useCallback((msg: PairMsg | null) => {
+    selfPair.current = msg;
+    transportRef.current?.send("quests", questsPayload(selfQuests.current ?? [], selfLink.current, selfPc.current, msg));
   }, []);
 
   const addMarker = useCallback((m: WireMarker) => {
@@ -620,6 +639,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
       broadcastPosition,
       broadcastQuests,
       setSelfLink,
+      sendPair,
       addMarker,
       removeMarker,
       addDraw,
@@ -642,6 +662,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
       broadcastPosition,
       broadcastQuests,
       setSelfLink,
+      sendPair,
       addMarker,
       removeMarker,
       addDraw,

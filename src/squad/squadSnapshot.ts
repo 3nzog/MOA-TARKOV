@@ -24,6 +24,7 @@ export function parseSquadSnapshot(raw: unknown): { snap: SquadState | null } | 
       draws: rec(r.draws),
       links: rec(r.links),
       pcs: rec(r.pcs),
+      pairs: {},
     },
   };
 }

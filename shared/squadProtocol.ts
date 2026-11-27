@@ -116,6 +116,18 @@ export interface QuestsPayload {
   link?: LinkOffer;
   // Every PC: its name and addresses, so the game PC can let it link with a click.
   pc?: PcInfo;
+  // Pairing two PCs from the party list (src/link/pairing.ts): this app's latest step.
+  pair?: PairMsg;
+}
+
+export interface PairMsg {
+  id: string; // the pairing's id
+  to: string; // member id the step is for
+  step: "invite" | "code" | "ok" | "bad" | "no" | "game";
+  code?: string; // step "code": what was typed
+  try?: number; // step "code": attempt number
+  game?: string; // step "game": member id of the game PC
+  at: number; // sender clock, ms
 }
 
 export interface PcInfo {

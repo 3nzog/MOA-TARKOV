@@ -87,6 +87,7 @@ import GlassIntro from './intro/GlassIntro';
 import TitleBar from './shell/TitleBar';
 import { SUPPORTED_MAP_NAMES } from './map/mapDefs';
 import LinkRequestDialog from './link/LinkRequestDialog';
+import PairDialog from './link/PairDialog';
 import { useMirroredState, usePublishState } from './link/linkState';
 import { normalizeTraderLevels, setTraderLevels, useTraderLevels } from './gunsmith/availability';
 import { replacePresets, usePresets } from './gunsmith/presets';
@@ -1012,6 +1013,7 @@ function App() {
         }}
       />
       <LinkRequestDialog />
+      <PairDialog />
       {showIntro && <GlassIntro onDone={() => setShowIntro(false)} />}
       <Toast message={toast} onDismiss={() => setToast(null)} />
       {priceScan.result && !onMarketTab && <PriceScanCard result={priceScan.result} onClose={priceScan.clear} uses={itemUses} />}

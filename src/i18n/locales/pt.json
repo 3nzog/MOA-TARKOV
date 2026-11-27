@@ -385,8 +385,8 @@
     "mirrored": "Esta é a party do PC do jogo, mostrada aqui porque este PC está anexado a ele. Para sair, saia no PC do jogo.",
     "link": {
       "menu": "Opções de {{name}}",
-      "action": "Vincular ao computador do jogo",
-      "help": "Este PC vira a tela extra do PC do jogo dele. Ele confirma lá.",
+      "action": "Vincular com o PC dele",
+      "help": "Este PC mostra um código; no PC dele aparece um pedido pra digitar. Depois os dois escolhem qual PC é o do jogo.",
       "noOffer": "O MoA dele não mandou o endereço: ao clicar, eu procuro o PC do jogo na rede.",
       "noNetwork": "Sem rede em comum com ele: ao clicar, eu tento mesmo assim pelo endereço que ele mandou.",
       "waiting": "Esperando o PC do jogo aceitar…",
@@ -989,6 +989,24 @@
       "isOff": "Desligado: este PC não se anexa a nenhum outro.",
       "whyGame": "(o Tarkov está instalado aqui)",
       "whyScreen": "(o Tarkov não está instalado aqui)"
+    },
+    "pair": {
+      "title": "Vincular PCs",
+      "showCode": "Digite este código no PC de {{name}}:",
+      "waiting": "Esperando ele digitar…",
+      "askTitle": "Vincular este computador?",
+      "askBody": "{{name}} quer vincular com este computador. Digite o código que aparece na tela do outro PC.",
+      "codeLabel": "Código de 4 dígitos",
+      "link": "Vincular",
+      "notNow": "Agora não",
+      "wrong": "Código errado. Confira na tela do outro PC e tente de novo.",
+      "chooseTitle": "Qual PC é o do jogo?",
+      "chooseBody": "Código certo, PCs pareados com {{name}}. Qual deles roda o Tarkov? Vale o primeiro clique, em qualquer um dos dois.",
+      "mine": "Este PC",
+      "theirs": "O PC de {{name}}",
+      "doneGame": "Pronto: este é o PC do jogo, e o PC de {{name}} vira a tela extra.",
+      "doneScreen": "Pronto: o PC de {{name}} é o do jogo, e este vira a tela extra. Conectando…",
+      "declined": "{{name}} não quis vincular agora."
     }
   },
   "net": {

@@ -385,8 +385,8 @@
     "mirrored": "This is the game PC's party, shown here because this PC is linked to it. To leave, leave on the game PC.",
     "link": {
       "menu": "Options for {{name}}",
-      "action": "Link to the game PC",
-      "help": "This PC becomes their game PC's extra screen. They confirm it there.",
+      "action": "Link with their PC",
+      "help": "This PC shows a code; their PC asks for it. Then both pick which PC has the game.",
       "noOffer": "Their app did not send its address: clicking looks for the game PC on the network.",
       "noNetwork": "No network in common: clicking tries the address they sent anyway.",
       "waiting": "Waiting for the game PC to accept…",
@@ -989,6 +989,24 @@
       "isOff": "Off: this PC does not link to any other.",
       "whyGame": "(Tarkov is installed here)",
       "whyScreen": "(Tarkov is not installed here)"
+    },
+    "pair": {
+      "title": "Link PCs",
+      "showCode": "Type this code on {{name}}'s PC:",
+      "waiting": "Waiting for them to type it…",
+      "askTitle": "Link this computer?",
+      "askBody": "{{name}} wants to link with this computer. Type the code shown on the other PC.",
+      "codeLabel": "4-digit code",
+      "link": "Link",
+      "notNow": "Not now",
+      "wrong": "Wrong code. Check the other PC's screen and try again.",
+      "chooseTitle": "Which PC has the game?",
+      "chooseBody": "Code right, paired with {{name}}. Which one runs Tarkov? The first click, on either PC, decides.",
+      "mine": "This PC",
+      "theirs": "{{name}}'s PC",
+      "doneGame": "Done: this is the game PC; {{name}}'s PC becomes the extra screen.",
+      "doneScreen": "Done: {{name}}'s PC has the game; this one becomes its extra screen. Linking…",
+      "declined": "{{name}} did not want to link now."
     }
   },
   "net": {

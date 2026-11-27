@@ -3,6 +3,7 @@
 import App from './App.tsx';
 import { SquadProvider } from './squad/SquadContext';
 import { LinkProvider } from './link/LinkProvider';
+import { PairingProvider } from './link/PairingProvider';
 // The thermal look, after every component's own stylesheet (imported above through App).
 import './ui/thermal.css';
 
@@ -10,7 +11,9 @@ export default function MainWindow() {
   return (
     <LinkProvider>
       <SquadProvider>
-        <App />
+        <PairingProvider>
+          <App />
+        </PairingProvider>
       </SquadProvider>
     </LinkProvider>
   );
