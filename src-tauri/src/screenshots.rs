@@ -79,6 +79,8 @@ fn process_screenshot(app: &AppHandle, path: &Path, re: &Regex) {
     if !name.to_lowercase().ends_with(".png") || !is_game_screenshot(name) {
         return;
     }
+    // Written to the connection log too: "the map did not show my position"
+    // is answered by it (was the print seen, did its name carry a position).
     // In a raid the name carries the position; in the stash or the hideout it
     // may not, and the picture is still worth reading for prices.
     // The name is all the position needs: it goes out at once, to the app and
@@ -90,9 +92,13 @@ fn process_screenshot(app: &AppHandle, path: &Path, re: &Regex) {
         if let Ok(frame) = serde_json::to_string(&serde_json::json!({ "pos": &pos })) {
             crate::phone::publish_pos(frame);
         }
+        crate::net::log(format!("prints: {name}: posição lida (x {:.0}, z {:.0})", pos.x, pos.z));
         if let Err(e) = app.emit("player-position", pos) {
             eprintln!("[screenshots] emit failed: {}", e);
+            crate::net::log(format!("prints: a posição não chegou ao app: {e}"));
         }
+    } else {
+        crate::net::log(format!("prints: {name}: sem posição no nome (fora da raid, ou o jogo não pôs)"));
     }
     // The picture itself may still be being written: a moment before reading it.
     thread::sleep(Duration::from_millis(150));
@@ -159,12 +165,14 @@ pub fn start(app: AppHandle, state: Arc<Mutex<Option<PathBuf>>>) {
         };
         let Some(dir) = initial else {
             eprintln!("[screenshots] cannot resolve default screenshots dir");
+            crate::net::log("prints: não achei a pasta Documentos para olhar os prints");
             return;
         };
         if !dir.is_dir() {
             // Create the folder so notify can watch it — EFT will populate.
             if let Err(e) = std::fs::create_dir_all(&dir) {
                 eprintln!("[screenshots] cannot create {}: {}", dir.display(), e);
+                crate::net::log(format!("prints: não deu para criar {}: {e}", dir.display()));
                 return;
             }
         }
@@ -197,14 +205,17 @@ pub fn start(app: AppHandle, state: Arc<Mutex<Option<PathBuf>>>) {
             Ok(w) => w,
             Err(e) => {
                 eprintln!("[screenshots] failed to start notify watcher: {}", e);
+                crate::net::log(format!("prints: não deu para olhar a pasta: {e}"));
                 return;
             }
         };
 
         if let Err(e) = watcher.watch(&dir, RecursiveMode::NonRecursive) {
             eprintln!("[screenshots] failed to watch {}: {}", dir.display(), e);
+            crate::net::log(format!("prints: não deu para olhar {}: {e}", dir.display()));
             return;
         }
+        crate::net::log(format!("prints: olhando a pasta {}", dir.display()));
 
         // Keep watcher alive forever.
         loop {

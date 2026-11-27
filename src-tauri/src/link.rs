@@ -759,6 +759,13 @@ async fn session(
             Some("event") if linked => {
                 let Some(event) = v.get("event").and_then(|e| e.as_str()) else { continue };
                 if FORWARDED.contains(&event) || event == SIDE_SCAN_EVENT || event == STATE_EVENT {
+                    if event == "player-position" {
+                        let n = POSITIONS_IN.fetch_add(1, Ordering::Relaxed) + 1;
+                        // The first, then every 20th: enough to see they arrive.
+                        if n == 1 || n.is_multiple_of(20) {
+                            net::log(format!("anexar: posição recebida do PC do jogo ({n} até agora)"));
+                        }
+                    }
                     (cfg.emit)(event, v.get("payload").cloned().unwrap_or(Value::Null));
                 }
             }
@@ -842,6 +849,8 @@ fn client_cell() -> &'static Mutex<Option<ClientHandle>> {
 /// True while this PC shows another PC's game: then its own link server must
 /// not pass those replayed events on again.
 static CLIENT_ACTIVE: AtomicBool = AtomicBool::new(false);
+/// Positions received from the game PC (for the connection log).
+static POSITIONS_IN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 pub fn is_hosting() -> bool {
     server_cell().lock().unwrap().is_some()
