@@ -217,9 +217,27 @@ pub fn start(app: AppHandle, state: Arc<Mutex<Option<PathBuf>>>) {
         }
         crate::net::log(format!("prints: olhando a pasta {}", dir.display()));
 
-        // Keep watcher alive forever.
+        // Keeps the watcher alive, and follows a new folder (set_screenshots_dir)
+        // at once instead of after the app is reopened.
+        let mut watched = dir;
         loop {
-            thread::sleep(Duration::from_secs(60));
+            thread::sleep(Duration::from_secs(2));
+            let wanted = state.lock().ok().and_then(|g| g.clone());
+            let Some(next) = wanted.filter(|d| *d != watched) else { continue };
+            match watcher.watch(&next, RecursiveMode::NonRecursive) {
+                Ok(()) => {
+                    let _ = watcher.unwatch(&watched);
+                    crate::net::log(format!("prints: agora olhando a pasta {}", next.display()));
+                    watched = next;
+                }
+                Err(e) => {
+                    crate::net::log(format!("prints: não deu para olhar {}: {e}", next.display()));
+                    // Not asked again until the folder changes once more.
+                    if let Ok(mut g) = state.lock() {
+                        *g = Some(watched.clone());
+                    }
+                }
+            }
         }
     });
 }
